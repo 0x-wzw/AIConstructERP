@@ -93,7 +93,6 @@
         select { color: var(--text-primary); }
         .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
         .light-mode .modal-overlay { background: rgba(0,0,0,0.3); }
-        /* Light mode overrides for hardcoded Tailwind classes in JS templates */
         .light-mode .text-slate-400 { color: #475569 !important; }
         .light-mode .text-slate-500 { color: #64748b !important; }
         .light-mode .text-slate-600 { color: #94a3b8 !important; }
@@ -132,11 +131,22 @@
         .pagination-btn:hover:not(:disabled) { background: rgba(245,158,11,0.15); color: var(--accent); }
         .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .pagination-btn.active { background: rgba(245,158,11,0.2); color: var(--accent); }
+        .tenant-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; background: var(--accent-dim); color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+        .tenant-selector { cursor: pointer; transition: all 0.2s; }
+        .tenant-selector:hover { background: var(--hover-bg); }
+        .tenant-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .tenant-color-0 { background: #f59e0b; }
+        .tenant-color-1 { background: #3b82f6; }
+        .tenant-color-2 { background: #10b981; }
+        .tenant-color-3 { background: #8b5cf6; }
+        .tenant-color-4 { background: #ef4444; }
+        .tenant-color-5 { background: #ec4899; }
+        .tenant-color-6 { background: #14b8a6; }
+        .tenant-color-7 { background: #f97316; }
 
-        /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 1024px) {
             .sidebar { width: 56px; }
-            .sidebar .nav-text, .sidebar .brand-text, .sidebar .version-text { display: none; }
+            .sidebar .nav-text, .sidebar .brand-text, .sidebar .version-text, .sidebar .tenant-section { display: none; }
             .sidebar .brand-icon { margin: 0 auto; }
             .sidebar nav button { justify-content: center; padding: 10px; }
             .sidebar nav button i { margin: 0; }
@@ -167,7 +177,6 @@
 </head>
 <body class="h-screen overflow-hidden flex">
 
-    <!-- Sidebar overlay (mobile) -->
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <!-- ════════════════════════════════════════════════════════════════ -->
@@ -211,9 +220,24 @@
             </button>
         </nav>
 
+        <!-- Tenant Selector -->
+        <div class="tenant-section p-3 border-t border-slate-800">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-wider font-semibold" style="color: var(--text-muted)">Tenant</span>
+                <button onclick="showModal('tenant')" class="p-0.5 hover:bg-slate-700 rounded transition-colors" style="color: var(--text-muted)" title="Manage tenants">
+                    <i data-lucide="settings-2" class="w-3 h-3"></i>
+                </button>
+            </div>
+            <div id="tenant-selector" class="tenant-selector flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs" onclick="cycleTenant()" title="Click to switch tenant">
+                <div id="tenant-dot" class="tenant-dot tenant-color-0"></div>
+                <span id="tenant-name" class="truncate" style="color: var(--text-primary)">Demo Corp</span>
+                <i data-lucide="chevrons-up-down" class="w-3 h-3 ml-auto flex-shrink-0" style="color: var(--text-muted)"></i>
+            </div>
+        </div>
+
         <div class="p-3 border-t border-slate-800" style="background: var(--bg-alt);">
             <div class="flex items-center justify-between text-[10px] mono">
-                <span class="version-text" style="color: var(--text-muted)">v2.2.0</span>
+                <span class="version-text" style="color: var(--text-muted)">v3.0.0</span>
                 <div class="flex items-center gap-1.5">
                     <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
                     <span style="color: rgba(16, 185, 129, 0.7)">LIVE</span>
@@ -227,13 +251,13 @@
     <!-- ════════════════════════════════════════════════════════════════ -->
     <main class="flex-1 flex flex-col h-full overflow-hidden">
 
-        <!-- Header -->
         <header class="h-14 glass border-b border-slate-800 flex items-center justify-between px-6 z-10 flex-shrink-0">
             <div class="flex items-center gap-4">
                 <button class="mobile-menu-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-amber-400 transition-colors" onclick="toggleSidebar()">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <span class="text-sm" style="color: var(--text-muted)">ERP / <span class="font-medium" style="color: var(--text-primary)" id="page-title">Dashboard</span></span>
+                <span id="header-tenant-badge" class="tenant-badge">Demo Corp</span>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="toggleTheme()" id="theme-toggle" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors" style="color: var(--text-muted)" title="Toggle theme">
@@ -250,13 +274,9 @@
             </div>
         </header>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- DASHBOARD                                                        -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- DASHBOARD -->
         <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 scrollbar-thin">
             <div class="max-w-7xl mx-auto space-y-6">
-
-                <!-- KPI Cards -->
                 <div class="grid grid-cols-4 gap-4">
                     <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
                         <div class="flex items-center justify-between mb-3">
@@ -292,7 +312,6 @@
                     </div>
                 </div>
 
-                <!-- Charts Row -->
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2 glass rounded-2xl p-6 border border-slate-800">
                         <div class="flex items-center justify-between mb-6">
@@ -335,7 +354,6 @@
                     </div>
                 </div>
 
-                <!-- Recent Activity + Upcoming -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="glass rounded-2xl p-6 border border-slate-800">
                         <div class="flex items-center justify-between mb-4">
@@ -369,9 +387,7 @@
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- PROJECTS                                                          -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- PROJECTS -->
         <div id="view-projects" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -380,15 +396,11 @@
                         <i data-lucide="plus" class="w-4 h-4"></i> New Project
                     </button>
                 </div>
-                <div id="projects-grid" class="grid grid-cols-3 gap-4">
-                    <!-- Dynamically populated -->
-                </div>
+                <div id="projects-grid" class="grid grid-cols-3 gap-4"></div>
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- SCHEDULE (Gantt)                                                  -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- SCHEDULE -->
         <div id="view-schedule" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -411,16 +423,12 @@
                             <span class="flex-1 text-center">Aug 4</span>
                         </div>
                     </div>
-                    <div id="gantt-chart" class="space-y-2">
-                        <!-- Dynamically populated -->
-                    </div>
+                    <div id="gantt-chart" class="space-y-2"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- RESOURCES                                                         -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- RESOURCES -->
         <div id="view-resources" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -429,15 +437,11 @@
                         <i data-lucide="plus" class="w-4 h-4"></i> Add Resource
                     </button>
                 </div>
-                <div id="resources-grid" class="grid grid-cols-3 gap-4">
-                    <!-- Dynamically populated -->
-                </div>
+                <div id="resources-grid" class="grid grid-cols-3 gap-4"></div>
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- BUDGET                                                            -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- BUDGET -->
         <div id="view-budget" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -488,9 +492,7 @@
                                     <th class="text-right p-4 font-semibold"></th>
                                 </tr>
                             </thead>
-                            <tbody id="budget-table-body" class="divide-y divide-slate-800/30">
-                                <!-- Dynamically populated -->
-                            </tbody>
+                            <tbody id="budget-table-body" class="divide-y divide-slate-800/30"></tbody>
                         </table>
                     </div>
                     <div id="budget-pagination" class="flex items-center justify-center gap-2 p-3 border-t border-slate-800"></div>
@@ -498,9 +500,7 @@
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- PROCUREMENT                                                       -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- PROCUREMENT -->
         <div id="view-procurement" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -534,9 +534,7 @@
                                     <th class="text-right p-4 font-semibold"></th>
                                 </tr>
                             </thead>
-                            <tbody id="po-table-body" class="divide-y divide-slate-800/30">
-                                <!-- Dynamically populated -->
-                            </tbody>
+                            <tbody id="po-table-body" class="divide-y divide-slate-800/30"></tbody>
                         </table>
                     </div>
                     <div id="po-pagination" class="flex items-center justify-center gap-2 p-3 border-t border-slate-800"></div>
@@ -544,9 +542,7 @@
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- SUBCONTRACTORS                                                    -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- SUBCONTRACTORS -->
         <div id="view-subs" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -555,15 +551,11 @@
                         <i data-lucide="plus" class="w-4 h-4"></i> Add Sub
                     </button>
                 </div>
-                <div id="subs-grid" class="grid grid-cols-3 gap-4">
-                    <!-- Dynamically populated -->
-                </div>
+                <div id="subs-grid" class="grid grid-cols-3 gap-4"></div>
             </div>
         </div>
 
-        <!-- ════════════════════════════════════════════════════════════════ -->
-        <!-- REPORTS                                                            -->
-        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- REPORTS -->
         <div id="view-reports" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
@@ -595,9 +587,7 @@
 
     </main>
 
-    <!-- ════════════════════════════════════════════════════════════════ -->
-    <!-- MODALS                                                            -->
-    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- MODALS -->
     <div id="modal-overlay" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center" onclick="closeModal(event)">
         <div id="modal-content" class="glass rounded-2xl border border-slate-800 w-full max-w-lg max-h-[80vh] overflow-y-auto scrollbar-thin m-4" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-slate-800 flex justify-between items-center">
@@ -612,13 +602,52 @@
         </div>
     </div>
 
-    <!-- Toast container -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
 
     <script>
-        // ── Data Store (localStorage-backed) ─────────────────────────
-        const STORE_KEY = 'construct_erp_data';
+        // ── Multi-Tenant System ──────────────────────────────────────
+        const TENANTS_KEY = 'construct_erp_tenants';
+        const ACTIVE_TENANT_KEY = 'construct_erp_active_tenant';
 
+        const DEFAULT_TENANTS = [
+            { id: 't1', name: 'Demo Corp', color: 0 },
+            { id: 't2', name: 'BuildRight LLC', color: 1 },
+            { id: 't3', name: 'Skyline Developers', color: 2 }
+        ];
+
+        const TENANT_COLORS = ['tenant-color-0','tenant-color-1','tenant-color-2','tenant-color-3','tenant-color-4','tenant-color-5','tenant-color-6','tenant-color-7'];
+
+        function loadTenants() {
+            try {
+                const raw = localStorage.getItem(TENANTS_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return JSON.parse(JSON.stringify(DEFAULT_TENANTS));
+        }
+
+        function saveTenants() {
+            localStorage.setItem(TENANTS_KEY, JSON.stringify(tenants));
+        }
+
+        function getActiveTenantId() {
+            return localStorage.getItem(ACTIVE_TENANT_KEY) || 't1';
+        }
+
+        function setActiveTenantId(id) {
+            localStorage.setItem(ACTIVE_TENANT_KEY, id);
+        }
+
+        function getActiveTenant() {
+            return tenants.find(t => t.id === getActiveTenantId()) || tenants[0];
+        }
+
+        function getDataKey() {
+            return `construct_erp_data_${getActiveTenantId()}`;
+        }
+
+        let tenants = loadTenants();
+
+        // ── Data Store (per-tenant localStorage) ─────────────────────
         const DEFAULT_DATA = {
             projects: [
                 { id: 'p1', name: 'Riverside Tower', location: '123 Main St', budget: 1450000, duration: '18 months', description: 'Mixed-use commercial tower', status: 'active', progress: 62, createdAt: '2024-01-15' },
@@ -676,8 +705,9 @@
         };
 
         function loadData() {
+            const key = getDataKey();
             try {
-                const raw = localStorage.getItem(STORE_KEY);
+                const raw = localStorage.getItem(key);
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     return deepMerge(DEFAULT_DATA, parsed);
@@ -701,10 +731,38 @@
         }
 
         function saveData() {
-            localStorage.setItem(STORE_KEY, JSON.stringify(data));
+            localStorage.setItem(getDataKey(), JSON.stringify(data));
         }
 
         let data = loadData();
+
+        // ── Tenant UI ────────────────────────────────────────────────
+        function updateTenantUI() {
+            const tenant = getActiveTenant();
+            const el = document.getElementById('tenant-name');
+            const dot = document.getElementById('tenant-dot');
+            const badge = document.getElementById('header-tenant-badge');
+            if (el) el.textContent = tenant.name;
+            if (dot) { dot.className = `tenant-dot ${TENANT_COLORS[tenant.color] || 'tenant-color-0'}`; }
+            if (badge) badge.textContent = tenant.name;
+        }
+
+        function cycleTenant() {
+            const ids = tenants.map(t => t.id);
+            const current = getActiveTenantId();
+            const idx = ids.indexOf(current);
+            const next = ids[(idx + 1) % ids.length];
+            switchTenant(next);
+        }
+
+        function switchTenant(id) {
+            if (id === getActiveTenantId()) return;
+            setActiveTenantId(id);
+            data = loadData();
+            updateTenantUI();
+            refreshAll();
+            showToast(`Switched to ${getActiveTenant().name}`, 'info');
+        }
 
         // ── Theme Toggle ─────────────────────────────────────────────
         const THEME_KEY = 'construct_erp_theme';
@@ -721,7 +779,6 @@
                 icon.setAttribute('data-lucide', theme === 'light' ? 'sun' : 'moon');
             }
             lucide.createIcons();
-            // Re-render chart with new theme colors
             renderBudgetChart();
         }
 
@@ -729,10 +786,9 @@
             setTheme(getTheme() === 'dark' ? 'light' : 'dark');
         }
 
-        // Apply saved theme on load
         setTheme(getTheme());
 
-        // ── Sidebar Toggle (mobile) ─────────────────────────────────
+        // ── Sidebar Toggle ───────────────────────────────────────────
         function toggleSidebar(forceClose) {
             const sidebar = document.querySelector('.sidebar');
             if (forceClose && window.innerWidth <= 768) {
@@ -742,7 +798,7 @@
             sidebar.classList.toggle('open');
         }
 
-        // ── Toast Notifications ───────────────────────────────────────
+        // ── Toast Notifications ─────────────────────────────────────
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const colors = { info: 'bg-blue-500/20 border-blue-500/30 text-blue-300', success: 'bg-green-500/20 border-green-500/30 text-green-300', error: 'bg-red-500/20 border-red-500/30 text-red-300' };
@@ -794,7 +850,6 @@
             const totalSpent = data.budget.reduce((s, c) => s + c.spent, 0);
             const totalWorkforce = data.resources.labor.reduce((s, r) => s + r.available, 0);
             const avgProgress = data.projects.length ? Math.round(data.projects.reduce((s, p) => s + p.progress, 0) / data.projects.length) : 0;
-
             document.getElementById('kpi-projects').innerText = activeProjects;
             document.getElementById('kpi-projects-change').innerText = `+${activeProjects}`;
             document.getElementById('kpi-budget').innerText = '$' + (totalBudget / 1000000).toFixed(2) + 'M';
@@ -845,19 +900,12 @@
             grid.innerHTML = data.projects.map(p => `
                 <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
                     <div class="absolute top-3 right-3 flex gap-1">
-                        <button onclick="editProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all">
-                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-                        </button>
-                        <button onclick="deleteProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                        </button>
+                        <button onclick="editProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">${p.name.charAt(0)}</div>
-                        <div>
-                            <div class="font-medium text-sm" style="color: var(--text-primary)">${p.name}</div>
-                            <div class="text-[10px]" style="color: var(--text-muted)">${p.location}</div>
-                        </div>
+                        <div><div class="font-medium text-sm" style="color: var(--text-primary)">${p.name}</div><div class="text-[10px]" style="color: var(--text-muted)">${p.location}</div></div>
                     </div>
                     <div class="space-y-2 text-xs">
                         <div class="flex justify-between"><span style="color: var(--text-muted)">Budget</span><span class="mono" style="color: var(--text-primary)">$${(p.budget / 1000000).toFixed(1)}M</span></div>
@@ -869,19 +917,8 @@
             `).join('');
         }
 
-        function editProject(id) {
-            const p = data.projects.find(x => x.id === id);
-            if (!p) return;
-            showModal('project', p);
-        }
-
-        function deleteProject(id) {
-            data.projects = data.projects.filter(p => p.id !== id);
-            saveData();
-            renderProjects();
-            updateKPIs();
-            showToast('Project deleted', 'info');
-        }
+        function editProject(id) { const p = data.projects.find(x => x.id === id); if (p) showModal('project', p); }
+        function deleteProject(id) { data.projects = data.projects.filter(p => p.id !== id); saveData(); renderProjects(); updateKPIs(); showToast('Project deleted', 'info'); }
 
         // ── Gantt Chart ──────────────────────────────────────────────
         function renderGantt() {
@@ -894,33 +931,17 @@
             chart.innerHTML = data.tasks.map(t => `
                 <div class="flex items-center gap-4 h-8 fade-in group">
                     <span class="w-48 text-xs truncate flex-shrink-0" style="color: var(--text-secondary)">${t.name}</span>
-                    <div class="flex-1 relative h-6 rounded" style="background: var(--border)">
-                        <div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div>
-                    </div>
+                    <div class="flex-1 relative h-6 rounded" style="background: var(--border)"><div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div></div>
                     <div class="flex gap-1">
-                        <button onclick="editTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400">
-                            <i data-lucide="pencil" class="w-3 h-3"></i>
-                        </button>
-                        <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400">
-                            <i data-lucide="x" class="w-3 h-3"></i>
-                        </button>
+                        <button onclick="editTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                        <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="x" class="w-3 h-3"></i></button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function editTask(id) {
-            const t = data.tasks.find(x => x.id === id);
-            if (!t) return;
-            showModal('task', t);
-        }
-
-        function deleteTask(id) {
-            data.tasks = data.tasks.filter(t => t.id !== id);
-            saveData();
-            renderGantt();
-            showToast('Task removed', 'info');
-        }
+        function editTask(id) { const t = data.tasks.find(x => x.id === id); if (t) showModal('task', t); }
+        function deleteTask(id) { data.tasks = data.tasks.filter(t => t.id !== id); saveData(); renderGantt(); showToast('Task removed', 'info'); }
 
         // ── Resources ─────────────────────────────────────────────────
         function renderResources() {
@@ -929,21 +950,15 @@
             grid.innerHTML = `
                 <div class="glass rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center gap-3 mb-4"><i data-lucide="users" class="w-5 h-5 text-cyan-400"></i><span class="text-white font-semibold text-sm">Labor</span></div>
-                    <div class="space-y-3 text-xs">
-                        ${r.labor.map(l => `<div class="flex justify-between"><span class="text-slate-400">${l.name}</span><span class="text-white mono">${l.available} / ${l.required}</span></div>`).join('')}
-                    </div>
+                    <div class="space-y-3 text-xs">${r.labor.map(l => `<div class="flex justify-between"><span style="color: var(--text-muted)">${l.name}</span><span class="mono" style="color: var(--text-primary)">${l.available} / ${l.required}</span></div>`).join('')}</div>
                 </div>
                 <div class="glass rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center gap-3 mb-4"><i data-lucide="tractor" class="w-5 h-5 text-green-400"></i><span class="text-white font-semibold text-sm">Equipment</span></div>
-                    <div class="space-y-3 text-xs">
-                        ${r.equipment.map(e => `<div class="flex justify-between"><span class="text-slate-400">${e.name}</span><span class="text-white mono">${e.available} / ${e.required}</span></div>`).join('')}
-                    </div>
+                    <div class="space-y-3 text-xs">${r.equipment.map(e => `<div class="flex justify-between"><span style="color: var(--text-muted)">${e.name}</span><span class="mono" style="color: var(--text-primary)">${e.available} / ${e.required}</span></div>`).join('')}</div>
                 </div>
                 <div class="glass rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center gap-3 mb-4"><i data-lucide="package" class="w-5 h-5 text-amber-400"></i><span class="text-white font-semibold text-sm">Materials On-Site</span></div>
-                    <div class="space-y-3 text-xs">
-                        ${r.materials.map(m => `<div class="flex justify-between"><span class="text-slate-400">${m.name}</span><span class="text-white mono">${m.available.toLocaleString()} / ${m.required.toLocaleString()}</span></div>`).join('')}
-                    </div>
+                    <div class="space-y-3 text-xs">${r.materials.map(m => `<div class="flex justify-between"><span style="color: var(--text-muted)">${m.name}</span><span class="mono" style="color: var(--text-primary)">${m.available.toLocaleString()} / ${m.required.toLocaleString()}</span></div>`).join('')}</div>
                 </div>
             `;
         }
@@ -968,20 +983,14 @@
         }
 
         function sortBudget(field) {
-            if (budgetSort.field === field) {
-                budgetSort.dir = budgetSort.dir === 'asc' ? 'desc' : 'asc';
-            } else {
-                budgetSort.field = field;
-                budgetSort.dir = 'asc';
-            }
-            budgetPage = 1;
-            renderBudgetTable();
+            if (budgetSort.field === field) { budgetSort.dir = budgetSort.dir === 'asc' ? 'desc' : 'asc'; }
+            else { budgetSort.field = field; budgetSort.dir = 'asc'; }
+            budgetPage = 1; renderBudgetTable();
         }
 
         function getBudgetData() {
             const search = (document.getElementById('budget-search')?.value || '').toLowerCase();
             let items = data.budget.filter(c => c.category.toLowerCase().includes(search));
-
             if (budgetSort.field) {
                 const dir = budgetSort.dir === 'asc' ? 1 : -1;
                 items.sort((a, b) => {
@@ -1004,66 +1013,36 @@
             if (budgetPage > totalPages) budgetPage = totalPages;
             const start = (budgetPage - 1) * BUDGET_PER_PAGE;
             const pageItems = all.slice(start, start + BUDGET_PER_PAGE);
-
-            // Update sort indicators
-            document.querySelectorAll('[id^="sort-budget-"]').forEach(el => {
-                el.classList.remove('asc', 'desc');
-                if (el.id === `sort-budget-${budgetSort.field}`) el.classList.add(budgetSort.dir);
-            });
-
+            document.querySelectorAll('[id^="sort-budget-"]').forEach(el => { el.classList.remove('asc', 'desc'); if (el.id === `sort-budget-${budgetSort.field}`) el.classList.add(budgetSort.dir); });
             tbody.innerHTML = pageItems.map(c => {
                 const pct = c.budget ? Math.round((c.spent / c.budget) * 100) : 0;
                 const remaining = c.budget - c.spent;
                 const color = pct > 85 ? 'text-red-400' : pct > 70 ? 'text-amber-400' : pct > 50 ? 'text-blue-400' : 'text-green-400';
                 return `<tr class="hover:bg-slate-800/20">
-                    <td class="p-4 text-slate-300">${c.category}</td>
-                    <td class="p-4 text-right text-white mono">$${c.budget.toLocaleString()}</td>
-                    <td class="p-4 text-right text-white mono">$${c.committed.toLocaleString()}</td>
-                    <td class="p-4 text-right text-white mono">$${c.spent.toLocaleString()}</td>
+                    <td class="p-4" style="color: var(--text-secondary)">${c.category}</td>
+                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.budget.toLocaleString()}</td>
+                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.committed.toLocaleString()}</td>
+                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.spent.toLocaleString()}</td>
                     <td class="p-4 text-right text-green-400 mono">$${remaining.toLocaleString()}</td>
                     <td class="p-4 text-right"><span class="${color} text-[10px] mono">${pct}%</span></td>
-                    <td class="p-4 text-right">
-                        <div class="flex items-center justify-end gap-1">
-                            <button onclick="editBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400 transition-all">
-                                <i data-lucide="pencil" class="w-3 h-3"></i>
-                            </button>
-                            <button onclick="deleteBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <td class="p-4 text-right"><div class="flex items-center justify-end gap-1">
+                        <button onclick="editBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                        <button onclick="deleteBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                    </div></td>
                 </tr>`;
             }).join('');
-            if (!pageItems.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-600 text-sm">No matching categories</td></tr>';
-            }
-
-            // Pagination
+            if (!pageItems.length) tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center" style="color: var(--text-muted)">No matching categories</td></tr>';
             if (totalPages <= 1) { pagination.innerHTML = ''; return; }
-            let phtml = `<button class="pagination-btn text-slate-400" onclick="budgetPage=1;renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn text-slate-400" onclick="budgetPage=Math.max(1,budgetPage-1);renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
-            for (let i = Math.max(1, budgetPage-2); i <= Math.min(totalPages, budgetPage+2); i++) {
-                phtml += `<button class="pagination-btn ${i===budgetPage?'active':'text-slate-400'}" onclick="budgetPage=${i};renderBudgetTable()">${i}</button>`;
-            }
-            phtml += `<button class="pagination-btn text-slate-400" onclick="budgetPage=Math.min(${totalPages},budgetPage+1);renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn text-slate-400" onclick="budgetPage=${totalPages};renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
+            let phtml = `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=1;renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=Math.max(1,budgetPage-1);renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
+            for (let i = Math.max(1, budgetPage-2); i <= Math.min(totalPages, budgetPage+2); i++) phtml += `<button class="pagination-btn ${i===budgetPage?'active':''}" style="${i!==budgetPage?'color:var(--text-muted)':''}" onclick="budgetPage=${i};renderBudgetTable()">${i}</button>`;
+            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=Math.min(${totalPages},budgetPage+1);renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=${totalPages};renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
             pagination.innerHTML = phtml;
         }
 
-        function editBudgetItem(category) {
-            const c = data.budget.find(x => x.category === category);
-            if (!c) return;
-            showModal('budgetItem', c);
-        }
-
-        function deleteBudgetItem(category) {
-            data.budget = data.budget.filter(c => c.category !== category);
-            saveData();
-            renderBudgetSummary();
-            renderBudgetTable();
-            updateKPIs();
-            showToast(`Category "${category}" removed`, 'info');
-        }
+        function editBudgetItem(category) { const c = data.budget.find(x => x.category === category); if (c) showModal('budgetItem', c); }
+        function deleteBudgetItem(category) { data.budget = data.budget.filter(c => c.category !== category); saveData(); renderBudgetSummary(); renderBudgetTable(); updateKPIs(); showToast(`Category "${category}" removed`, 'info'); }
 
         // ── Procurement ──────────────────────────────────────────────
         let poSort = { field: null, dir: 'asc' };
@@ -1071,35 +1050,22 @@
         const PO_PER_PAGE = 5;
 
         function sortPO(field) {
-            if (poSort.field === field) {
-                poSort.dir = poSort.dir === 'asc' ? 'desc' : 'asc';
-            } else {
-                poSort.field = field;
-                poSort.dir = 'asc';
-            }
-            poPage = 1;
-            renderPOTable();
+            if (poSort.field === field) { poSort.dir = poSort.dir === 'asc' ? 'desc' : 'asc'; }
+            else { poSort.field = field; poSort.dir = 'asc'; }
+            poPage = 1; renderPOTable();
         }
 
         function getPOData() {
             const search = (document.getElementById('po-search')?.value || '').toLowerCase();
             const statusFilter = document.getElementById('po-status-filter')?.value || 'all';
-            let items = data.pos.filter(po =>
-                (po.supplier.toLowerCase().includes(search) || po.item.toLowerCase().includes(search) || po.id.toLowerCase().includes(search)) &&
-                (statusFilter === 'all' || po.status === statusFilter)
-            );
+            let items = data.pos.filter(po => (po.supplier.toLowerCase().includes(search) || po.item.toLowerCase().includes(search) || po.id.toLowerCase().includes(search)) && (statusFilter === 'all' || po.status === statusFilter));
             if (poSort.field) {
                 const dir = poSort.dir === 'asc' ? 1 : -1;
                 items.sort((a, b) => {
                     let va, vb;
-                    if (poSort.field === 'qty') {
-                        va = parseInt(a.qty) || 0; vb = parseInt(b.qty) || 0; return (va - vb) * dir;
-                    }
-                    if (poSort.field === 'id' || poSort.field === 'supplier' || poSort.field === 'item' || poSort.field === 'status' || poSort.field === 'delivery') {
-                        va = (a[poSort.field] || '').toLowerCase(); vb = (b[poSort.field] || '').toLowerCase(); return va.localeCompare(vb) * dir;
-                    }
-                    va = a[poSort.field] || 0; vb = b[poSort.field] || 0;
-                    return (va - vb) * dir;
+                    if (poSort.field === 'qty') { va = parseInt(a.qty) || 0; vb = parseInt(b.qty) || 0; return (va - vb) * dir; }
+                    if (['id','supplier','item','status','delivery'].includes(poSort.field)) { va = (a[poSort.field] || '').toLowerCase(); vb = (b[poSort.field] || '').toLowerCase(); return va.localeCompare(vb) * dir; }
+                    va = a[poSort.field] || 0; vb = b[poSort.field] || 0; return (va - vb) * dir;
                 });
             }
             return items;
@@ -1114,305 +1080,209 @@
             if (poPage > totalPages) poPage = totalPages;
             const start = (poPage - 1) * PO_PER_PAGE;
             const pageItems = all.slice(start, start + PO_PER_PAGE);
-
-            // Update sort indicators
-            document.querySelectorAll('[id^="sort-po-"]').forEach(el => {
-                el.classList.remove('asc', 'desc');
-                if (el.id === `sort-po-${poSort.field}`) el.classList.add(poSort.dir);
-            });
-
+            document.querySelectorAll('[id^="sort-po-"]').forEach(el => { el.classList.remove('asc', 'desc'); if (el.id === `sort-po-${poSort.field}`) el.classList.add(poSort.dir); });
             tbody.innerHTML = pageItems.map(po => `
                 <tr class="hover:bg-slate-800/20">
                     <td class="p-4 text-cyan-400 mono text-xs">${po.id}</td>
-                    <td class="p-4 text-slate-300">${po.supplier}</td>
-                    <td class="p-4 text-slate-400">${po.item}</td>
-                    <td class="p-4 text-right text-white mono">${po.qty}</td>
-                    <td class="p-4 text-right text-white mono">$${po.amount.toLocaleString()}</td>
+                    <td class="p-4" style="color: var(--text-secondary)">${po.supplier}</td>
+                    <td class="p-4" style="color: var(--text-muted)">${po.item}</td>
+                    <td class="p-4 text-right mono" style="color: var(--text-primary)">${po.qty}</td>
+                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${po.amount.toLocaleString()}</td>
                     <td class="p-4"><span class="text-[10px] px-2 py-0.5 rounded ${statusColors[po.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}">${po.status}</span></td>
-                    <td class="p-4 text-slate-500 text-xs">${po.delivery}</td>
-                    <td class="p-4 text-right">
-                        <div class="flex items-center justify-end gap-1">
-                            <button onclick="editPO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400 transition-all">
-                                <i data-lucide="pencil" class="w-3 h-3"></i>
-                            </button>
-                            <button onclick="deletePO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <td class="p-4 text-xs" style="color: var(--text-muted)">${po.delivery}</td>
+                    <td class="p-4 text-right"><div class="flex items-center justify-end gap-1">
+                        <button onclick="editPO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                        <button onclick="deletePO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                    </div></td>
                 </tr>
             `).join('');
-            if (!pageItems.length) {
-                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-600 text-sm">No purchase orders found</td></tr>';
-            }
-
-            // Pagination
+            if (!pageItems.length) tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center" style="color: var(--text-muted)">No purchase orders found</td></tr>';
             if (totalPages <= 1) { pagination.innerHTML = ''; return; }
-            let phtml = `<button class="pagination-btn text-slate-400" onclick="poPage=1;renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn text-slate-400" onclick="poPage=Math.max(1,poPage-1);renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
-            for (let i = Math.max(1, poPage-2); i <= Math.min(totalPages, poPage+2); i++) {
-                phtml += `<button class="pagination-btn ${i===poPage?'active':'text-slate-400'}" onclick="poPage=${i};renderPOTable()">${i}</button>`;
-            }
-            phtml += `<button class="pagination-btn text-slate-400" onclick="poPage=Math.min(${totalPages},poPage+1);renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn text-slate-400" onclick="poPage=${totalPages};renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
+            let phtml = `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=1;renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=Math.max(1,poPage-1);renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
+            for (let i = Math.max(1, poPage-2); i <= Math.min(totalPages, poPage+2); i++) phtml += `<button class="pagination-btn ${i===poPage?'active':''}" style="${i!==poPage?'color:var(--text-muted)':''}" onclick="poPage=${i};renderPOTable()">${i}</button>`;
+            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=Math.min(${totalPages},poPage+1);renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=${totalPages};renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
             pagination.innerHTML = phtml;
         }
 
-        function editPO(id) {
-            const po = data.pos.find(x => x.id === id);
-            if (!po) return;
-            showModal('po', po);
-        }
-
-        function deletePO(id) {
-            data.pos = data.pos.filter(po => po.id !== id);
-            saveData();
-            renderPOTable();
-            showToast(`PO ${id} deleted`, 'info');
-        }
+        function editPO(id) { const po = data.pos.find(x => x.id === id); if (po) showModal('po', po); }
+        function deletePO(id) { data.pos = data.pos.filter(po => po.id !== id); saveData(); renderPOTable(); showToast(`PO ${id} deleted`, 'info'); }
 
         // ── Subcontractors ────────────────────────────────────────────
         function renderSubs() {
             const grid = document.getElementById('subs-grid');
             if (!data.subs.length) {
-                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12">No subcontractors yet. Click "Add Sub" to add one.</div>';
+                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12" style="color: var(--text-muted)">No subcontractors yet. Click "Add Sub" to add one.</div>';
                 return;
             }
             grid.innerHTML = data.subs.map(s => {
                 const progressColor = s.progress > 80 ? 'text-green-400' : s.progress > 50 ? 'text-amber-400' : 'text-blue-400';
-                return `
-                <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
+                return `<div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
                     <div class="absolute top-3 right-3 flex gap-1">
-                        <button onclick="editSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all">
-                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-                        </button>
-                        <button onclick="deleteSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                        </button>
+                        <button onclick="editSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white font-bold">${s.initials}</div>
-                        <div>
-                            <div class="text-white font-medium text-sm">${s.name}</div>
-                            <div class="text-[10px] text-slate-500">${s.trade}</div>
-                        </div>
+                        <div><div class="font-medium text-sm" style="color: var(--text-primary)">${s.name}</div><div class="text-[10px]" style="color: var(--text-muted)">${s.trade}</div></div>
                     </div>
                     <div class="space-y-2 text-xs">
-                        <div class="flex justify-between"><span class="text-slate-500">Contract</span><span class="text-white mono">$${s.contract.toLocaleString()}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Progress</span><span class="${progressColor} mono">${s.progress}%</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Status</span><span class="text-green-400">${s.status}</span></div>
+                        <div class="flex justify-between"><span style="color: var(--text-muted)">Contract</span><span class="mono" style="color: var(--text-primary)">$${s.contract.toLocaleString()}</span></div>
+                        <div class="flex justify-between"><span style="color: var(--text-muted)">Progress</span><span class="${progressColor} mono">${s.progress}%</span></div>
+                        <div class="flex justify-between"><span style="color: var(--text-muted)">Status</span><span class="text-green-400">${s.status}</span></div>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function editSub(id) {
-            const s = data.subs.find(x => x.id === id);
-            if (!s) return;
-            showModal('sub', s);
-        }
+        function editSub(id) { const s = data.subs.find(x => x.id === id); if (s) showModal('sub', s); }
+        function deleteSub(id) { data.subs = data.subs.filter(s => s.id !== id); saveData(); renderSubs(); showToast('Subcontractor removed', 'info'); }
 
-        function deleteSub(id) {
-            data.subs = data.subs.filter(s => s.id !== id);
-            saveData();
-            renderSubs();
-            showToast('Subcontractor removed', 'info');
-        }
-
-        // ── Form Validation Helpers ─────────────────────────────────
+        // ── Form Validation ─────────────────────────────────────────
         function validateField(id, rules) {
             const el = document.getElementById(id);
             if (!el) return true;
             const val = el.value.trim();
             el.classList.remove('field-error');
             let errorText = el.parentElement.querySelector('.error-text');
-            if (!errorText) {
-                errorText = document.createElement('div');
-                errorText.className = 'error-text';
-                el.parentElement.appendChild(errorText);
-            }
+            if (!errorText) { errorText = document.createElement('div'); errorText.className = 'error-text'; el.parentElement.appendChild(errorText); }
             errorText.style.display = 'none';
-
             for (const rule of rules) {
-                if (rule.required && !val) {
-                    el.classList.add('field-error');
-                    errorText.textContent = rule.message || 'This field is required';
-                    errorText.style.display = 'block';
-                    return false;
-                }
-                if (rule.min !== undefined && parseFloat(val) < rule.min) {
-                    el.classList.add('field-error');
-                    errorText.textContent = rule.message || `Minimum value is ${rule.min}`;
-                    errorText.style.display = 'block';
-                    return false;
-                }
-                if (rule.max !== undefined && parseFloat(val) > rule.max) {
-                    el.classList.add('field-error');
-                    errorText.textContent = rule.message || `Maximum value is ${rule.max}`;
-                    errorText.style.display = 'block';
-                    return false;
-                }
-                if (rule.pattern && !rule.pattern.test(val)) {
-                    el.classList.add('field-error');
-                    errorText.textContent = rule.message || 'Invalid format';
-                    errorText.style.display = 'block';
-                    return false;
-                }
+                if (rule.required && !val) { el.classList.add('field-error'); errorText.textContent = rule.message || 'This field is required'; errorText.style.display = 'block'; return false; }
+                if (rule.min !== undefined && parseFloat(val) < rule.min) { el.classList.add('field-error'); errorText.textContent = rule.message || `Minimum value is ${rule.min}`; errorText.style.display = 'block'; return false; }
+                if (rule.max !== undefined && parseFloat(val) > rule.max) { el.classList.add('field-error'); errorText.textContent = rule.message || `Maximum value is ${rule.max}`; errorText.style.display = 'block'; return false; }
+                if (rule.pattern && !rule.pattern.test(val)) { el.classList.add('field-error'); errorText.textContent = rule.message || 'Invalid format'; errorText.style.display = 'block'; return false; }
             }
             return true;
         }
 
-        function clearValidation() {
-            document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
-            document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none');
-        }
+        function clearValidation() { document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error')); document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none'); }
 
         // ── Modals ─────────────────────────────────────────────────────
-        let modalEditId = null; // tracks if we're editing an existing item
-
         function showModal(type, editData) {
             const overlay = document.getElementById('modal-overlay');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
-            modalEditId = null;
             clearValidation();
-
             const isEdit = !!editData;
             const forms = {
-                project: {
-                    t: isEdit ? 'Edit Project' : 'New Project',
-                    h: (d) => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Project Name <span class="text-red-400">*</span></label>
-                            <input id="f-project-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.name||''}" placeholder="e.g. Riverside Tower" required>
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Location</label>
-                            <input id="f-project-location" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.location||''}" placeholder="e.g. 123 Main St"></div>
-                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Budget ($) <span class="text-red-400">*</span></label>
-                            <input id="f-project-budget" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.budget||''}" placeholder="1000000" min="0">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Duration</label>
-                            <input id="f-project-duration" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.duration||''}" placeholder="e.g. 12 months"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Progress (%)</label>
-                            <input id="f-project-progress" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.progress||0}" min="0" max="100">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
-                            <textarea id="f-project-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 h-20" placeholder="Project scope...">${d?.description||''}</textarea></div>
-                        <button onclick="${isEdit ? `submitEditProject('${d.id}')` : 'submitProject()'}" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create Project'}</button>
-                    `
-                },
-                task: {
-                    t: isEdit ? 'Edit Task' : 'New Task',
-                    h: (d) => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Task Name <span class="text-red-400">*</span></label>
-                            <input id="f-task-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.name||''}" placeholder="e.g. Foundation Pour" required>
-                            <div class="error-text"></div></div>
-                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Start %</label>
-                            <input id="f-task-start" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.start||0}" min="0" max="90">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Width %</label>
-                            <input id="f-task-width" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.width||20}" min="5" max="100">
-                            <div class="error-text"></div></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Color</label>
-                            <select id="f-task-color" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
-                                ${['amber','blue','green','purple','rose','cyan'].map(c => `<option value="${c}" ${d?.color===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
-                            </select></div>
-                        <button onclick="${isEdit ? `submitEditTask('${d.id}')` : 'submitTask()'}" class="w-full py-2.5 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Task'}</button>
-                    `
-                },
-                resource: {
-                    t: 'Add Resource',
-                    h: () => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Resource Type</label>
-                            <select id="f-resource-type" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option value="labor">Labor</option><option value="equipment">Equipment</option><option value="materials">Material</option></select></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Name <span class="text-red-400">*</span></label>
-                            <input id="f-resource-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Crane Operator" required>
-                            <div class="error-text"></div></div>
-                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Required</label>
-                            <input id="f-resource-req" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" min="0">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Available</label>
-                            <input id="f-resource-avail" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" min="0">
-                            <div class="error-text"></div></div></div>
-                        <button onclick="submitResource()" class="w-full py-2.5 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all">Add Resource</button>
-                    `
-                },
-                changeorder: {
-                    t: 'Change Order',
-                    h: () => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Title <span class="text-red-400">*</span></label>
-                            <input id="f-co-title" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Additional electrical work" required>
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
-                            <textarea id="f-co-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white h-20" placeholder="Scope change details..."></textarea></div>
-                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Cost Impact ($)</label>
-                            <input id="f-co-cost" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0" min="0">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Schedule Impact</label>
-                            <input id="f-co-schedule" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. +5 days"></div></div>
-                        <button onclick="submitChangeOrder()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Submit Change Order</button>
-                    `
-                },
-                po: {
-                    t: isEdit ? 'Edit Purchase Order' : 'New Purchase Order',
-                    h: (d) => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Supplier <span class="text-red-400">*</span></label>
-                            <input id="f-po-supplier" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.supplier||''}" placeholder="Supplier name" required>
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Item / Material</label>
-                            <input id="f-po-item" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.item||''}" placeholder="e.g. Rebar #4"></div>
-                        <div class="grid grid-cols-3 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Qty</label>
-                            <input id="f-po-qty" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.qty?.split(' ')[0]||''}" placeholder="42"></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Unit</label>
-                            <input id="f-po-unit" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.qty?.split(' ').slice(1).join(' ')||''}" placeholder="tons"></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Unit Price</label>
-                            <input id="f-po-price" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.amount && d?.qty ? Math.round(d.amount / (parseInt(d.qty)||1)) : ''}" placeholder="$" min="0">
-                            <div class="error-text"></div></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Delivery Date</label>
-                            <input id="f-po-delivery" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.delivery||''}" placeholder="e.g. Aug 1"></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Status</label>
-                            <select id="f-po-status" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
-                                ${['Pending','Ordered','In Transit','Delivered'].map(s => `<option value="${s}" ${d?.status===s?'selected':''}>${s}</option>`).join('')}
-                            </select></div>
-                        <button onclick="${isEdit ? `submitEditPO('${d.id}')` : 'submitPO()'}" class="w-full py-2.5 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create PO'}</button>
-                    `
-                },
-                sub: {
-                    t: isEdit ? 'Edit Subcontractor' : 'Add Subcontractor',
-                    h: (d) => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Company Name <span class="text-red-400">*</span></label>
-                            <input id="f-sub-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.name||''}" placeholder="Company name" required>
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Trade</label>
-                            <select id="f-sub-trade" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
-                                ${['Electrical','Plumbing','Structural','HVAC','Finishes'].map(t => `<option value="${t}" ${d?.trade===t?'selected':''}>${t}</option>`).join('')}
-                            </select></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Contract Amount ($) <span class="text-red-400">*</span></label>
-                            <input id="f-sub-contract" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.contract||''}" placeholder="0" min="0">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Progress (%)</label>
-                            <input id="f-sub-progress" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.progress||0}" min="0" max="100">
-                            <div class="error-text"></div></div>
-                        <button onclick="${isEdit ? `submitEditSub('${d.id}')` : 'submitSub()'}" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Subcontractor'}</button>
-                    `
-                },
-                budgetItem: {
-                    t: 'Edit Budget Category',
-                    h: (d) => `
-                        <div><label class="text-xs text-slate-400 mb-1 block">Category Name <span class="text-red-400">*</span></label>
-                            <input id="f-budget-category" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.category||''}" placeholder="e.g. Site Work" required>
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Budget ($) <span class="text-red-400">*</span></label>
-                            <input id="f-budget-budget" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.budget||0}" min="0">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Committed ($)</label>
-                            <input id="f-budget-committed" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.committed||0}" min="0">
-                            <div class="error-text"></div></div>
-                        <div><label class="text-xs text-slate-400 mb-1 block">Spent ($)</label>
-                            <input id="f-budget-spent" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.spent||0}" min="0">
-                            <div class="error-text"></div></div>
-                        <button onclick="submitEditBudgetItem('${d.category}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Save Changes</button>
-                    `
-                }
+                project: { t: isEdit ? 'Edit Project' : 'New Project', h: (d) => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Project Name <span class="text-red-400">*</span></label>
+                        <input id="f-project-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.name||''}" placeholder="e.g. Riverside Tower" required><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Location</label>
+                        <input id="f-project-location" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.location||''}" placeholder="e.g. 123 Main St"></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Budget ($) <span class="text-red-400">*</span></label>
+                        <input id="f-project-budget" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.budget||''}" placeholder="1000000" min="0"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Duration</label>
+                        <input id="f-project-duration" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.duration||''}" placeholder="e.g. 12 months"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Progress (%)</label>
+                        <input id="f-project-progress" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.progress||0}" min="0" max="100"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Description</label>
+                        <textarea id="f-project-desc" class="w-full rounded-xl px-4 py-2.5 text-sm h-20" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="Project scope...">${d?.description||''}</textarea></div>
+                    <button onclick="${isEdit ? `submitEditProject('${d.id}')` : 'submitProject()'}" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create Project'}</button>
+                ` },
+                task: { t: isEdit ? 'Edit Task' : 'New Task', h: (d) => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Task Name <span class="text-red-400">*</span></label>
+                        <input id="f-task-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.name||''}" placeholder="e.g. Foundation Pour" required><div class="error-text"></div></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Start %</label>
+                        <input id="f-task-start" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.start||0}" min="0" max="90"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Width %</label>
+                        <input id="f-task-width" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.width||20}" min="5" max="100"><div class="error-text"></div></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Color</label>
+                        <select id="f-task-color" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">${['amber','blue','green','purple','rose','cyan'].map(c => `<option value="${c}" ${d?.color===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select></div>
+                    <button onclick="${isEdit ? `submitEditTask('${d.id}')` : 'submitTask()'}" class="w-full py-2.5 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Task'}</button>
+                ` },
+                resource: { t: 'Add Resource', h: () => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Resource Type</label>
+                        <select id="f-resource-type" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)"><option value="labor">Labor</option><option value="equipment">Equipment</option><option value="materials">Material</option></select></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Name <span class="text-red-400">*</span></label>
+                        <input id="f-resource-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="e.g. Crane Operator" required><div class="error-text"></div></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Required</label>
+                        <input id="f-resource-req" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" min="0"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Available</label>
+                        <input id="f-resource-avail" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" min="0"><div class="error-text"></div></div></div>
+                    <button onclick="submitResource()" class="w-full py-2.5 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all">Add Resource</button>
+                ` },
+                changeorder: { t: 'Change Order', h: () => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Title <span class="text-red-400">*</span></label>
+                        <input id="f-co-title" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="e.g. Additional electrical work" required><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Description</label>
+                        <textarea id="f-co-desc" class="w-full rounded-xl px-4 py-2.5 text-sm h-20" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="Scope change details..."></textarea></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Cost Impact ($)</label>
+                        <input id="f-co-cost" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="0" min="0"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Schedule Impact</label>
+                        <input id="f-co-schedule" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="e.g. +5 days"></div></div>
+                    <button onclick="submitChangeOrder()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Submit Change Order</button>
+                ` },
+                po: { t: isEdit ? 'Edit Purchase Order' : 'New Purchase Order', h: (d) => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Supplier <span class="text-red-400">*</span></label>
+                        <input id="f-po-supplier" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.supplier||''}" placeholder="Supplier name" required><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Item / Material</label>
+                        <input id="f-po-item" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.item||''}" placeholder="e.g. Rebar #4"></div>
+                    <div class="grid grid-cols-3 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Qty</label>
+                        <input id="f-po-qty" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.qty?.split(' ')[0]||''}" placeholder="42"></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Unit</label>
+                        <input id="f-po-unit" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.qty?.split(' ').slice(1).join(' ')||''}" placeholder="tons"></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Unit Price</label>
+                        <input id="f-po-price" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.amount && d?.qty ? Math.round(d.amount / (parseInt(d.qty)||1)) : ''}" placeholder="$" min="0"><div class="error-text"></div></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Delivery Date</label>
+                        <input id="f-po-delivery" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.delivery||''}" placeholder="e.g. Aug 1"></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Status</label>
+                        <select id="f-po-status" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">${['Pending','Ordered','In Transit','Delivered'].map(s => `<option value="${s}" ${d?.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+                    <button onclick="${isEdit ? `submitEditPO('${d.id}')` : 'submitPO()'}" class="w-full py-2.5 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create PO'}</button>
+                ` },
+                sub: { t: isEdit ? 'Edit Subcontractor' : 'Add Subcontractor', h: (d) => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Company Name <span class="text-red-400">*</span></label>
+                        <input id="f-sub-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.name||''}" placeholder="Company name" required><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Trade</label>
+                        <select id="f-sub-trade" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">${['Electrical','Plumbing','Structural','HVAC','Finishes'].map(t => `<option value="${t}" ${d?.trade===t?'selected':''}>${t}</option>`).join('')}</select></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Contract Amount ($) <span class="text-red-400">*</span></label>
+                        <input id="f-sub-contract" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.contract||''}" placeholder="0" min="0"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Progress (%)</label>
+                        <input id="f-sub-progress" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.progress||0}" min="0" max="100"><div class="error-text"></div></div>
+                    <button onclick="${isEdit ? `submitEditSub('${d.id}')` : 'submitSub()'}" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Subcontractor'}</button>
+                ` },
+                budgetItem: { t: 'Edit Budget Category', h: (d) => `
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Category Name <span class="text-red-400">*</span></label>
+                        <input id="f-budget-category" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.category||''}" placeholder="e.g. Site Work" required><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Budget ($) <span class="text-red-400">*</span></label>
+                        <input id="f-budget-budget" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.budget||0}" min="0"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Committed ($)</label>
+                        <input id="f-budget-committed" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.committed||0}" min="0"><div class="error-text"></div></div>
+                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Spent ($)</label>
+                        <input id="f-budget-spent" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.spent||0}" min="0"><div class="error-text"></div></div>
+                    <button onclick="submitEditBudgetItem('${d.category}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Save Changes</button>
+                ` },
+                tenant: { t: 'Manage Tenants', h: () => `
+                    <div class="space-y-3 max-h-60 overflow-y-auto scrollbar-thin" id="tenant-list">
+                        ${tenants.map((t, i) => `
+                            <div class="flex items-center justify-between p-3 rounded-xl" style="background: var(--input-bg); border: 1px solid var(--input-border);">
+                                <div class="flex items-center gap-3">
+                                    <div class="tenant-dot ${TENANT_COLORS[t.color] || 'tenant-color-0'}"></div>
+                                    <div>
+                                        <div class="text-sm font-medium" style="color: var(--text-primary)">${t.name}</div>
+                                        <div class="text-[10px]" style="color: var(--text-muted)">ID: ${t.id}</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1">
+                                    ${t.id !== 't1' ? `<button onclick="deleteTenant('${t.id}')" class="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="border-t border-slate-800 pt-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">New Tenant Name</label>
+                                <input id="f-tenant-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="Company name"></div>
+                            <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Color</label>
+                                <select id="f-tenant-color" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">
+                                    ${['Amber','Blue','Green','Purple','Red','Pink','Teal','Orange'].map((c, i) => `<option value="${i}">${c}</option>`).join('')}
+                                </select></div>
+                        </div>
+                        <button onclick="addTenant()" class="w-full mt-3 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Add Tenant</button>
+                    </div>
+                ` }
             };
             const f = forms[type] || forms.project;
             title.innerText = f.t;
@@ -1424,211 +1294,136 @@
         function closeModal(e) {
             if (e && e.target !== document.getElementById('modal-overlay') && e.target.closest('#modal-content')) return;
             document.getElementById('modal-overlay').classList.add('hidden');
-            modalEditId = null;
+        }
+
+        // ── Tenant Management ────────────────────────────────────────
+        function addTenant() {
+            const name = document.getElementById('f-tenant-name')?.value.trim();
+            if (!name) { showToast('Tenant name is required', 'error'); return; }
+            const color = parseInt(document.getElementById('f-tenant-color')?.value) || 0;
+            const id = 't' + Date.now();
+            tenants.push({ id, name, color });
+            saveTenants();
+            closeModal();
+            showToast(`Tenant "${name}" created`, 'success');
+            // Rebuild tenant list in modal if open
+            showModal('tenant');
+        }
+
+        function deleteTenant(id) {
+            if (id === getActiveTenantId()) {
+                showToast('Cannot delete active tenant. Switch first.', 'error');
+                return;
+            }
+            tenants = tenants.filter(t => t.id !== id);
+            saveTenants();
+            // Remove tenant data
+            localStorage.removeItem(`construct_erp_data_${id}`);
+            showToast('Tenant deleted', 'info');
+            showModal('tenant');
         }
 
         // ── Form Submissions ─────────────────────────────────────────
         function submitProject() {
             if (!validateField('f-project-name', [{required: true, message: 'Project name is required'}])) return;
             if (!validateField('f-project-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
-            data.projects.push({
-                id: 'p' + Date.now(),
-                name: document.getElementById('f-project-name').value.trim(),
-                location: document.getElementById('f-project-location')?.value || '',
-                budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0,
-                duration: document.getElementById('f-project-duration')?.value || '',
-                progress: parseInt(document.getElementById('f-project-progress')?.value) || 0,
-                description: document.getElementById('f-project-desc')?.value || '',
-                status: 'active',
-                createdAt: new Date().toISOString().split('T')[0]
-            });
-            saveData();
-            closeModal();
-            renderProjects();
-            updateKPIs();
-            showToast('Project created!', 'success');
+            data.projects.push({ id: 'p' + Date.now(), name: document.getElementById('f-project-name').value.trim(), location: document.getElementById('f-project-location')?.value || '', budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0, duration: document.getElementById('f-project-duration')?.value || '', progress: parseInt(document.getElementById('f-project-progress')?.value) || 0, description: document.getElementById('f-project-desc')?.value || '', status: 'active', createdAt: new Date().toISOString().split('T')[0] });
+            saveData(); closeModal(); renderProjects(); updateKPIs(); showToast('Project created!', 'success');
         }
 
         function submitEditProject(id) {
             if (!validateField('f-project-name', [{required: true, message: 'Project name is required'}])) return;
             if (!validateField('f-project-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
-            const p = data.projects.find(x => x.id === id);
-            if (!p) return;
-            p.name = document.getElementById('f-project-name').value.trim();
-            p.location = document.getElementById('f-project-location')?.value || '';
-            p.budget = parseFloat(document.getElementById('f-project-budget')?.value) || 0;
-            p.duration = document.getElementById('f-project-duration')?.value || '';
-            p.progress = parseInt(document.getElementById('f-project-progress')?.value) || 0;
-            p.description = document.getElementById('f-project-desc')?.value || '';
-            saveData();
-            closeModal();
-            renderProjects();
-            updateKPIs();
-            showToast('Project updated!', 'success');
+            const p = data.projects.find(x => x.id === id); if (!p) return;
+            Object.assign(p, { name: document.getElementById('f-project-name').value.trim(), location: document.getElementById('f-project-location')?.value || '', budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0, duration: document.getElementById('f-project-duration')?.value || '', progress: parseInt(document.getElementById('f-project-progress')?.value) || 0, description: document.getElementById('f-project-desc')?.value || '' });
+            saveData(); closeModal(); renderProjects(); updateKPIs(); showToast('Project updated!', 'success');
         }
 
         function submitTask() {
             if (!validateField('f-task-name', [{required: true, message: 'Task name is required'}])) return;
-            if (!validateField('f-task-start', [{min: 0, message: 'Start must be 0 or greater'}, {max: 90, message: 'Start must be 90 or less'}])) return;
-            if (!validateField('f-task-width', [{min: 5, message: 'Width must be at least 5'}, {max: 100, message: 'Width must be 100 or less'}])) return;
-            data.tasks.push({
-                id: 't' + Date.now(),
-                name: document.getElementById('f-task-name').value.trim(),
-                start: parseInt(document.getElementById('f-task-start')?.value) || 0,
-                width: parseInt(document.getElementById('f-task-width')?.value) || 20,
-                color: document.getElementById('f-task-color')?.value || 'amber'
-            });
-            saveData();
-            closeModal();
-            renderGantt();
-            showToast('Task added!', 'success');
+            if (!validateField('f-task-start', [{min: 0}, {max: 90}])) return;
+            if (!validateField('f-task-width', [{min: 5}, {max: 100}])) return;
+            data.tasks.push({ id: 't' + Date.now(), name: document.getElementById('f-task-name').value.trim(), start: parseInt(document.getElementById('f-task-start')?.value) || 0, width: parseInt(document.getElementById('f-task-width')?.value) || 20, color: document.getElementById('f-task-color')?.value || 'amber' });
+            saveData(); closeModal(); renderGantt(); showToast('Task added!', 'success');
         }
 
         function submitEditTask(id) {
             if (!validateField('f-task-name', [{required: true, message: 'Task name is required'}])) return;
             if (!validateField('f-task-start', [{min: 0}, {max: 90}])) return;
             if (!validateField('f-task-width', [{min: 5}, {max: 100}])) return;
-            const t = data.tasks.find(x => x.id === id);
-            if (!t) return;
-            t.name = document.getElementById('f-task-name').value.trim();
-            t.start = parseInt(document.getElementById('f-task-start')?.value) || 0;
-            t.width = parseInt(document.getElementById('f-task-width')?.value) || 20;
-            t.color = document.getElementById('f-task-color')?.value || 'amber';
-            saveData();
-            closeModal();
-            renderGantt();
-            showToast('Task updated!', 'success');
+            const t = data.tasks.find(x => x.id === id); if (!t) return;
+            Object.assign(t, { name: document.getElementById('f-task-name').value.trim(), start: parseInt(document.getElementById('f-task-start')?.value) || 0, width: parseInt(document.getElementById('f-task-width')?.value) || 20, color: document.getElementById('f-task-color')?.value || 'amber' });
+            saveData(); closeModal(); renderGantt(); showToast('Task updated!', 'success');
         }
 
         function submitResource() {
             if (!validateField('f-resource-name', [{required: true, message: 'Resource name is required'}])) return;
             const type = document.getElementById('f-resource-type')?.value;
-            const name = document.getElementById('f-resource-name').value.trim();
-            const req = parseInt(document.getElementById('f-resource-req')?.value) || 0;
-            const avail = parseInt(document.getElementById('f-resource-avail')?.value) || 0;
-            data.resources[type].push({ name, required: req, available: avail });
-            saveData();
-            closeModal();
-            renderResources();
-            updateKPIs();
-            showToast('Resource added!', 'success');
+            data.resources[type].push({ name: document.getElementById('f-resource-name').value.trim(), required: parseInt(document.getElementById('f-resource-req')?.value) || 0, available: parseInt(document.getElementById('f-resource-avail')?.value) || 0 });
+            saveData(); closeModal(); renderResources(); updateKPIs(); showToast('Resource added!', 'success');
         }
 
         function submitChangeOrder() {
             if (!validateField('f-co-title', [{required: true, message: 'Title is required'}])) return;
-            const title = document.getElementById('f-co-title').value.trim();
             const cost = parseFloat(document.getElementById('f-co-cost')?.value) || 0;
-            showToast(`Change order "${title}" submitted ($${cost.toLocaleString()})`, 'success');
+            showToast(`Change order "${document.getElementById('f-co-title').value.trim()}" submitted ($${cost.toLocaleString()})`, 'success');
             closeModal();
         }
 
         function submitPO() {
             if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
-            const supplier = document.getElementById('f-po-supplier').value.trim();
-            const qty = document.getElementById('f-po-qty')?.value || '0';
-            const unit = document.getElementById('f-po-unit')?.value || '';
-            const price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
-            const poId = `PO-2024-${String(data.nextPO).padStart(3, '0')}`;
-            data.nextPO++;
-            data.pos.push({
-                id: poId, supplier,
-                item: document.getElementById('f-po-item')?.value || '',
-                qty: unit ? `${qty} ${unit}` : qty,
-                amount: price * (parseInt(qty) || 1),
-                status: 'Pending',
-                delivery: document.getElementById('f-po-delivery')?.value || 'TBD'
-            });
-            saveData();
-            closeModal();
-            renderPOTable();
-            showToast(`PO ${poId} created!`, 'success');
+            const qty = document.getElementById('f-po-qty')?.value || '0', unit = document.getElementById('f-po-unit')?.value || '', price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
+            const poId = `PO-2024-${String(data.nextPO).padStart(3, '0')}`; data.nextPO++;
+            data.pos.push({ id: poId, supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), status: 'Pending', delivery: document.getElementById('f-po-delivery')?.value || 'TBD' });
+            saveData(); closeModal(); renderPOTable(); showToast(`PO ${poId} created!`, 'success');
         }
 
         function submitEditPO(id) {
             if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
-            const po = data.pos.find(x => x.id === id);
-            if (!po) return;
-            po.supplier = document.getElementById('f-po-supplier').value.trim();
-            po.item = document.getElementById('f-po-item')?.value || '';
-            const qty = document.getElementById('f-po-qty')?.value || '0';
-            const unit = document.getElementById('f-po-unit')?.value || '';
-            po.qty = unit ? `${qty} ${unit}` : qty;
-            const price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
-            po.amount = price * (parseInt(qty) || 1);
-            po.delivery = document.getElementById('f-po-delivery')?.value || 'TBD';
-            po.status = document.getElementById('f-po-status')?.value || 'Pending';
-            saveData();
-            closeModal();
-            renderPOTable();
-            showToast('PO updated!', 'success');
+            const po = data.pos.find(x => x.id === id); if (!po) return;
+            const qty = document.getElementById('f-po-qty')?.value || '0', unit = document.getElementById('f-po-unit')?.value || '', price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
+            Object.assign(po, { supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), delivery: document.getElementById('f-po-delivery')?.value || 'TBD', status: document.getElementById('f-po-status')?.value || 'Pending' });
+            saveData(); closeModal(); renderPOTable(); showToast('PO updated!', 'success');
         }
 
         function submitSub() {
             if (!validateField('f-sub-name', [{required: true, message: 'Company name is required'}])) return;
             if (!validateField('f-sub-contract', [{min: 0, message: 'Contract must be 0 or greater'}])) return;
-            const name = document.getElementById('f-sub-name').value.trim();
-            const trade = document.getElementById('f-sub-trade')?.value || 'General';
-            const contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
+            const name = document.getElementById('f-sub-name').value.trim(), trade = document.getElementById('f-sub-trade')?.value || 'General', contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
             const colors = ['from-blue-500 to-cyan-600', 'from-green-500 to-emerald-600', 'from-amber-500 to-orange-600', 'from-purple-500 to-pink-600', 'from-rose-500 to-red-600'];
-            data.subs.push({
-                id: 's' + Date.now(),
-                initials: name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(),
-                name, trade, contract, progress: 0, status: 'Active',
-                color: colors[data.subs.length % colors.length]
-            });
-            saveData();
-            closeModal();
-            renderSubs();
-            showToast('Subcontractor added!', 'success');
+            data.subs.push({ id: 's' + Date.now(), initials: name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(), name, trade, contract, progress: 0, status: 'Active', color: colors[data.subs.length % colors.length] });
+            saveData(); closeModal(); renderSubs(); showToast('Subcontractor added!', 'success');
         }
 
         function submitEditSub(id) {
             if (!validateField('f-sub-name', [{required: true, message: 'Company name is required'}])) return;
             if (!validateField('f-sub-contract', [{min: 0, message: 'Contract must be 0 or greater'}])) return;
-            const s = data.subs.find(x => x.id === id);
-            if (!s) return;
-            s.name = document.getElementById('f-sub-name').value.trim();
-            s.trade = document.getElementById('f-sub-trade')?.value || 'General';
-            s.contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
-            s.progress = parseInt(document.getElementById('f-sub-progress')?.value) || 0;
-            s.initials = s.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            saveData();
-            closeModal();
-            renderSubs();
-            showToast('Subcontractor updated!', 'success');
+            const s = data.subs.find(x => x.id === id); if (!s) return;
+            s.name = document.getElementById('f-sub-name').value.trim(); s.trade = document.getElementById('f-sub-trade')?.value || 'General'; s.contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0; s.progress = parseInt(document.getElementById('f-sub-progress')?.value) || 0; s.initials = s.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            saveData(); closeModal(); renderSubs(); showToast('Subcontractor updated!', 'success');
         }
 
         function submitEditBudgetItem(oldCategory) {
             if (!validateField('f-budget-category', [{required: true, message: 'Category name is required'}])) return;
             if (!validateField('f-budget-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
-            const c = data.budget.find(x => x.category === oldCategory);
-            if (!c) return;
-            c.category = document.getElementById('f-budget-category').value.trim();
-            c.budget = parseFloat(document.getElementById('f-budget-budget')?.value) || 0;
-            c.committed = parseFloat(document.getElementById('f-budget-committed')?.value) || 0;
-            c.spent = parseFloat(document.getElementById('f-budget-spent')?.value) || 0;
-            saveData();
-            closeModal();
-            renderBudgetSummary();
-            renderBudgetTable();
-            updateKPIs();
-            showToast('Budget category updated!', 'success');
+            const c = data.budget.find(x => x.category === oldCategory); if (!c) return;
+            Object.assign(c, { category: document.getElementById('f-budget-category').value.trim(), budget: parseFloat(document.getElementById('f-budget-budget')?.value) || 0, committed: parseFloat(document.getElementById('f-budget-committed')?.value) || 0, spent: parseFloat(document.getElementById('f-budget-spent')?.value) || 0 });
+            saveData(); closeModal(); renderBudgetSummary(); renderBudgetTable(); updateKPIs(); showToast('Budget category updated!', 'success');
         }
 
         // ── Export ────────────────────────────────────────────────────
         function exportAll() {
-            const exportData = JSON.stringify(data, null, 2);
+            const exportData = JSON.stringify({ tenant: getActiveTenant(), data }, null, 2);
             const blob = new Blob([exportData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `construct_erp_export_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+            a.href = url; a.download = `construct_erp_${getActiveTenant().name.replace(/\s+/g,'_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click(); URL.revokeObjectURL(url);
             showToast('Data exported as JSON', 'success');
         }
 
         // ── Init ──────────────────────────────────────────────────────
+        updateTenantUI();
         updateKPIs();
         renderProjects();
         renderGantt();

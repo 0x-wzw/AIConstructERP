@@ -11,7 +11,9 @@
     <style>
         :root {
             --bg: #0c0f1a;
+            --bg-alt: #0a0d16;
             --panel: rgba(18, 22, 36, 0.85);
+            --panel-solid: #121624;
             --border: rgba(45, 55, 80, 0.5);
             --accent: #f59e0b;
             --accent-dim: rgba(245, 158, 11, 0.15);
@@ -19,17 +21,62 @@
             --red: #ef4444;
             --blue: #3b82f6;
             --purple: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-inverse: #0f172a;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(51, 65, 85, 0.5);
+            --table-stripe: rgba(30, 41, 59, 0.3);
+            --hover-bg: rgba(30, 41, 59, 0.7);
+            --scrollbar-thumb: rgba(45, 55, 80, 0.5);
+            --chart-grid: rgba(148, 163, 184, 0.1);
+            --chart-text: #cbd5e1;
+            --chart-tooltip-bg: rgba(15, 23, 42, 0.95);
+            --chart-tooltip-border: rgba(148, 163, 184, 0.2);
+            --badge-bg: rgba(15, 23, 42, 0.5);
+            --search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+        }
+        .light-mode {
+            --bg: #f1f5f9;
+            --bg-alt: #e2e8f0;
+            --panel: rgba(255, 255, 255, 0.92);
+            --panel-solid: #ffffff;
+            --border: rgba(203, 213, 225, 0.7);
+            --accent: #d97706;
+            --accent-dim: rgba(217, 119, 6, 0.12);
+            --green: #059669;
+            --red: #dc2626;
+            --blue: #2563eb;
+            --purple: #7c3aed;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --text-inverse: #f8fafc;
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: rgba(203, 213, 225, 0.7);
+            --table-stripe: rgba(241, 245, 249, 0.5);
+            --hover-bg: rgba(241, 245, 249, 0.8);
+            --scrollbar-thumb: rgba(203, 213, 225, 0.7);
+            --chart-grid: rgba(148, 163, 184, 0.2);
+            --chart-text: #475569;
+            --chart-tooltip-bg: rgba(255, 255, 255, 0.98);
+            --chart-tooltip-border: rgba(203, 213, 225, 0.5);
+            --badge-bg: rgba(241, 245, 249, 0.8);
+            --search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
         }
         * { -webkit-font-smoothing: antialiased; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #94a3b8; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-secondary); }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: var(--panel); backdrop-filter: blur(16px); border: 1px solid var(--border); }
         .glass-hover { transition: all 0.2s; }
-        .glass-hover:hover { background: rgba(30, 41, 59, 0.7); border-color: rgba(245, 158, 11, 0.25); }
+        .glass-hover:hover { background: var(--hover-bg); border-color: rgba(245, 158, 11, 0.25); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(45,55,80,0.5); border-radius: 2px; }
-        .tab-btn { transition: all 0.2s; position: relative; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
+        .tab-btn { transition: all 0.2s; position: relative; color: var(--text-muted); }
+        .tab-btn:hover { color: var(--text-primary); background: rgba(30, 41, 59, 0.3); }
+        .light-mode .tab-btn:hover { background: rgba(203, 213, 225, 0.3); }
         .tab-btn.active { color: var(--accent); }
         .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 2px; }
         @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -38,16 +85,38 @@
         .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
         .stat-card { transition: all 0.2s; }
         .stat-card:hover { transform: translateY(-2px); border-color: rgba(245,158,11,0.3); }
-        .progress-bar { height: 6px; border-radius: 3px; background: rgba(45,55,80,0.5); overflow: hidden; }
+        .progress-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
-        input, select, textarea { transition: all 0.2s; }
+        input, select, textarea { transition: all 0.2s; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
         input:focus, select:focus, textarea:focus { border-color: rgba(245,158,11,0.5); box-shadow: 0 0 0 3px rgba(245,158,11,0.1); outline: none; }
+        select { color: var(--text-primary); }
         .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3); }
+        /* Light mode overrides for hardcoded Tailwind classes in JS templates */
+        .light-mode .text-slate-400 { color: #475569 !important; }
+        .light-mode .text-slate-500 { color: #64748b !important; }
+        .light-mode .text-slate-600 { color: #94a3b8 !important; }
+        .light-mode .text-white { color: #0f172a !important; }
+        .light-mode .bg-slate-900\/60 { background: rgba(255,255,255,0.8) !important; }
+        .light-mode .border-slate-700 { border-color: rgba(203,213,225,0.7) !important; }
+        .light-mode .bg-slate-950\/50 { background: rgba(241,245,249,0.5) !important; }
+        .light-mode .divide-slate-800\/30 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(203,213,225,0.4) !important; }
+        .light-mode .border-slate-800 { border-color: rgba(203,213,225,0.6) !important; }
+        .light-mode .hover\:bg-slate-800:hover { background: rgba(241,245,249,0.8) !important; }
+        .light-mode .hover\:bg-slate-800\/50:hover { background: rgba(241,245,249,0.8) !important; }
+        .light-mode .placeholder-slate-600::placeholder { color: #94a3b8 !important; }
+        .light-mode .text-slate-300 { color: #334155 !important; }
+        .light-mode .text-slate-900 { color: #0f172a !important; }
+        .light-mode .bg-slate-800\/30 { background: rgba(203,213,225,0.3) !important; }
+        .light-mode .bg-slate-800 { background: rgba(203,213,225,0.5) !important; }
+        .light-mode .hover\:bg-slate-700:hover { background: rgba(203,213,225,0.5) !important; }
+        .light-mode .hover\:text-white:hover { color: #0f172a !important; }
         .gantt-bar { transition: all 0.3s; }
         .gantt-bar:hover { filter: brightness(1.2); transform: scaleY(1.15); }
         .toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; animation: fade-in 0.3s ease-out; }
         .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
-        .search-input { padding-left: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
+        .search-input { padding-left: 32px; background-image: var(--search-icon); background-repeat: no-repeat; background-position: 12px center; }
         .action-btn { opacity: 0; transition: opacity 0.2s; }
         tr:hover .action-btn, .card-hover:hover .action-btn { opacity: 1; }
         .sort-btn { cursor: pointer; user-select: none; }
@@ -109,45 +178,45 @@
             <div class="flex items-center gap-3">
                 <div class="brand-icon w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">CE</div>
                 <div class="brand-text">
-                    <h1 class="text-white font-bold text-sm tracking-tight">Construct<span class="text-amber-400">ERP</span></h1>
-                    <div class="text-[9px] mono text-slate-600">Project Management Suite</div>
+                    <h1 class="text-white font-bold text-sm tracking-tight" style="color: var(--text-primary)">Construct<span class="text-amber-400">ERP</span></h1>
+                    <div class="text-[9px] mono" style="color: var(--text-muted)">Project Management Suite</div>
                 </div>
             </div>
         </div>
 
         <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
-            <button onclick="switchTab('dashboard'); toggleSidebar(true)" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('dashboard'); toggleSidebar(true)" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400 flex-shrink-0"></i> <span class="nav-text">Dashboard</span>
             </button>
-            <button onclick="switchTab('projects'); toggleSidebar(true)" id="tab-projects" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('projects'); toggleSidebar(true)" id="tab-projects" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="building-2" class="w-4 h-4 text-blue-400 flex-shrink-0"></i> <span class="nav-text">Projects</span>
             </button>
-            <button onclick="switchTab('schedule'); toggleSidebar(true)" id="tab-schedule" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('schedule'); toggleSidebar(true)" id="tab-schedule" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="calendar-range" class="w-4 h-4 text-purple-400 flex-shrink-0"></i> <span class="nav-text">Schedule</span>
             </button>
-            <button onclick="switchTab('resources'); toggleSidebar(true)" id="tab-resources" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('resources'); toggleSidebar(true)" id="tab-resources" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="hard-hat" class="w-4 h-4 text-green-400 flex-shrink-0"></i> <span class="nav-text">Resources</span>
             </button>
-            <button onclick="switchTab('budget'); toggleSidebar(true)" id="tab-budget" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('budget'); toggleSidebar(true)" id="tab-budget" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="wallet" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i> <span class="nav-text">Budget</span>
             </button>
-            <button onclick="switchTab('procurement'); toggleSidebar(true)" id="tab-procurement" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('procurement'); toggleSidebar(true)" id="tab-procurement" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="truck" class="w-4 h-4 text-orange-400 flex-shrink-0"></i> <span class="nav-text">Procurement</span>
             </button>
-            <button onclick="switchTab('subs'); toggleSidebar(true)" id="tab-subs" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('subs'); toggleSidebar(true)" id="tab-subs" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="users" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i> <span class="nav-text">Subcontractors</span>
             </button>
-            <button onclick="switchTab('reports'); toggleSidebar(true)" id="tab-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <button onclick="switchTab('reports'); toggleSidebar(true)" id="tab-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="file-bar-chart" class="w-4 h-4 text-rose-400 flex-shrink-0"></i> <span class="nav-text">Reports</span>
             </button>
         </nav>
 
-        <div class="p-3 border-t border-slate-800 bg-slate-950/50">
+        <div class="p-3 border-t border-slate-800" style="background: var(--bg-alt);">
             <div class="flex items-center justify-between text-[10px] mono">
-                <span class="version-text text-slate-600">v2.1.0</span>
+                <span class="version-text" style="color: var(--text-muted)">v2.2.0</span>
                 <div class="flex items-center gap-1.5">
                     <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
-                    <span class="text-green-400/70">LIVE</span>
+                    <span style="color: rgba(16, 185, 129, 0.7)">LIVE</span>
                 </div>
             </div>
         </div>
@@ -164,15 +233,18 @@
                 <button class="mobile-menu-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-amber-400 transition-colors" onclick="toggleSidebar()">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
-                <span class="text-slate-500 text-sm">ERP / <span class="text-white font-medium" id="page-title">Dashboard</span></span>
+                <span class="text-sm" style="color: var(--text-muted)">ERP / <span class="font-medium" style="color: var(--text-primary)" id="page-title">Dashboard</span></span>
             </div>
             <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" id="theme-toggle" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors" style="color: var(--text-muted)" title="Toggle theme">
+                    <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
+                </button>
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg glass text-[10px] mono">
                     <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
-                    <span class="text-slate-400">System</span>
-                    <span class="text-white font-semibold">ONLINE</span>
+                    <span style="color: var(--text-muted)">System</span>
+                    <span class="font-semibold" style="color: var(--text-primary)">ONLINE</span>
                 </div>
-                <button onclick="refreshAll()" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-amber-400">
+                <button onclick="refreshAll()" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors" style="color: var(--text-muted)">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -188,35 +260,35 @@
                 <div class="grid grid-cols-4 gap-4">
                     <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Active Projects</span>
+                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">Active Projects</span>
                             <i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i>
                         </div>
-                        <div class="text-2xl font-bold text-white mono" id="kpi-projects">0</div>
-                        <div class="text-xs text-slate-500 mt-1"><span class="text-green-400" id="kpi-projects-change">+0</span> this quarter</div>
+                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-projects">0</div>
+                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-green-400" id="kpi-projects-change">+0</span> this quarter</div>
                     </div>
                     <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Total Budget</span>
+                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">Total Budget</span>
                             <i data-lucide="wallet" class="w-4 h-4 text-yellow-400"></i>
                         </div>
-                        <div class="text-2xl font-bold text-white mono" id="kpi-budget">$0</div>
-                        <div class="text-xs text-slate-500 mt-1"><span class="text-amber-400" id="kpi-budget-pct">0%</span> allocated</div>
+                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-budget">$0</div>
+                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-amber-400" id="kpi-budget-pct">0%</span> allocated</div>
                     </div>
                     <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Workforce</span>
+                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">Workforce</span>
                             <i data-lucide="hard-hat" class="w-4 h-4 text-green-400"></i>
                         </div>
-                        <div class="text-2xl font-bold text-white mono" id="kpi-workforce">0</div>
-                        <div class="text-xs text-slate-500 mt-1"><span class="text-green-400" id="kpi-workforce-status">On-site</span></div>
+                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-workforce">0</div>
+                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-green-400" id="kpi-workforce-status">On-site</span></div>
                     </div>
                     <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">On Schedule</span>
+                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">On Schedule</span>
                             <i data-lucide="calendar-check" class="w-4 h-4 text-purple-400"></i>
                         </div>
-                        <div class="text-2xl font-bold text-white mono" id="kpi-schedule">0%</div>
-                        <div class="text-xs text-slate-500 mt-1"><span class="text-amber-400" id="kpi-schedule-status">Tracking</span></div>
+                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-schedule">0%</div>
+                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-amber-400" id="kpi-schedule-status">Tracking</span></div>
                     </div>
                 </div>
 
@@ -224,10 +296,10 @@
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2 glass rounded-2xl p-6 border border-slate-800">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
                                 <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Budget vs. Actual
                             </h3>
-                            <span class="text-[10px] mono text-slate-600">YTD</span>
+                            <span class="text-[10px] mono" style="color: var(--text-muted)">YTD</span>
                         </div>
                         <div id="budget-chart" class="relative h-64">
                             <canvas id="budgetChartCanvas"></canvas>
@@ -235,28 +307,28 @@
                     </div>
                     <div class="glass rounded-2xl p-6 border border-slate-800">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
                                 <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i> Alerts
                             </h3>
-                            <span class="text-[10px] mono text-slate-600" id="alert-count">3</span>
+                            <span class="text-[10px] mono" style="color: var(--text-muted)" id="alert-count">3</span>
                         </div>
                         <div id="alert-list" class="space-y-3">
                             <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 fade-in">
                                 <div class="flex items-start gap-3">
                                     <div class="w-2 h-2 rounded-full bg-red-400 mt-1.5 flex-shrink-0"></div>
-                                    <div><div class="text-xs text-white font-medium">Permit Delay</div><div class="text-[10px] text-slate-500 mt-0.5">Building permit #B-2024-089 delayed 2 weeks</div></div>
+                                    <div><div class="text-xs font-medium" style="color: var(--text-primary)">Permit Delay</div><div class="text-[10px]" style="color: var(--text-muted)">Building permit #B-2024-089 delayed 2 weeks</div></div>
                                 </div>
                             </div>
                             <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 fade-in">
                                 <div class="flex items-start gap-3">
                                     <div class="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></div>
-                                    <div><div class="text-xs text-white font-medium">Material Shortage</div><div class="text-[10px] text-slate-500 mt-0.5">Steel rebar delivery rescheduled to Aug 12</div></div>
+                                    <div><div class="text-xs font-medium" style="color: var(--text-primary)">Material Shortage</div><div class="text-[10px]" style="color: var(--text-muted)">Steel rebar delivery rescheduled to Aug 12</div></div>
                                 </div>
                             </div>
                             <div class="p-3 rounded-xl bg-green-500/10 border border-green-500/20 fade-in">
                                 <div class="flex items-start gap-3">
                                     <div class="w-2 h-2 rounded-full bg-green-400 mt-1.5 flex-shrink-0"></div>
-                                    <div><div class="text-xs text-white font-medium">Phase Complete</div><div class="text-[10px] text-slate-500 mt-0.5">Structural framing passed inspection</div></div>
+                                    <div><div class="text-xs font-medium" style="color: var(--text-primary)">Phase Complete</div><div class="text-[10px]" style="color: var(--text-muted)">Structural framing passed inspection</div></div>
                                 </div>
                             </div>
                         </div>
@@ -267,30 +339,30 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="glass rounded-2xl p-6 border border-slate-800">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
                                 <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i> Recent Activity
                             </h3>
                         </div>
                         <div id="activity-feed" class="space-y-3">
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-slate-400">Inspection passed</span><span class="text-slate-600 ml-auto">2h ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-400">PO #PO-2024-042 issued</span><span class="text-slate-600 ml-auto">4h ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div><span class="text-slate-400">Change order #CO-003 submitted</span><span class="text-slate-600 ml-auto">6h ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-slate-400">Subcontractor bid awarded</span><span class="text-slate-600 ml-auto">1d ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span class="text-slate-400">Safety report filed</span><span class="text-slate-600 ml-auto">1d ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span style="color: var(--text-secondary)">Inspection passed</span><span class="ml-auto" style="color: var(--text-muted)">2h ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span style="color: var(--text-secondary)">PO #PO-2024-042 issued</span><span class="ml-auto" style="color: var(--text-muted)">4h ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div><span style="color: var(--text-secondary)">Change order #CO-003 submitted</span><span class="ml-auto" style="color: var(--text-muted)">6h ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span style="color: var(--text-secondary)">Subcontractor bid awarded</span><span class="ml-auto" style="color: var(--text-muted)">1d ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span style="color: var(--text-secondary)">Safety report filed</span><span class="ml-auto" style="color: var(--text-muted)">1d ago</span></div>
                         </div>
                     </div>
                     <div class="glass rounded-2xl p-6 border border-slate-800">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
                                 <i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i> Upcoming Milestones
                             </h3>
                         </div>
                         <div id="milestone-list" class="space-y-3">
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot"></div><span class="text-white font-medium">Concrete Pour</span><span class="text-slate-500 ml-auto">Jul 12</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-400">Steel Erection</span><span class="text-slate-500 ml-auto">Jul 18</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-slate-400">Roofing Start</span><span class="text-slate-500 ml-auto">Aug 5</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-slate-400">MEP Rough-In</span><span class="text-slate-500 ml-auto">Aug 14</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span class="text-slate-400">Drywall</span><span class="text-slate-500 ml-auto">Sep 2</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot"></div><span class="font-medium" style="color: var(--text-primary)">Concrete Pour</span><span class="ml-auto" style="color: var(--text-muted)">Jul 12</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span style="color: var(--text-secondary)">Steel Erection</span><span class="ml-auto" style="color: var(--text-muted)">Jul 18</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span style="color: var(--text-secondary)">Roofing Start</span><span class="ml-auto" style="color: var(--text-muted)">Aug 5</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span style="color: var(--text-secondary)">MEP Rough-In</span><span class="ml-auto" style="color: var(--text-muted)">Aug 14</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span style="color: var(--text-secondary)">Drywall</span><span class="ml-auto" style="color: var(--text-muted)">Sep 2</span></div>
                         </div>
                     </div>
                 </div>
@@ -303,7 +375,7 @@
         <div id="view-projects" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Projects</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Projects</h2>
                     <button onclick="showModal('project')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> New Project
                     </button>
@@ -320,17 +392,17 @@
         <div id="view-schedule" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Schedule</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Schedule</h2>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] mono text-slate-600">Week 28 / 2024</span>
+                        <span class="text-[10px] mono" style="color: var(--text-muted)">Week 28 / 2024</span>
                         <button onclick="showModal('task')" class="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                             <i data-lucide="plus" class="w-4 h-4"></i> Add Task
                         </button>
                     </div>
                 </div>
                 <div class="glass rounded-2xl p-6 border border-slate-800">
-                    <div class="flex items-center justify-between mb-4 text-xs text-slate-500">
-                        <span class="w-48 flex-shrink-0 font-medium text-slate-400">Task</span>
+                    <div class="flex items-center justify-between mb-4 text-xs" style="color: var(--text-muted)">
+                        <span class="w-48 flex-shrink-0 font-medium" style="color: var(--text-secondary)">Task</span>
                         <div class="flex-1 flex">
                             <span class="flex-1 text-center">Jul 7</span>
                             <span class="flex-1 text-center">Jul 14</span>
@@ -352,7 +424,7 @@
         <div id="view-resources" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Resources</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Resources</h2>
                     <button onclick="showModal('resource')" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> Add Resource
                     </button>
@@ -369,36 +441,36 @@
         <div id="view-budget" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Budget & Cost Control</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Budget & Cost Control</h2>
                     <button onclick="showModal('changeorder')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="file-plus" class="w-4 h-4"></i> Change Order
                     </button>
                 </div>
                 <div class="grid grid-cols-4 gap-4">
                     <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Budget</div>
-                        <div class="text-xl font-bold text-white mono" id="budget-total">$0</div>
-                        <div class="text-[10px] text-slate-500">Total approved</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Budget</div>
+                        <div class="text-xl font-bold mono" style="color: var(--text-primary)" id="budget-total">$0</div>
+                        <div class="text-[10px]" style="color: var(--text-muted)">Total approved</div>
                     </div>
                     <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Committed</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Committed</div>
                         <div class="text-xl font-bold text-amber-400 mono" id="budget-committed">$0</div>
-                        <div class="text-[10px] text-slate-500" id="budget-committed-pct">0% of budget</div>
+                        <div class="text-[10px]" style="color: var(--text-muted)" id="budget-committed-pct">0% of budget</div>
                     </div>
                     <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Spent</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Spent</div>
                         <div class="text-xl font-bold text-blue-400 mono" id="budget-spent">$0</div>
-                        <div class="text-[10px] text-slate-500" id="budget-spent-pct">0% of budget</div>
+                        <div class="text-[10px]" style="color: var(--text-muted)" id="budget-spent-pct">0% of budget</div>
                     </div>
                     <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Remaining</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Remaining</div>
                         <div class="text-xl font-bold text-green-400 mono" id="budget-remaining">$0</div>
-                        <div class="text-[10px] text-slate-500" id="budget-remaining-pct">0% remaining</div>
+                        <div class="text-[10px]" style="color: var(--text-muted)" id="budget-remaining-pct">0% remaining</div>
                     </div>
                 </div>
                 <div class="glass rounded-2xl overflow-hidden border border-slate-800">
                     <div class="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
-                        <h3 class="text-white font-semibold text-sm">Cost Breakdown</h3>
+                        <h3 class="font-semibold text-sm" style="color: var(--text-primary)">Cost Breakdown</h3>
                         <div class="flex items-center gap-2 flex-wrap">
                             <input type="text" id="budget-search" oninput="renderBudgetTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search categories...">
                         </div>
@@ -406,7 +478,7 @@
                     <div class="table-wrap overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-slate-950/50 border-b border-slate-800">
-                                <tr class="text-[10px] uppercase tracking-widest text-slate-600">
+                                <tr class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted)">
                                     <th class="text-left p-4 font-semibold sort-btn" onclick="sortBudget('category')" id="sort-budget-category">Category</th>
                                     <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('budget')" id="sort-budget-budget">Budget</th>
                                     <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('committed')" id="sort-budget-committed">Committed</th>
@@ -432,7 +504,7 @@
         <div id="view-procurement" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Procurement</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Procurement</h2>
                     <button onclick="showModal('po')" class="px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> New PO
                     </button>
@@ -451,7 +523,7 @@
                     <div class="table-wrap overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-slate-950/50 border-b border-slate-800">
-                                <tr class="text-[10px] uppercase tracking-widest text-slate-600">
+                                <tr class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted)">
                                     <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('id')" id="sort-po-id">PO #</th>
                                     <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('supplier')" id="sort-po-supplier">Supplier</th>
                                     <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('item')" id="sort-po-item">Item</th>
@@ -478,7 +550,7 @@
         <div id="view-subs" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Subcontractors</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Subcontractors</h2>
                     <button onclick="showModal('sub')" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> Add Sub
                     </button>
@@ -495,27 +567,27 @@
         <div id="view-reports" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-white font-bold text-lg">Reports</h2>
+                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Reports</h2>
                     <button onclick="exportAll()" class="px-4 py-2 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="download" class="w-4 h-4"></i> Export All
                     </button>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Daily Progress Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i><span class="text-white font-medium text-sm">Daily Progress Report</span></div>
-                        <div class="text-xs text-slate-500">Labor hours, material usage, completed tasks, delays</div>
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Daily Progress Report</span></div>
+                        <div class="text-xs" style="color: var(--text-muted)">Labor hours, material usage, completed tasks, delays</div>
                     </div>
                     <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Cost Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i><span class="text-white font-medium text-sm">Cost Report</span></div>
-                        <div class="text-xs text-slate-500">Budget vs actual, committed costs, forecast</div>
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Cost Report</span></div>
+                        <div class="text-xs" style="color: var(--text-muted)">Budget vs actual, committed costs, forecast</div>
                     </div>
                     <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Safety Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-green-400"></i><span class="text-white font-medium text-sm">Safety Report</span></div>
-                        <div class="text-xs text-slate-500">Incidents, inspections, near-misses, compliance</div>
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-green-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Safety Report</span></div>
+                        <div class="text-xs" style="color: var(--text-muted)">Incidents, inspections, near-misses, compliance</div>
                     </div>
                     <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Schedule Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-purple-400"></i><span class="text-white font-medium text-sm">Schedule Report</span></div>
-                        <div class="text-xs text-slate-500">Milestone tracking, critical path, delays</div>
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-purple-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Schedule Report</span></div>
+                        <div class="text-xs" style="color: var(--text-muted)">Milestone tracking, critical path, delays</div>
                     </div>
                 </div>
             </div>
@@ -529,13 +601,13 @@
     <div id="modal-overlay" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center" onclick="closeModal(event)">
         <div id="modal-content" class="glass rounded-2xl border border-slate-800 w-full max-w-lg max-h-[80vh] overflow-y-auto scrollbar-thin m-4" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-                <h3 id="modal-title" class="text-white font-semibold text-sm">New Project</h3>
-                <button onclick="closeModal()" class="p-1 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+                <h3 id="modal-title" class="font-semibold text-sm" style="color: var(--text-primary)">New Project</h3>
+                <button onclick="closeModal()" class="p-1 hover:bg-slate-800 rounded-lg" style="color: var(--text-muted); transition: all 0.2s;">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
             <div id="modal-body" class="p-5 space-y-4">
-                <p class="text-slate-500 text-xs">Modal content placeholder</p>
+                <p class="text-xs" style="color: var(--text-muted)">Modal content placeholder</p>
             </div>
         </div>
     </div>
@@ -634,6 +706,32 @@
 
         let data = loadData();
 
+        // ── Theme Toggle ─────────────────────────────────────────────
+        const THEME_KEY = 'construct_erp_theme';
+
+        function getTheme() {
+            return localStorage.getItem(THEME_KEY) || 'dark';
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem(THEME_KEY, theme);
+            document.documentElement.classList.toggle('light-mode', theme === 'light');
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.setAttribute('data-lucide', theme === 'light' ? 'sun' : 'moon');
+            }
+            lucide.createIcons();
+            // Re-render chart with new theme colors
+            renderBudgetChart();
+        }
+
+        function toggleTheme() {
+            setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+        }
+
+        // Apply saved theme on load
+        setTheme(getTheme());
+
         // ── Sidebar Toggle (mobile) ─────────────────────────────────
         function toggleSidebar(forceClose) {
             const sidebar = document.querySelector('.sidebar');
@@ -711,25 +809,27 @@
             const canvas = document.getElementById('budgetChartCanvas');
             if (!canvas) return;
             if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+            const isLight = getTheme() === 'light';
             const fmt = (v) => '$' + v.toLocaleString('en-US');
+            const style = getComputedStyle(document.documentElement);
             budgetChart = new Chart(canvas.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: data.budget.map(c => c.category),
                     datasets: [
-                        { label: 'Budget', data: data.budget.map(c => c.budget), backgroundColor: 'rgba(96, 165, 250, 0.8)', borderColor: 'rgba(96, 165, 250, 1)', borderWidth: 1, borderRadius: 4 },
-                        { label: 'Spent', data: data.budget.map(c => c.spent), backgroundColor: 'rgba(251, 191, 36, 0.8)', borderColor: 'rgba(251, 191, 36, 1)', borderWidth: 1, borderRadius: 4 }
+                        { label: 'Budget', data: data.budget.map(c => c.budget), backgroundColor: isLight ? 'rgba(37, 99, 235, 0.7)' : 'rgba(96, 165, 250, 0.8)', borderColor: isLight ? 'rgba(37, 99, 235, 1)' : 'rgba(96, 165, 250, 1)', borderWidth: 1, borderRadius: 4 },
+                        { label: 'Spent', data: data.budget.map(c => c.spent), backgroundColor: isLight ? 'rgba(217, 119, 6, 0.7)' : 'rgba(251, 191, 36, 0.8)', borderColor: isLight ? 'rgba(217, 119, 6, 1)' : 'rgba(251, 191, 36, 1)', borderWidth: 1, borderRadius: 4 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { labels: { color: '#e2e8f0', font: { size: 11 }, boxWidth: 12, padding: 16 } },
-                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', titleColor: '#f8fafc', bodyColor: '#e2e8f0', borderColor: 'rgba(148, 163, 184, 0.2)', borderWidth: 1, padding: 10, callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+                        legend: { labels: { color: style.getPropertyValue('--chart-text').trim() || (isLight ? '#475569' : '#cbd5e1'), font: { size: 11 }, boxWidth: 12, padding: 16 } },
+                        tooltip: { backgroundColor: style.getPropertyValue('--chart-tooltip-bg').trim() || (isLight ? 'rgba(255,255,255,0.98)' : 'rgba(15,23,42,0.95)'), titleColor: isLight ? '#0f172a' : '#f8fafc', bodyColor: isLight ? '#475569' : '#e2e8f0', borderColor: style.getPropertyValue('--chart-tooltip-border').trim() || (isLight ? 'rgba(203,213,225,0.5)' : 'rgba(148,163,184,0.2)'), borderWidth: 1, padding: 10, callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
                     },
                     scales: {
-                        x: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#cbd5e1', font: { size: 10 } } },
-                        y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#cbd5e1', font: { size: 10 }, callback: (v) => '$' + (v / 1000) + 'k' } }
+                        x: { grid: { color: style.getPropertyValue('--chart-grid').trim() || (isLight ? 'rgba(148,163,184,0.2)' : 'rgba(148,163,184,0.1)') }, ticks: { color: style.getPropertyValue('--chart-text').trim() || (isLight ? '#475569' : '#cbd5e1'), font: { size: 10 } } },
+                        y: { beginAtZero: true, grid: { color: style.getPropertyValue('--chart-grid').trim() || (isLight ? 'rgba(148,163,184,0.2)' : 'rgba(148,163,184,0.1)') }, ticks: { color: style.getPropertyValue('--chart-text').trim() || (isLight ? '#475569' : '#cbd5e1'), font: { size: 10 }, callback: (v) => '$' + (v / 1000) + 'k' } }
                     }
                 }
             });
@@ -739,7 +839,7 @@
         function renderProjects() {
             const grid = document.getElementById('projects-grid');
             if (!data.projects.length) {
-                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12">No projects yet. Click "New Project" to create one.</div>';
+                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12" style="color: var(--text-muted)">No projects yet. Click "New Project" to create one.</div>';
                 return;
             }
             grid.innerHTML = data.projects.map(p => `
@@ -755,14 +855,14 @@
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">${p.name.charAt(0)}</div>
                         <div>
-                            <div class="text-white font-medium text-sm">${p.name}</div>
-                            <div class="text-[10px] text-slate-500">${p.location}</div>
+                            <div class="font-medium text-sm" style="color: var(--text-primary)">${p.name}</div>
+                            <div class="text-[10px]" style="color: var(--text-muted)">${p.location}</div>
                         </div>
                     </div>
                     <div class="space-y-2 text-xs">
-                        <div class="flex justify-between"><span class="text-slate-500">Budget</span><span class="text-white mono">$${(p.budget / 1000000).toFixed(1)}M</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Duration</span><span class="text-slate-400">${p.duration}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Progress</span><span class="text-amber-400 mono">${p.progress}%</span></div>
+                        <div class="flex justify-between"><span style="color: var(--text-muted)">Budget</span><span class="mono" style="color: var(--text-primary)">$${(p.budget / 1000000).toFixed(1)}M</span></div>
+                        <div class="flex justify-between"><span style="color: var(--text-muted)">Duration</span><span style="color: var(--text-secondary)">${p.duration}</span></div>
+                        <div class="flex justify-between"><span style="color: var(--text-muted)">Progress</span><span class="text-amber-400 mono">${p.progress}%</span></div>
                         <div class="progress-bar mt-2"><div class="progress-fill bg-amber-400" style="width:${p.progress}%"></div></div>
                     </div>
                 </div>
@@ -788,13 +888,13 @@
             const chart = document.getElementById('gantt-chart');
             const colors = { amber: 'bg-amber-500/60', blue: 'bg-blue-500/60', green: 'bg-green-500/60', purple: 'bg-purple-500/60', rose: 'bg-rose-500/60', cyan: 'bg-cyan-500/60' };
             if (!data.tasks.length) {
-                chart.innerHTML = '<div class="text-slate-600 italic text-sm text-center py-8">No tasks scheduled. Click "Add Task" to create one.</div>';
+                chart.innerHTML = '<div class="text-slate-600 italic text-sm text-center py-8" style="color: var(--text-muted)">No tasks scheduled. Click "Add Task" to create one.</div>';
                 return;
             }
             chart.innerHTML = data.tasks.map(t => `
                 <div class="flex items-center gap-4 h-8 fade-in group">
-                    <span class="w-48 text-xs text-slate-300 truncate flex-shrink-0">${t.name}</span>
-                    <div class="flex-1 relative h-6 bg-slate-800/30 rounded">
+                    <span class="w-48 text-xs truncate flex-shrink-0" style="color: var(--text-secondary)">${t.name}</span>
+                    <div class="flex-1 relative h-6 rounded" style="background: var(--border)">
                         <div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div>
                     </div>
                     <div class="flex gap-1">

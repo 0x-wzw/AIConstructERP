@@ -79,6 +79,8 @@
         .light-mode .tab-btn:hover { background: rgba(203, 213, 225, 0.3); }
         .tab-btn.active { color: var(--accent); }
         .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 2px; }
+        .tab-btn.restricted { opacity: 0.35; cursor: not-allowed; }
+        .tab-btn.restricted:hover { color: var(--text-muted); background: transparent; }
         @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fade-in 0.3s ease-out; }
         @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -143,10 +145,16 @@
         .tenant-color-5 { background: #ec4899; }
         .tenant-color-6 { background: #14b8a6; }
         .tenant-color-7 { background: #f97316; }
+        .role-badge { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .role-superadmin { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .role-vendor { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .role-supplier { background: rgba(16,185,129,0.2); color: #34d399; }
+        .readonly-row { opacity: 0.7; pointer-events: none; }
+        .readonly-row .action-btn { display: none; }
 
         @media (max-width: 1024px) {
             .sidebar { width: 56px; }
-            .sidebar .nav-text, .sidebar .brand-text, .sidebar .version-text, .sidebar .tenant-section { display: none; }
+            .sidebar .nav-text, .sidebar .brand-text, .sidebar .version-text, .sidebar .tenant-section, .sidebar .role-section { display: none; }
             .sidebar .brand-icon { margin: 0 auto; }
             .sidebar nav button { justify-content: center; padding: 10px; }
             .sidebar nav button i { margin: 0; }
@@ -193,7 +201,7 @@
             </div>
         </div>
 
-        <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin" id="sidebar-nav">
             <button onclick="switchTab('dashboard'); toggleSidebar(true)" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
                 <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400 flex-shrink-0"></i> <span class="nav-text">Dashboard</span>
             </button>
@@ -220,6 +228,20 @@
             </button>
         </nav>
 
+        <!-- Role Selector -->
+        <div class="role-section p-3 border-t border-slate-800">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] uppercase tracking-wider font-semibold" style="color: var(--text-muted)">Role</span>
+                <button onclick="showModal('role')" class="p-0.5 hover:bg-slate-700 rounded transition-colors" style="color: var(--text-muted)" title="Switch role">
+                    <i data-lucide="shuffle" class="w-3 h-3"></i>
+                </button>
+            </div>
+            <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs" style="background: var(--input-bg);">
+                <span id="role-badge" class="role-badge role-superadmin">Superadmin</span>
+                <span id="role-name" class="truncate" style="color: var(--text-primary)">Full Access</span>
+            </div>
+        </div>
+
         <!-- Tenant Selector -->
         <div class="tenant-section p-3 border-t border-slate-800">
             <div class="flex items-center justify-between mb-2">
@@ -237,7 +259,7 @@
 
         <div class="p-3 border-t border-slate-800" style="background: var(--bg-alt);">
             <div class="flex items-center justify-between text-[10px] mono">
-                <span class="version-text" style="color: var(--text-muted)">v3.0.0</span>
+                <span class="version-text" style="color: var(--text-muted)">v4.0.0</span>
                 <div class="flex items-center gap-1.5">
                     <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
                     <span style="color: rgba(16, 185, 129, 0.7)">LIVE</span>
@@ -258,6 +280,7 @@
                 </button>
                 <span class="text-sm" style="color: var(--text-muted)">ERP / <span class="font-medium" style="color: var(--text-primary)" id="page-title">Dashboard</span></span>
                 <span id="header-tenant-badge" class="tenant-badge">Demo Corp</span>
+                <span id="header-role-badge" class="role-badge role-superadmin">Superadmin</span>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="toggleTheme()" id="theme-toggle" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors" style="color: var(--text-muted)" title="Toggle theme">
@@ -392,7 +415,7 @@
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-lg" style="color: var(--text-primary)">Projects</h2>
-                    <button onclick="showModal('project')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                    <button id="btn-new-project" onclick="showModal('project')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> New Project
                     </button>
                 </div>
@@ -407,7 +430,7 @@
                     <h2 class="font-bold text-lg" style="color: var(--text-primary)">Schedule</h2>
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] mono" style="color: var(--text-muted)">Week 28 / 2024</span>
-                        <button onclick="showModal('task')" class="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <button id="btn-add-task" onclick="showModal('task')" class="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                             <i data-lucide="plus" class="w-4 h-4"></i> Add Task
                         </button>
                     </div>
@@ -433,7 +456,7 @@
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-lg" style="color: var(--text-primary)">Resources</h2>
-                    <button onclick="showModal('resource')" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                    <button id="btn-add-resource" onclick="showModal('resource')" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> Add Resource
                     </button>
                 </div>
@@ -446,7 +469,7 @@
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-lg" style="color: var(--text-primary)">Budget & Cost Control</h2>
-                    <button onclick="showModal('changeorder')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                    <button id="btn-change-order" onclick="showModal('changeorder')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="file-plus" class="w-4 h-4"></i> Change Order
                     </button>
                 </div>
@@ -505,7 +528,7 @@
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-lg" style="color: var(--text-primary)">Procurement</h2>
-                    <button onclick="showModal('po')" class="px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                    <button id="btn-new-po" onclick="showModal('po')" class="px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> New PO
                     </button>
                 </div>
@@ -547,7 +570,7 @@
             <div class="max-w-7xl mx-auto space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-lg" style="color: var(--text-primary)">Subcontractors</h2>
-                    <button onclick="showModal('sub')" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                    <button id="btn-add-sub" onclick="showModal('sub')" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> Add Sub
                     </button>
                 </div>
@@ -605,6 +628,117 @@
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
 
     <script>
+        // ── Role-Based Access Control ────────────────────────────────
+        const ROLES = {
+            superadmin: {
+                label: 'Superadmin',
+                description: 'Full Access',
+                badgeClass: 'role-superadmin',
+                tabs: ['dashboard', 'projects', 'schedule', 'resources', 'budget', 'procurement', 'subs', 'reports'],
+                canCreate: true,
+                canEdit: true,
+                canDelete: true,
+                canManageTenants: true,
+                canManageRoles: true,
+                poFilter: 'all' // sees all POs
+            },
+            vendor: {
+                label: 'Vendor',
+                description: 'Procurement & Reports',
+                badgeClass: 'role-vendor',
+                tabs: ['dashboard', 'procurement', 'reports'],
+                canCreate: false,
+                canEdit: false,
+                canDelete: false,
+                canManageTenants: false,
+                canManageRoles: false,
+                poFilter: 'own' // sees only their POs
+            },
+            supplier: {
+                label: 'Supplier',
+                description: 'Procurement (Read-Only)',
+                badgeClass: 'role-supplier',
+                tabs: ['dashboard', 'procurement', 'reports'],
+                canCreate: false,
+                canEdit: false,
+                canDelete: false,
+                canManageTenants: false,
+                canManageRoles: false,
+                poFilter: 'own'
+            }
+        };
+
+        const ROLE_KEY = 'construct_erp_role';
+
+        function getRole() {
+            return localStorage.getItem(ROLE_KEY) || 'superadmin';
+        }
+
+        function setRole(role) {
+            localStorage.setItem(ROLE_KEY, role);
+            applyRole(role);
+        }
+
+        function applyRole(roleId) {
+            const role = ROLES[roleId] || ROLES.superadmin;
+
+            // Update role badge in sidebar
+            const badge = document.getElementById('role-badge');
+            const roleName = document.getElementById('role-name');
+            if (badge) {
+                badge.className = `role-badge ${role.badgeClass}`;
+                badge.textContent = role.label;
+            }
+            if (roleName) roleName.textContent = role.description;
+
+            // Update header role badge
+            const headerBadge = document.getElementById('header-role-badge');
+            if (headerBadge) {
+                headerBadge.className = `role-badge ${role.badgeClass}`;
+                headerBadge.textContent = role.label;
+            }
+
+            // Show/hide sidebar tabs based on role
+            const allTabs = ['dashboard', 'projects', 'schedule', 'resources', 'budget', 'procurement', 'subs', 'reports'];
+            allTabs.forEach(tab => {
+                const btn = document.getElementById(`tab-${tab}`);
+                if (!btn) return;
+                if (role.tabs.includes(tab)) {
+                    btn.classList.remove('hidden', 'restricted');
+                    btn.onclick = function() { switchTab(tab); toggleSidebar(true); };
+                } else {
+                    btn.classList.add('restricted');
+                    btn.onclick = function() { showToast(`"${tab.charAt(0).toUpperCase()+tab.slice(1)}" is restricted for ${role.label}`, 'error'); };
+                }
+            });
+
+            // Show/hide create buttons
+            const createBtns = {
+                'btn-new-project': role.canCreate,
+                'btn-add-task': role.canCreate,
+                'btn-add-resource': role.canCreate,
+                'btn-change-order': role.canCreate,
+                'btn-new-po': role.canCreate,
+                'btn-add-sub': role.canCreate
+            };
+            Object.entries(createBtns).forEach(([id, visible]) => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = visible ? '' : 'none';
+            });
+
+            // If current tab is restricted, switch to dashboard
+            const currentTab = document.querySelector('.tab-btn.active');
+            if (currentTab) {
+                const tabId = currentTab.id.replace('tab-', '');
+                if (!role.tabs.includes(tabId)) {
+                    switchTab('dashboard');
+                }
+            }
+
+            // Re-render PO table with role filter
+            renderPOTable();
+        }
+
         // ── Multi-Tenant System ──────────────────────────────────────
         const TENANTS_KEY = 'construct_erp_tenants';
         const ACTIVE_TENANT_KEY = 'construct_erp_active_tenant';
@@ -618,32 +752,17 @@
         const TENANT_COLORS = ['tenant-color-0','tenant-color-1','tenant-color-2','tenant-color-3','tenant-color-4','tenant-color-5','tenant-color-6','tenant-color-7'];
 
         function loadTenants() {
-            try {
-                const raw = localStorage.getItem(TENANTS_KEY);
-                if (raw) return JSON.parse(raw);
-            } catch (e) {}
+            try { const raw = localStorage.getItem(TENANTS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
             return JSON.parse(JSON.stringify(DEFAULT_TENANTS));
         }
 
-        function saveTenants() {
-            localStorage.setItem(TENANTS_KEY, JSON.stringify(tenants));
-        }
+        function saveTenants() { localStorage.setItem(TENANTS_KEY, JSON.stringify(tenants)); }
 
-        function getActiveTenantId() {
-            return localStorage.getItem(ACTIVE_TENANT_KEY) || 't1';
-        }
+        function getActiveTenantId() { return localStorage.getItem(ACTIVE_TENANT_KEY) || 't1'; }
+        function setActiveTenantId(id) { localStorage.setItem(ACTIVE_TENANT_KEY, id); }
 
-        function setActiveTenantId(id) {
-            localStorage.setItem(ACTIVE_TENANT_KEY, id);
-        }
-
-        function getActiveTenant() {
-            return tenants.find(t => t.id === getActiveTenantId()) || tenants[0];
-        }
-
-        function getDataKey() {
-            return `construct_erp_data_${getActiveTenantId()}`;
-        }
+        function getActiveTenant() { return tenants.find(t => t.id === getActiveTenantId()) || tenants[0]; }
+        function getDataKey() { return `construct_erp_data_${getActiveTenantId()}`; }
 
         let tenants = loadTenants();
 
@@ -663,24 +782,9 @@
                 { id: 't6', name: 'Interior Finishes', start: 60, width: 35, color: 'cyan' }
             ],
             resources: {
-                labor: [
-                    { name: 'Carpenters', required: 15, available: 12 },
-                    { name: 'Electricians', required: 8, available: 6 },
-                    { name: 'Operators', required: 4, available: 4 },
-                    { name: 'Laborers', required: 20, available: 18 }
-                ],
-                equipment: [
-                    { name: 'Excavators', required: 3, available: 3 },
-                    { name: 'Cranes', required: 2, available: 1 },
-                    { name: 'Forklifts', required: 4, available: 4 },
-                    { name: 'Dump Trucks', required: 6, available: 5 }
-                ],
-                materials: [
-                    { name: 'Steel (tons)', required: 85, available: 42 },
-                    { name: 'Concrete (yd³)', required: 600, available: 320 },
-                    { name: 'Lumber (bdft)', required: 18000, available: 12000 },
-                    { name: 'Rebar (tons)', required: 32, available: 18 }
-                ]
+                labor: [{ name: 'Carpenters', required: 15, available: 12 }, { name: 'Electricians', required: 8, available: 6 }, { name: 'Operators', required: 4, available: 4 }, { name: 'Laborers', required: 20, available: 18 }],
+                equipment: [{ name: 'Excavators', required: 3, available: 3 }, { name: 'Cranes', required: 2, available: 1 }, { name: 'Forklifts', required: 4, available: 4 }, { name: 'Dump Trucks', required: 6, available: 5 }],
+                materials: [{ name: 'Steel (tons)', required: 85, available: 42 }, { name: 'Concrete (yd³)', required: 600, available: 320 }, { name: 'Lumber (bdft)', required: 18000, available: 12000 }, { name: 'Rebar (tons)', required: 32, available: 18 }]
             },
             budget: [
                 { category: 'Site Work', budget: 180000, committed: 165000, spent: 148000 },
@@ -690,11 +794,11 @@
                 { category: 'Finishes', budget: 120000, committed: 95000, spent: 64000 }
             ],
             pos: [
-                { id: 'PO-2024-038', supplier: 'BuildCo Steel', item: 'Structural Steel', qty: '42 tons', amount: 168000, status: 'Delivered', delivery: 'Jul 2' },
-                { id: 'PO-2024-039', supplier: 'Concrete Supply Co', item: 'Ready-Mix Concrete', qty: '320 yd³', amount: 96000, status: 'In Transit', delivery: 'Jul 10' },
-                { id: 'PO-2024-040', supplier: 'Electrical Wholesale', item: 'Cable & Wiring', qty: '5,000 ft', amount: 24500, status: 'Ordered', delivery: 'Jul 15' },
-                { id: 'PO-2024-041', supplier: 'Lumber Yard Inc', item: 'Framing Lumber', qty: '12,000 bdft', amount: 38400, status: 'Pending', delivery: 'Jul 22' },
-                { id: 'PO-2024-042', supplier: 'HVAC Distributors', item: 'HVAC Units', qty: '6 units', amount: 72000, status: 'In Transit', delivery: 'Jul 18' }
+                { id: 'PO-2024-038', supplier: 'BuildCo Steel', item: 'Structural Steel', qty: '42 tons', amount: 168000, status: 'Delivered', delivery: 'Jul 2', vendor: 'BuildCo Steel' },
+                { id: 'PO-2024-039', supplier: 'Concrete Supply Co', item: 'Ready-Mix Concrete', qty: '320 yd³', amount: 96000, status: 'In Transit', delivery: 'Jul 10', vendor: 'Concrete Supply Co' },
+                { id: 'PO-2024-040', supplier: 'Electrical Wholesale', item: 'Cable & Wiring', qty: '5,000 ft', amount: 24500, status: 'Ordered', delivery: 'Jul 15', vendor: 'Electrical Wholesale' },
+                { id: 'PO-2024-041', supplier: 'Lumber Yard Inc', item: 'Framing Lumber', qty: '12,000 bdft', amount: 38400, status: 'Pending', delivery: 'Jul 22', vendor: 'Lumber Yard Inc' },
+                { id: 'PO-2024-042', supplier: 'HVAC Distributors', item: 'HVAC Units', qty: '6 units', amount: 72000, status: 'In Transit', delivery: 'Jul 18', vendor: 'HVAC Distributors' }
             ],
             subs: [
                 { id: 's1', initials: 'EC', name: 'Elite Electrical', trade: 'Electrical', contract: 185000, progress: 62, status: 'Active', color: 'from-blue-500 to-cyan-600' },
@@ -706,13 +810,7 @@
 
         function loadData() {
             const key = getDataKey();
-            try {
-                const raw = localStorage.getItem(key);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    return deepMerge(DEFAULT_DATA, parsed);
-                }
-            } catch (e) { console.warn('Failed to load data, using defaults', e); }
+            try { const raw = localStorage.getItem(key); if (raw) { const parsed = JSON.parse(raw); return deepMerge(DEFAULT_DATA, parsed); } } catch (e) { console.warn('Failed to load data, using defaults', e); }
             return JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
 
@@ -720,19 +818,14 @@
             const result = JSON.parse(JSON.stringify(defaults));
             for (const key in overrides) {
                 if (overrides.hasOwnProperty(key)) {
-                    if (typeof overrides[key] === 'object' && !Array.isArray(overrides[key]) && overrides[key] !== null && result[key]) {
-                        result[key] = deepMerge(result[key], overrides[key]);
-                    } else {
-                        result[key] = overrides[key];
-                    }
+                    if (typeof overrides[key] === 'object' && !Array.isArray(overrides[key]) && overrides[key] !== null && result[key]) { result[key] = deepMerge(result[key], overrides[key]); }
+                    else { result[key] = overrides[key]; }
                 }
             }
             return result;
         }
 
-        function saveData() {
-            localStorage.setItem(getDataKey(), JSON.stringify(data));
-        }
+        function saveData() { localStorage.setItem(getDataKey(), JSON.stringify(data)); }
 
         let data = loadData();
 
@@ -748,6 +841,8 @@
         }
 
         function cycleTenant() {
+            const role = ROLES[getRole()];
+            if (!role.canManageTenants) { showToast('Tenant switching is restricted for your role', 'error'); return; }
             const ids = tenants.map(t => t.id);
             const current = getActiveTenantId();
             const idx = ids.indexOf(current);
@@ -766,35 +861,22 @@
 
         // ── Theme Toggle ─────────────────────────────────────────────
         const THEME_KEY = 'construct_erp_theme';
-
-        function getTheme() {
-            return localStorage.getItem(THEME_KEY) || 'dark';
-        }
-
+        function getTheme() { return localStorage.getItem(THEME_KEY) || 'dark'; }
         function setTheme(theme) {
             localStorage.setItem(THEME_KEY, theme);
             document.documentElement.classList.toggle('light-mode', theme === 'light');
             const icon = document.getElementById('theme-icon');
-            if (icon) {
-                icon.setAttribute('data-lucide', theme === 'light' ? 'sun' : 'moon');
-            }
+            if (icon) { icon.setAttribute('data-lucide', theme === 'light' ? 'sun' : 'moon'); }
             lucide.createIcons();
             renderBudgetChart();
         }
-
-        function toggleTheme() {
-            setTheme(getTheme() === 'dark' ? 'light' : 'dark');
-        }
-
+        function toggleTheme() { setTheme(getTheme() === 'dark' ? 'light' : 'dark'); }
         setTheme(getTheme());
 
         // ── Sidebar Toggle ───────────────────────────────────────────
         function toggleSidebar(forceClose) {
             const sidebar = document.querySelector('.sidebar');
-            if (forceClose && window.innerWidth <= 768) {
-                sidebar.classList.remove('open');
-                return;
-            }
+            if (forceClose && window.innerWidth <= 768) { sidebar.classList.remove('open'); return; }
             sidebar.classList.toggle('open');
         }
 
@@ -813,6 +895,8 @@
 
         // ── Tab Switching ─────────────────────────────────────────────
         function switchTab(tab) {
+            const role = ROLES[getRole()];
+            if (!role.tabs.includes(tab)) { showToast(`"${tab.charAt(0).toUpperCase()+tab.slice(1)}" is restricted for ${role.label}`, 'error'); return; }
             const titles = { dashboard:'Dashboard', projects:'Projects', schedule:'Schedule', resources:'Resources', budget:'Budget', procurement:'Procurement', subs:'Subcontractors', reports:'Reports' };
             document.getElementById('page-title').innerText = titles[tab] || tab;
             Object.keys(titles).forEach(t => {
@@ -893,16 +977,17 @@
         // ── Projects ─────────────────────────────────────────────────
         function renderProjects() {
             const grid = document.getElementById('projects-grid');
+            const role = ROLES[getRole()];
             if (!data.projects.length) {
                 grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12" style="color: var(--text-muted)">No projects yet. Click "New Project" to create one.</div>';
                 return;
             }
             grid.innerHTML = data.projects.map(p => `
-                <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
-                    <div class="absolute top-3 right-3 flex gap-1">
-                        <button onclick="editProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
+                <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
+                    ${role.canEdit || role.canDelete ? `<div class="absolute top-3 right-3 flex gap-1">
+                        ${role.canEdit ? `<button onclick="editProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>` : ''}
+                        ${role.canDelete ? `<button onclick="deleteProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                    </div>` : ''}
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">${p.name.charAt(0)}</div>
                         <div><div class="font-medium text-sm" style="color: var(--text-primary)">${p.name}</div><div class="text-[10px]" style="color: var(--text-muted)">${p.location}</div></div>
@@ -923,6 +1008,7 @@
         // ── Gantt Chart ──────────────────────────────────────────────
         function renderGantt() {
             const chart = document.getElementById('gantt-chart');
+            const role = ROLES[getRole()];
             const colors = { amber: 'bg-amber-500/60', blue: 'bg-blue-500/60', green: 'bg-green-500/60', purple: 'bg-purple-500/60', rose: 'bg-rose-500/60', cyan: 'bg-cyan-500/60' };
             if (!data.tasks.length) {
                 chart.innerHTML = '<div class="text-slate-600 italic text-sm text-center py-8" style="color: var(--text-muted)">No tasks scheduled. Click "Add Task" to create one.</div>';
@@ -932,10 +1018,10 @@
                 <div class="flex items-center gap-4 h-8 fade-in group">
                     <span class="w-48 text-xs truncate flex-shrink-0" style="color: var(--text-secondary)">${t.name}</span>
                     <div class="flex-1 relative h-6 rounded" style="background: var(--border)"><div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div></div>
-                    <div class="flex gap-1">
-                        <button onclick="editTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                        <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="x" class="w-3 h-3"></i></button>
-                    </div>
+                    ${role.canEdit || role.canDelete ? `<div class="flex gap-1">
+                        ${role.canEdit ? `<button onclick="editTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>` : ''}
+                        ${role.canDelete ? `<button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+                    </div>` : ''}
                 </div>
             `).join('');
         }
@@ -1008,6 +1094,7 @@
         function renderBudgetTable() {
             const tbody = document.getElementById('budget-table-body');
             const pagination = document.getElementById('budget-pagination');
+            const role = ROLES[getRole()];
             const all = getBudgetData();
             const totalPages = Math.max(1, Math.ceil(all.length / BUDGET_PER_PAGE));
             if (budgetPage > totalPages) budgetPage = totalPages;
@@ -1018,17 +1105,17 @@
                 const pct = c.budget ? Math.round((c.spent / c.budget) * 100) : 0;
                 const remaining = c.budget - c.spent;
                 const color = pct > 85 ? 'text-red-400' : pct > 70 ? 'text-amber-400' : pct > 50 ? 'text-blue-400' : 'text-green-400';
-                return `<tr class="hover:bg-slate-800/20">
+                return `<tr class="hover:bg-slate-800/20 ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
                     <td class="p-4" style="color: var(--text-secondary)">${c.category}</td>
                     <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.budget.toLocaleString()}</td>
                     <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.committed.toLocaleString()}</td>
                     <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.spent.toLocaleString()}</td>
                     <td class="p-4 text-right text-green-400 mono">$${remaining.toLocaleString()}</td>
                     <td class="p-4 text-right"><span class="${color} text-[10px] mono">${pct}%</span></td>
-                    <td class="p-4 text-right"><div class="flex items-center justify-end gap-1">
-                        <button onclick="editBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                        <button onclick="deleteBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
-                    </div></td>
+                    <td class="p-4 text-right">${role.canEdit || role.canDelete ? `<div class="flex items-center justify-end gap-1">
+                        ${role.canEdit ? `<button onclick="editBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>` : ''}
+                        ${role.canDelete ? `<button onclick="deleteBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
+                    </div>` : ''}</td>
                 </tr>`;
             }).join('');
             if (!pageItems.length) tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center" style="color: var(--text-muted)">No matching categories</td></tr>';
@@ -1056,9 +1143,17 @@
         }
 
         function getPOData() {
+            const role = ROLES[getRole()];
             const search = (document.getElementById('po-search')?.value || '').toLowerCase();
             const statusFilter = document.getElementById('po-status-filter')?.value || 'all';
             let items = data.pos.filter(po => (po.supplier.toLowerCase().includes(search) || po.item.toLowerCase().includes(search) || po.id.toLowerCase().includes(search)) && (statusFilter === 'all' || po.status === statusFilter));
+            // Role-based filtering: vendor/supplier only see their own POs
+            if (role.poFilter === 'own') {
+                // For demo, filter by a simulated "current vendor" based on role
+                // In production this would come from auth context
+                const vendorName = role.label === 'Vendor' ? 'BuildCo Steel' : 'Concrete Supply Co';
+                items = items.filter(po => po.vendor === vendorName);
+            }
             if (poSort.field) {
                 const dir = poSort.dir === 'asc' ? 1 : -1;
                 items.sort((a, b) => {
@@ -1074,6 +1169,7 @@
         function renderPOTable() {
             const tbody = document.getElementById('po-table-body');
             const pagination = document.getElementById('po-pagination');
+            const role = ROLES[getRole()];
             const statusColors = { Delivered: 'bg-green-500/10 text-green-400 border-green-500/20', 'In Transit': 'bg-amber-500/10 text-amber-400 border-amber-500/20', Ordered: 'bg-blue-500/10 text-blue-400 border-blue-500/20', Pending: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
             const all = getPOData();
             const totalPages = Math.max(1, Math.ceil(all.length / PO_PER_PAGE));
@@ -1082,7 +1178,7 @@
             const pageItems = all.slice(start, start + PO_PER_PAGE);
             document.querySelectorAll('[id^="sort-po-"]').forEach(el => { el.classList.remove('asc', 'desc'); if (el.id === `sort-po-${poSort.field}`) el.classList.add(poSort.dir); });
             tbody.innerHTML = pageItems.map(po => `
-                <tr class="hover:bg-slate-800/20">
+                <tr class="hover:bg-slate-800/20 ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
                     <td class="p-4 text-cyan-400 mono text-xs">${po.id}</td>
                     <td class="p-4" style="color: var(--text-secondary)">${po.supplier}</td>
                     <td class="p-4" style="color: var(--text-muted)">${po.item}</td>
@@ -1090,10 +1186,10 @@
                     <td class="p-4 text-right mono" style="color: var(--text-primary)">$${po.amount.toLocaleString()}</td>
                     <td class="p-4"><span class="text-[10px] px-2 py-0.5 rounded ${statusColors[po.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}">${po.status}</span></td>
                     <td class="p-4 text-xs" style="color: var(--text-muted)">${po.delivery}</td>
-                    <td class="p-4 text-right"><div class="flex items-center justify-end gap-1">
-                        <button onclick="editPO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                        <button onclick="deletePO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
-                    </div></td>
+                    <td class="p-4 text-right">${role.canEdit || role.canDelete ? `<div class="flex items-center justify-end gap-1">
+                        ${role.canEdit ? `<button onclick="editPO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>` : ''}
+                        ${role.canDelete ? `<button onclick="deletePO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
+                    </div>` : ''}</td>
                 </tr>
             `).join('');
             if (!pageItems.length) tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center" style="color: var(--text-muted)">No purchase orders found</td></tr>';
@@ -1112,17 +1208,18 @@
         // ── Subcontractors ────────────────────────────────────────────
         function renderSubs() {
             const grid = document.getElementById('subs-grid');
+            const role = ROLES[getRole()];
             if (!data.subs.length) {
                 grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12" style="color: var(--text-muted)">No subcontractors yet. Click "Add Sub" to add one.</div>';
                 return;
             }
             grid.innerHTML = data.subs.map(s => {
                 const progressColor = s.progress > 80 ? 'text-green-400' : s.progress > 50 ? 'text-amber-400' : 'text-blue-400';
-                return `<div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
-                    <div class="absolute top-3 right-3 flex gap-1">
-                        <button onclick="editSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
+                return `<div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
+                    ${role.canEdit || role.canDelete ? `<div class="absolute top-3 right-3 flex gap-1">
+                        ${role.canEdit ? `<button onclick="editSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>` : ''}
+                        ${role.canDelete ? `<button onclick="deleteSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                    </div>` : ''}
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white font-bold">${s.initials}</div>
                         <div><div class="font-medium text-sm" style="color: var(--text-primary)">${s.name}</div><div class="text-[10px]" style="color: var(--text-muted)">${s.trade}</div></div>
@@ -1164,8 +1261,16 @@
             const overlay = document.getElementById('modal-overlay');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
+            const role = ROLES[getRole()];
             clearValidation();
             const isEdit = !!editData;
+
+            // Check permissions for create/edit modals
+            if (!isEdit && !role.canCreate && type !== 'role' && type !== 'tenant') {
+                showToast(`Creating is restricted for ${role.label}`, 'error');
+                return;
+            }
+
             const forms = {
                 project: { t: isEdit ? 'Edit Project' : 'New Project', h: (d) => `
                     <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Project Name <span class="text-red-400">*</span></label>
@@ -1254,6 +1359,23 @@
                         <input id="f-budget-spent" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.spent||0}" min="0"><div class="error-text"></div></div>
                     <button onclick="submitEditBudgetItem('${d.category}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Save Changes</button>
                 ` },
+                role: { t: 'Switch Role', h: () => `
+                    <div class="space-y-2">
+                        ${Object.entries(ROLES).map(([id, r]) => `
+                            <div onclick="setRole('${id}'); closeModal();" class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all" style="background: var(--input-bg); border: 1px solid var(--input-border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--input-border)'">
+                                <span class="role-badge ${r.badgeClass}">${r.label}</span>
+                                <div>
+                                    <div class="text-sm font-medium" style="color: var(--text-primary)">${r.label}</div>
+                                    <div class="text-[10px]" style="color: var(--text-muted)">${r.description}</div>
+                                </div>
+                                <div class="ml-auto text-xs" style="color: var(--text-muted)">${r.tabs.length} tabs</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="text-xs mt-4 p-3 rounded-xl" style="background: var(--accent-dim); color: var(--accent);">
+                        <strong>Note:</strong> Role switching is a demo simulation. In production, roles would be assigned via OAuth/OIDC authentication.
+                    </div>
+                ` },
                 tenant: { t: 'Manage Tenants', h: () => `
                     <div class="space-y-3 max-h-60 overflow-y-auto scrollbar-thin" id="tenant-list">
                         ${tenants.map((t, i) => `
@@ -1301,23 +1423,17 @@
             const name = document.getElementById('f-tenant-name')?.value.trim();
             if (!name) { showToast('Tenant name is required', 'error'); return; }
             const color = parseInt(document.getElementById('f-tenant-color')?.value) || 0;
-            const id = 't' + Date.now();
-            tenants.push({ id, name, color });
+            tenants.push({ id: 't' + Date.now(), name, color });
             saveTenants();
             closeModal();
             showToast(`Tenant "${name}" created`, 'success');
-            // Rebuild tenant list in modal if open
             showModal('tenant');
         }
 
         function deleteTenant(id) {
-            if (id === getActiveTenantId()) {
-                showToast('Cannot delete active tenant. Switch first.', 'error');
-                return;
-            }
+            if (id === getActiveTenantId()) { showToast('Cannot delete active tenant. Switch first.', 'error'); return; }
             tenants = tenants.filter(t => t.id !== id);
             saveTenants();
-            // Remove tenant data
             localStorage.removeItem(`construct_erp_data_${id}`);
             showToast('Tenant deleted', 'info');
             showModal('tenant');
@@ -1374,7 +1490,7 @@
             if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
             const qty = document.getElementById('f-po-qty')?.value || '0', unit = document.getElementById('f-po-unit')?.value || '', price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
             const poId = `PO-2024-${String(data.nextPO).padStart(3, '0')}`; data.nextPO++;
-            data.pos.push({ id: poId, supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), status: 'Pending', delivery: document.getElementById('f-po-delivery')?.value || 'TBD' });
+            data.pos.push({ id: poId, supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), status: 'Pending', delivery: document.getElementById('f-po-delivery')?.value || 'TBD', vendor: document.getElementById('f-po-supplier').value.trim() });
             saveData(); closeModal(); renderPOTable(); showToast(`PO ${poId} created!`, 'success');
         }
 
@@ -1382,7 +1498,7 @@
             if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
             const po = data.pos.find(x => x.id === id); if (!po) return;
             const qty = document.getElementById('f-po-qty')?.value || '0', unit = document.getElementById('f-po-unit')?.value || '', price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
-            Object.assign(po, { supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), delivery: document.getElementById('f-po-delivery')?.value || 'TBD', status: document.getElementById('f-po-status')?.value || 'Pending' });
+            Object.assign(po, { supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), delivery: document.getElementById('f-po-delivery')?.value || 'TBD', status: document.getElementById('f-po-status')?.value || 'Pending', vendor: document.getElementById('f-po-supplier').value.trim() });
             saveData(); closeModal(); renderPOTable(); showToast('PO updated!', 'success');
         }
 
@@ -1413,17 +1529,19 @@
 
         // ── Export ────────────────────────────────────────────────────
         function exportAll() {
-            const exportData = JSON.stringify({ tenant: getActiveTenant(), data }, null, 2);
+            const role = ROLES[getRole()];
+            const exportData = JSON.stringify({ tenant: getActiveTenant(), role: getRole(), data }, null, 2);
             const blob = new Blob([exportData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `construct_erp_${getActiveTenant().name.replace(/\s+/g,'_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
+            a.href = url; a.download = `construct_erp_${getActiveTenant().name.replace(/\s+/g,'_').toLowerCase()}_${role.label.toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
             a.click(); URL.revokeObjectURL(url);
             showToast('Data exported as JSON', 'success');
         }
 
         // ── Init ──────────────────────────────────────────────────────
         updateTenantUI();
+        applyRole(getRole());
         updateKPIs();
         renderProjects();
         renderGantt();

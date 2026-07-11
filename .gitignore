@@ -25,3 +25,12 @@ yarn-error.log*
 dist/
 build/
 *.tsbuildinfo
+
+# Python / backend
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.db
+.env
+.pytest_cache/

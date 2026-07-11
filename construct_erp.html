@@ -48,20 +48,67 @@
         .toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; animation: fade-in 0.3s ease-out; }
         .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
         .search-input { padding-left: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
-        .delete-btn { opacity: 0; transition: opacity 0.2s; }
-        tr:hover .delete-btn, .card-hover:hover .delete-btn { opacity: 1; }
+        .action-btn { opacity: 0; transition: opacity 0.2s; }
+        tr:hover .action-btn, .card-hover:hover .action-btn { opacity: 1; }
+        .sort-btn { cursor: pointer; user-select: none; }
+        .sort-btn:hover { color: var(--accent); }
+        .sort-btn::after { content: ' ↕'; font-size: 9px; opacity: 0.4; }
+        .sort-btn.asc::after { content: ' ↑'; opacity: 1; color: var(--accent); }
+        .sort-btn.desc::after { content: ' ↓'; opacity: 1; color: var(--accent); }
+        .field-error { border-color: #ef4444 !important; }
+        .field-error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.15) !important; }
+        .error-text { color: #ef4444; font-size: 10px; margin-top: 2px; display: none; }
+        .field-error ~ .error-text { display: block; }
+        .pagination-btn { padding: 4px 10px; border-radius: 8px; font-size: 11px; transition: all 0.2s; }
+        .pagination-btn:hover:not(:disabled) { background: rgba(245,158,11,0.15); color: var(--accent); }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination-btn.active { background: rgba(245,158,11,0.2); color: var(--accent); }
+
+        /* ── Responsive ───────────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .sidebar { width: 56px; }
+            .sidebar .nav-text, .sidebar .brand-text, .sidebar .version-text { display: none; }
+            .sidebar .brand-icon { margin: 0 auto; }
+            .sidebar nav button { justify-content: center; padding: 10px; }
+            .sidebar nav button i { margin: 0; }
+            .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+            .col-span-2 { grid-column: span 2; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -64px; width: 64px; z-index: 30; transition: left 0.3s; }
+            .sidebar.open { left: 0; }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 25; }
+            .sidebar.open ~ .sidebar-overlay { display: block; }
+            .grid-cols-4, .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr; }
+            .col-span-2 { grid-column: span 1; }
+            .max-w-7xl { padding: 0 4px; }
+            .p-6 { padding: 12px; }
+            .h-14 { height: 48px; }
+            .w-48 { width: 100px; }
+            .search-input { width: 100% !important; }
+            .table-wrap { overflow-x: auto; }
+            .mobile-menu-btn { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+            .mobile-menu-btn { display: none !important; }
+            .sidebar-overlay { display: none !important; }
+        }
     </style>
 </head>
 <body class="h-screen overflow-hidden flex">
 
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <!-- ════════════════════════════════════════════════════════════════ -->
     <!-- SIDEBAR                                                          -->
     <!-- ════════════════════════════════════════════════════════════════ -->
-    <aside class="w-64 glass border-r border-slate-800 flex flex-col h-full z-20 flex-shrink-0">
+    <aside class="sidebar w-64 glass border-r border-slate-800 flex flex-col h-full z-20 flex-shrink-0">
         <div class="p-5 border-b border-slate-800">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">CE</div>
-                <div>
+                <div class="brand-icon w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">CE</div>
+                <div class="brand-text">
                     <h1 class="text-white font-bold text-sm tracking-tight">Construct<span class="text-amber-400">ERP</span></h1>
                     <div class="text-[9px] mono text-slate-600">Project Management Suite</div>
                 </div>
@@ -69,35 +116,35 @@
         </div>
 
         <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400"></i> Dashboard
+            <button onclick="switchTab('dashboard'); toggleSidebar(true)" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400 flex-shrink-0"></i> <span class="nav-text">Dashboard</span>
             </button>
-            <button onclick="switchTab('projects')" id="tab-projects" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i> Projects
+            <button onclick="switchTab('projects'); toggleSidebar(true)" id="tab-projects" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="building-2" class="w-4 h-4 text-blue-400 flex-shrink-0"></i> <span class="nav-text">Projects</span>
             </button>
-            <button onclick="switchTab('schedule')" id="tab-schedule" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="calendar-range" class="w-4 h-4 text-purple-400"></i> Schedule
+            <button onclick="switchTab('schedule'); toggleSidebar(true)" id="tab-schedule" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="calendar-range" class="w-4 h-4 text-purple-400 flex-shrink-0"></i> <span class="nav-text">Schedule</span>
             </button>
-            <button onclick="switchTab('resources')" id="tab-resources" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="hard-hat" class="w-4 h-4 text-green-400"></i> Resources
+            <button onclick="switchTab('resources'); toggleSidebar(true)" id="tab-resources" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="hard-hat" class="w-4 h-4 text-green-400 flex-shrink-0"></i> <span class="nav-text">Resources</span>
             </button>
-            <button onclick="switchTab('budget')" id="tab-budget" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="wallet" class="w-4 h-4 text-yellow-400"></i> Budget
+            <button onclick="switchTab('budget'); toggleSidebar(true)" id="tab-budget" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="wallet" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i> <span class="nav-text">Budget</span>
             </button>
-            <button onclick="switchTab('procurement')" id="tab-procurement" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="truck" class="w-4 h-4 text-orange-400"></i> Procurement
+            <button onclick="switchTab('procurement'); toggleSidebar(true)" id="tab-procurement" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="truck" class="w-4 h-4 text-orange-400 flex-shrink-0"></i> <span class="nav-text">Procurement</span>
             </button>
-            <button onclick="switchTab('subs')" id="tab-subs" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i> Subcontractors
+            <button onclick="switchTab('subs'); toggleSidebar(true)" id="tab-subs" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="users" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i> <span class="nav-text">Subcontractors</span>
             </button>
-            <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
-                <i data-lucide="file-bar-chart" class="w-4 h-4 text-rose-400"></i> Reports
+            <button onclick="switchTab('reports'); toggleSidebar(true)" id="tab-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="file-bar-chart" class="w-4 h-4 text-rose-400 flex-shrink-0"></i> <span class="nav-text">Reports</span>
             </button>
         </nav>
 
         <div class="p-3 border-t border-slate-800 bg-slate-950/50">
             <div class="flex items-center justify-between text-[10px] mono">
-                <span class="text-slate-600">v2.0.0</span>
+                <span class="version-text text-slate-600">v2.1.0</span>
                 <div class="flex items-center gap-1.5">
                     <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
                     <span class="text-green-400/70">LIVE</span>
@@ -114,6 +161,9 @@
         <!-- Header -->
         <header class="h-14 glass border-b border-slate-800 flex items-center justify-between px-6 z-10 flex-shrink-0">
             <div class="flex items-center gap-4">
+                <button class="mobile-menu-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-amber-400 transition-colors" onclick="toggleSidebar()">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
                 <span class="text-slate-500 text-sm">ERP / <span class="text-white font-medium" id="page-title">Dashboard</span></span>
             </div>
             <div class="flex items-center gap-3">
@@ -347,20 +397,22 @@
                     </div>
                 </div>
                 <div class="glass rounded-2xl overflow-hidden border border-slate-800">
-                    <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                    <div class="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
                         <h3 class="text-white font-semibold text-sm">Cost Breakdown</h3>
-                        <input type="text" id="budget-search" oninput="renderBudgetTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search categories...">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <input type="text" id="budget-search" oninput="renderBudgetTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search categories...">
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="table-wrap overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-slate-950/50 border-b border-slate-800">
                                 <tr class="text-[10px] uppercase tracking-widest text-slate-600">
-                                    <th class="text-left p-4 font-semibold">Category</th>
-                                    <th class="text-right p-4 font-semibold">Budget</th>
-                                    <th class="text-right p-4 font-semibold">Committed</th>
-                                    <th class="text-right p-4 font-semibold">Spent</th>
-                                    <th class="text-right p-4 font-semibold">Remaining</th>
-                                    <th class="text-right p-4 font-semibold">% Used</th>
+                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortBudget('category')" id="sort-budget-category">Category</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('budget')" id="sort-budget-budget">Budget</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('committed')" id="sort-budget-committed">Committed</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('spent')" id="sort-budget-spent">Spent</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('remaining')" id="sort-budget-remaining">Remaining</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('pct')" id="sort-budget-pct">% Used</th>
                                     <th class="text-right p-4 font-semibold"></th>
                                 </tr>
                             </thead>
@@ -369,6 +421,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="budget-pagination" class="flex items-center justify-center gap-2 p-3 border-t border-slate-800"></div>
                 </div>
             </div>
         </div>
@@ -385,7 +438,7 @@
                     </button>
                 </div>
                 <div class="glass rounded-2xl overflow-hidden border border-slate-800">
-                    <div class="p-3 border-b border-slate-800 flex items-center gap-3">
+                    <div class="p-3 border-b border-slate-800 flex items-center gap-3 flex-wrap">
                         <input type="text" id="po-search" oninput="renderPOTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search POs...">
                         <select id="po-status-filter" onchange="renderPOTable()" class="bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
                             <option value="all">All Status</option>
@@ -395,17 +448,17 @@
                             <option value="Pending">Pending</option>
                         </select>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="table-wrap overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-slate-950/50 border-b border-slate-800">
                                 <tr class="text-[10px] uppercase tracking-widest text-slate-600">
-                                    <th class="text-left p-4 font-semibold">PO #</th>
-                                    <th class="text-left p-4 font-semibold">Supplier</th>
-                                    <th class="text-left p-4 font-semibold">Item</th>
-                                    <th class="text-right p-4 font-semibold">Qty</th>
-                                    <th class="text-right p-4 font-semibold">Amount</th>
-                                    <th class="text-left p-4 font-semibold">Status</th>
-                                    <th class="text-left p-4 font-semibold">Delivery</th>
+                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('id')" id="sort-po-id">PO #</th>
+                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('supplier')" id="sort-po-supplier">Supplier</th>
+                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('item')" id="sort-po-item">Item</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortPO('qty')" id="sort-po-qty">Qty</th>
+                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortPO('amount')" id="sort-po-amount">Amount</th>
+                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('status')" id="sort-po-status">Status</th>
+                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('delivery')" id="sort-po-delivery">Delivery</th>
                                     <th class="text-right p-4 font-semibold"></th>
                                 </tr>
                             </thead>
@@ -414,6 +467,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="po-pagination" class="flex items-center justify-center gap-2 p-3 border-t border-slate-800"></div>
                 </div>
             </div>
         </div>
@@ -473,7 +527,7 @@
     <!-- MODALS                                                            -->
     <!-- ════════════════════════════════════════════════════════════════ -->
     <div id="modal-overlay" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center" onclick="closeModal(event)">
-        <div id="modal-content" class="glass rounded-2xl border border-slate-800 w-full max-w-lg max-h-[80vh] overflow-y-auto scrollbar-thin" onclick="event.stopPropagation()">
+        <div id="modal-content" class="glass rounded-2xl border border-slate-800 w-full max-w-lg max-h-[80vh] overflow-y-auto scrollbar-thin m-4" onclick="event.stopPropagation()">
             <div class="p-5 border-b border-slate-800 flex justify-between items-center">
                 <h3 id="modal-title" class="text-white font-semibold text-sm">New Project</h3>
                 <button onclick="closeModal()" class="p-1 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
@@ -554,7 +608,6 @@
                 const raw = localStorage.getItem(STORE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    // Merge with defaults to handle new fields
                     return deepMerge(DEFAULT_DATA, parsed);
                 }
             } catch (e) { console.warn('Failed to load data, using defaults', e); }
@@ -581,6 +634,16 @@
 
         let data = loadData();
 
+        // ── Sidebar Toggle (mobile) ─────────────────────────────────
+        function toggleSidebar(forceClose) {
+            const sidebar = document.querySelector('.sidebar');
+            if (forceClose && window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                return;
+            }
+            sidebar.classList.toggle('open');
+        }
+
         // ── Toast Notifications ───────────────────────────────────────
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -595,75 +658,6 @@
         }
 
         // ── Tab Switching ─────────────────────────────────────────────
-        // ── Budget vs. Actual Chart ──────────────────────────────────
-        let budgetChart = null;
-        function renderBudgetChart() {
-            const canvas = document.getElementById('budgetChartCanvas');
-            if (!canvas) return;
-            // Destroy previous instance to prevent memory leaks
-            if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
-            const fmt = (v) => '$' + v.toLocaleString('en-US');
-            budgetChart = new Chart(canvas.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: data.budget.map(c => c.category),
-                    datasets: [
-                        {
-                            label: 'Budget',
-                            data: data.budget.map(c => c.budget),
-                            backgroundColor: 'rgba(96, 165, 250, 0.8)',
-                            borderColor: 'rgba(96, 165, 250, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Spent',
-                            data: data.budget.map(c => c.spent),
-                            backgroundColor: 'rgba(251, 191, 36, 0.8)',
-                            borderColor: 'rgba(251, 191, 36, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#e2e8f0', font: { size: 11 }, boxWidth: 12, padding: 16 }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                            titleColor: '#f8fafc',
-                            bodyColor: '#e2e8f0',
-                            borderColor: 'rgba(148, 163, 184, 0.2)',
-                            borderWidth: 1,
-                            padding: 10,
-                            callbacks: {
-                                label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                            ticks: { color: '#cbd5e1', font: { size: 10 } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                            ticks: {
-                                color: '#cbd5e1',
-                                font: { size: 10 },
-                                callback: (v) => '$' + (v / 1000) + 'k'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         function switchTab(tab) {
             const titles = { dashboard:'Dashboard', projects:'Projects', schedule:'Schedule', resources:'Resources', budget:'Budget', procurement:'Procurement', subs:'Subcontractors', reports:'Reports' };
             document.getElementById('page-title').innerText = titles[tab] || tab;
@@ -671,7 +665,6 @@
                 document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
                 document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
             });
-            // Re-render active tab content
             if (tab === 'dashboard') renderBudgetChart();
             if (tab === 'projects') renderProjects();
             if (tab === 'schedule') renderGantt();
@@ -712,6 +705,36 @@
             document.getElementById('kpi-schedule').innerText = avgProgress + '%';
         }
 
+        // ── Budget vs. Actual Chart ──────────────────────────────────
+        let budgetChart = null;
+        function renderBudgetChart() {
+            const canvas = document.getElementById('budgetChartCanvas');
+            if (!canvas) return;
+            if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+            const fmt = (v) => '$' + v.toLocaleString('en-US');
+            budgetChart = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.budget.map(c => c.category),
+                    datasets: [
+                        { label: 'Budget', data: data.budget.map(c => c.budget), backgroundColor: 'rgba(96, 165, 250, 0.8)', borderColor: 'rgba(96, 165, 250, 1)', borderWidth: 1, borderRadius: 4 },
+                        { label: 'Spent', data: data.budget.map(c => c.spent), backgroundColor: 'rgba(251, 191, 36, 0.8)', borderColor: 'rgba(251, 191, 36, 1)', borderWidth: 1, borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#e2e8f0', font: { size: 11 }, boxWidth: 12, padding: 16 } },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', titleColor: '#f8fafc', bodyColor: '#e2e8f0', borderColor: 'rgba(148, 163, 184, 0.2)', borderWidth: 1, padding: 10, callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#cbd5e1', font: { size: 10 } } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#cbd5e1', font: { size: 10 }, callback: (v) => '$' + (v / 1000) + 'k' } }
+                    }
+                }
+            });
+        }
+
         // ── Projects ─────────────────────────────────────────────────
         function renderProjects() {
             const grid = document.getElementById('projects-grid');
@@ -721,9 +744,14 @@
             }
             grid.innerHTML = data.projects.map(p => `
                 <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
-                    <button onclick="deleteProject('${p.id}')" class="delete-btn absolute top-3 right-3 p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                    </button>
+                    <div class="absolute top-3 right-3 flex gap-1">
+                        <button onclick="editProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="deleteProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">${p.name.charAt(0)}</div>
                         <div>
@@ -739,6 +767,12 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function editProject(id) {
+            const p = data.projects.find(x => x.id === id);
+            if (!p) return;
+            showModal('project', p);
         }
 
         function deleteProject(id) {
@@ -763,11 +797,22 @@
                     <div class="flex-1 relative h-6 bg-slate-800/30 rounded">
                         <div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div>
                     </div>
-                    <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
+                    <div class="flex gap-1">
+                        <button onclick="editTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400">
+                            <i data-lucide="pencil" class="w-3 h-3"></i>
+                        </button>
+                        <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        function editTask(id) {
+            const t = data.tasks.find(x => x.id === id);
+            if (!t) return;
+            showModal('task', t);
         }
 
         function deleteTask(id) {
@@ -804,6 +849,10 @@
         }
 
         // ── Budget ───────────────────────────────────────────────────
+        let budgetSort = { field: null, dir: 'asc' };
+        let budgetPage = 1;
+        const BUDGET_PER_PAGE = 5;
+
         function renderBudgetSummary() {
             const total = data.budget.reduce((s, c) => s + c.budget, 0);
             const committed = data.budget.reduce((s, c) => s + c.committed, 0);
@@ -818,11 +867,51 @@
             document.getElementById('budget-remaining-pct').innerText = total ? Math.round((remaining / total) * 100) + '% remaining' : '0% remaining';
         }
 
+        function sortBudget(field) {
+            if (budgetSort.field === field) {
+                budgetSort.dir = budgetSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                budgetSort.field = field;
+                budgetSort.dir = 'asc';
+            }
+            budgetPage = 1;
+            renderBudgetTable();
+        }
+
+        function getBudgetData() {
+            const search = (document.getElementById('budget-search')?.value || '').toLowerCase();
+            let items = data.budget.filter(c => c.category.toLowerCase().includes(search));
+
+            if (budgetSort.field) {
+                const dir = budgetSort.dir === 'asc' ? 1 : -1;
+                items.sort((a, b) => {
+                    let va, vb;
+                    if (budgetSort.field === 'category') { va = a.category; vb = b.category; return va.localeCompare(vb) * dir; }
+                    if (budgetSort.field === 'remaining') { va = a.budget - a.spent; vb = b.budget - b.spent; return (va - vb) * dir; }
+                    if (budgetSort.field === 'pct') { va = a.budget ? a.spent / a.budget : 0; vb = b.budget ? b.spent / b.budget : 0; return (va - vb) * dir; }
+                    va = a[budgetSort.field]; vb = b[budgetSort.field];
+                    return (va - vb) * dir;
+                });
+            }
+            return items;
+        }
+
         function renderBudgetTable() {
             const tbody = document.getElementById('budget-table-body');
-            const search = (document.getElementById('budget-search')?.value || '').toLowerCase();
-            const filtered = data.budget.filter(c => c.category.toLowerCase().includes(search));
-            tbody.innerHTML = filtered.map(c => {
+            const pagination = document.getElementById('budget-pagination');
+            const all = getBudgetData();
+            const totalPages = Math.max(1, Math.ceil(all.length / BUDGET_PER_PAGE));
+            if (budgetPage > totalPages) budgetPage = totalPages;
+            const start = (budgetPage - 1) * BUDGET_PER_PAGE;
+            const pageItems = all.slice(start, start + BUDGET_PER_PAGE);
+
+            // Update sort indicators
+            document.querySelectorAll('[id^="sort-budget-"]').forEach(el => {
+                el.classList.remove('asc', 'desc');
+                if (el.id === `sort-budget-${budgetSort.field}`) el.classList.add(budgetSort.dir);
+            });
+
+            tbody.innerHTML = pageItems.map(c => {
                 const pct = c.budget ? Math.round((c.spent / c.budget) * 100) : 0;
                 const remaining = c.budget - c.spent;
                 const color = pct > 85 ? 'text-red-400' : pct > 70 ? 'text-amber-400' : pct > 50 ? 'text-blue-400' : 'text-green-400';
@@ -834,15 +923,37 @@
                     <td class="p-4 text-right text-green-400 mono">$${remaining.toLocaleString()}</td>
                     <td class="p-4 text-right"><span class="${color} text-[10px] mono">${pct}%</span></td>
                     <td class="p-4 text-right">
-                        <button onclick="deleteBudgetItem('${c.category}')" class="delete-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
-                            <i data-lucide="trash-2" class="w-3 h-3"></i>
-                        </button>
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="editBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400 transition-all">
+                                <i data-lucide="pencil" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="deleteBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
             }).join('');
-            if (!filtered.length) {
+            if (!pageItems.length) {
                 tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-600 text-sm">No matching categories</td></tr>';
             }
+
+            // Pagination
+            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+            let phtml = `<button class="pagination-btn text-slate-400" onclick="budgetPage=1;renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn text-slate-400" onclick="budgetPage=Math.max(1,budgetPage-1);renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
+            for (let i = Math.max(1, budgetPage-2); i <= Math.min(totalPages, budgetPage+2); i++) {
+                phtml += `<button class="pagination-btn ${i===budgetPage?'active':'text-slate-400'}" onclick="budgetPage=${i};renderBudgetTable()">${i}</button>`;
+            }
+            phtml += `<button class="pagination-btn text-slate-400" onclick="budgetPage=Math.min(${totalPages},budgetPage+1);renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn text-slate-400" onclick="budgetPage=${totalPages};renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
+            pagination.innerHTML = phtml;
+        }
+
+        function editBudgetItem(category) {
+            const c = data.budget.find(x => x.category === category);
+            if (!c) return;
+            showModal('budgetItem', c);
         }
 
         function deleteBudgetItem(category) {
@@ -855,16 +966,62 @@
         }
 
         // ── Procurement ──────────────────────────────────────────────
-        function renderPOTable() {
-            const tbody = document.getElementById('po-table-body');
+        let poSort = { field: null, dir: 'asc' };
+        let poPage = 1;
+        const PO_PER_PAGE = 5;
+
+        function sortPO(field) {
+            if (poSort.field === field) {
+                poSort.dir = poSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                poSort.field = field;
+                poSort.dir = 'asc';
+            }
+            poPage = 1;
+            renderPOTable();
+        }
+
+        function getPOData() {
             const search = (document.getElementById('po-search')?.value || '').toLowerCase();
             const statusFilter = document.getElementById('po-status-filter')?.value || 'all';
-            const statusColors = { Delivered: 'bg-green-500/10 text-green-400 border-green-500/20', 'In Transit': 'bg-amber-500/10 text-amber-400 border-amber-500/20', Ordered: 'bg-blue-500/10 text-blue-400 border-blue-500/20', Pending: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
-            let filtered = data.pos.filter(po =>
+            let items = data.pos.filter(po =>
                 (po.supplier.toLowerCase().includes(search) || po.item.toLowerCase().includes(search) || po.id.toLowerCase().includes(search)) &&
                 (statusFilter === 'all' || po.status === statusFilter)
             );
-            tbody.innerHTML = filtered.map(po => `
+            if (poSort.field) {
+                const dir = poSort.dir === 'asc' ? 1 : -1;
+                items.sort((a, b) => {
+                    let va, vb;
+                    if (poSort.field === 'qty') {
+                        va = parseInt(a.qty) || 0; vb = parseInt(b.qty) || 0; return (va - vb) * dir;
+                    }
+                    if (poSort.field === 'id' || poSort.field === 'supplier' || poSort.field === 'item' || poSort.field === 'status' || poSort.field === 'delivery') {
+                        va = (a[poSort.field] || '').toLowerCase(); vb = (b[poSort.field] || '').toLowerCase(); return va.localeCompare(vb) * dir;
+                    }
+                    va = a[poSort.field] || 0; vb = b[poSort.field] || 0;
+                    return (va - vb) * dir;
+                });
+            }
+            return items;
+        }
+
+        function renderPOTable() {
+            const tbody = document.getElementById('po-table-body');
+            const pagination = document.getElementById('po-pagination');
+            const statusColors = { Delivered: 'bg-green-500/10 text-green-400 border-green-500/20', 'In Transit': 'bg-amber-500/10 text-amber-400 border-amber-500/20', Ordered: 'bg-blue-500/10 text-blue-400 border-blue-500/20', Pending: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
+            const all = getPOData();
+            const totalPages = Math.max(1, Math.ceil(all.length / PO_PER_PAGE));
+            if (poPage > totalPages) poPage = totalPages;
+            const start = (poPage - 1) * PO_PER_PAGE;
+            const pageItems = all.slice(start, start + PO_PER_PAGE);
+
+            // Update sort indicators
+            document.querySelectorAll('[id^="sort-po-"]').forEach(el => {
+                el.classList.remove('asc', 'desc');
+                if (el.id === `sort-po-${poSort.field}`) el.classList.add(poSort.dir);
+            });
+
+            tbody.innerHTML = pageItems.map(po => `
                 <tr class="hover:bg-slate-800/20">
                     <td class="p-4 text-cyan-400 mono text-xs">${po.id}</td>
                     <td class="p-4 text-slate-300">${po.supplier}</td>
@@ -874,15 +1031,37 @@
                     <td class="p-4"><span class="text-[10px] px-2 py-0.5 rounded ${statusColors[po.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}">${po.status}</span></td>
                     <td class="p-4 text-slate-500 text-xs">${po.delivery}</td>
                     <td class="p-4 text-right">
-                        <button onclick="deletePO('${po.id}')" class="delete-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
-                            <i data-lucide="trash-2" class="w-3 h-3"></i>
-                        </button>
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="editPO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400 transition-all">
+                                <i data-lucide="pencil" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="deletePO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
-            if (!filtered.length) {
+            if (!pageItems.length) {
                 tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-600 text-sm">No purchase orders found</td></tr>';
             }
+
+            // Pagination
+            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+            let phtml = `<button class="pagination-btn text-slate-400" onclick="poPage=1;renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn text-slate-400" onclick="poPage=Math.max(1,poPage-1);renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
+            for (let i = Math.max(1, poPage-2); i <= Math.min(totalPages, poPage+2); i++) {
+                phtml += `<button class="pagination-btn ${i===poPage?'active':'text-slate-400'}" onclick="poPage=${i};renderPOTable()">${i}</button>`;
+            }
+            phtml += `<button class="pagination-btn text-slate-400" onclick="poPage=Math.min(${totalPages},poPage+1);renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
+            phtml += `<button class="pagination-btn text-slate-400" onclick="poPage=${totalPages};renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
+            pagination.innerHTML = phtml;
+        }
+
+        function editPO(id) {
+            const po = data.pos.find(x => x.id === id);
+            if (!po) return;
+            showModal('po', po);
         }
 
         function deletePO(id) {
@@ -903,9 +1082,14 @@
                 const progressColor = s.progress > 80 ? 'text-green-400' : s.progress > 50 ? 'text-amber-400' : 'text-blue-400';
                 return `
                 <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
-                    <button onclick="deleteSub('${s.id}')" class="delete-btn absolute top-3 right-3 p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                    </button>
+                    <div class="absolute top-3 right-3 flex gap-1">
+                        <button onclick="editSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="deleteSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white font-bold">${s.initials}</div>
                         <div>
@@ -922,6 +1106,12 @@
             }).join('');
         }
 
+        function editSub(id) {
+            const s = data.subs.find(x => x.id === id);
+            if (!s) return;
+            showModal('sub', s);
+        }
+
         function deleteSub(id) {
             data.subs = data.subs.filter(s => s.id !== id);
             saveData();
@@ -929,54 +1119,204 @@
             showToast('Subcontractor removed', 'info');
         }
 
+        // ── Form Validation Helpers ─────────────────────────────────
+        function validateField(id, rules) {
+            const el = document.getElementById(id);
+            if (!el) return true;
+            const val = el.value.trim();
+            el.classList.remove('field-error');
+            let errorText = el.parentElement.querySelector('.error-text');
+            if (!errorText) {
+                errorText = document.createElement('div');
+                errorText.className = 'error-text';
+                el.parentElement.appendChild(errorText);
+            }
+            errorText.style.display = 'none';
+
+            for (const rule of rules) {
+                if (rule.required && !val) {
+                    el.classList.add('field-error');
+                    errorText.textContent = rule.message || 'This field is required';
+                    errorText.style.display = 'block';
+                    return false;
+                }
+                if (rule.min !== undefined && parseFloat(val) < rule.min) {
+                    el.classList.add('field-error');
+                    errorText.textContent = rule.message || `Minimum value is ${rule.min}`;
+                    errorText.style.display = 'block';
+                    return false;
+                }
+                if (rule.max !== undefined && parseFloat(val) > rule.max) {
+                    el.classList.add('field-error');
+                    errorText.textContent = rule.message || `Maximum value is ${rule.max}`;
+                    errorText.style.display = 'block';
+                    return false;
+                }
+                if (rule.pattern && !rule.pattern.test(val)) {
+                    el.classList.add('field-error');
+                    errorText.textContent = rule.message || 'Invalid format';
+                    errorText.style.display = 'block';
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function clearValidation() {
+            document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+            document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none');
+        }
+
         // ── Modals ─────────────────────────────────────────────────────
-        function showModal(type) {
+        let modalEditId = null; // tracks if we're editing an existing item
+
+        function showModal(type, editData) {
             const overlay = document.getElementById('modal-overlay');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
+            modalEditId = null;
+            clearValidation();
+
+            const isEdit = !!editData;
             const forms = {
-                project: { t: 'New Project', h: `
-                    <div><label class="text-xs text-slate-400 mb-1 block">Project Name</label><input id="f-project-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. Riverside Tower"></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Location</label><input id="f-project-location" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. 123 Main St"></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Budget ($)</label><input id="f-project-budget" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="1000000"></div><div><label class="text-xs text-slate-400 mb-1 block">Duration</label><input id="f-project-duration" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. 12 months"></div></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Description</label><textarea id="f-project-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 h-20" placeholder="Project scope..."></textarea></div>
-                    <button onclick="submitProject()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Create Project</button>
-                ` },
-                task: { t: 'New Task', h: `
-                    <div><label class="text-xs text-slate-400 mb-1 block">Task Name</label><input id="f-task-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. Foundation Pour"></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Start %</label><input id="f-task-start" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0" min="0" max="90"></div><div><label class="text-xs text-slate-400 mb-1 block">Width %</label><input id="f-task-width" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="20" min="5" max="100"></div></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Color</label><select id="f-task-color" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option value="amber">Amber</option><option value="blue">Blue</option><option value="green">Green</option><option value="purple">Purple</option><option value="rose">Rose</option><option value="cyan">Cyan</option></select></div>
-                    <button onclick="submitTask()" class="w-full py-2.5 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all">Add Task</button>
-                ` },
-                resource: { t: 'Add Resource', h: `
-                    <div><label class="text-xs text-slate-400 mb-1 block">Resource Type</label><select id="f-resource-type" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option value="labor">Labor</option><option value="equipment">Equipment</option><option value="materials">Material</option></select></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Name</label><input id="f-resource-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Crane Operator"></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Required</label><input id="f-resource-req" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"></div><div><label class="text-xs text-slate-400 mb-1 block">Available</label><input id="f-resource-avail" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"></div></div>
-                    <button onclick="submitResource()" class="w-full py-2.5 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all">Add Resource</button>
-                ` },
-                changeorder: { t: 'Change Order', h: `
-                    <div><label class="text-xs text-slate-400 mb-1 block">Title</label><input id="f-co-title" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Additional electrical work"></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Description</label><textarea id="f-co-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white h-20" placeholder="Scope change details..."></textarea></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Cost Impact ($)</label><input id="f-co-cost" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0"></div><div><label class="text-xs text-slate-400 mb-1 block">Schedule Impact</label><input id="f-co-schedule" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. +5 days"></div></div>
-                    <button onclick="submitChangeOrder()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Submit Change Order</button>
-                ` },
-                po: { t: 'New Purchase Order', h: `
-                    <div><label class="text-xs text-slate-400 mb-1 block">Supplier</label><input id="f-po-supplier" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="Supplier name"></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Item / Material</label><input id="f-po-item" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Rebar #4"></div>
-                    <div class="grid grid-cols-3 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Qty</label><input id="f-po-qty" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="42"></div><div><label class="text-xs text-slate-400 mb-1 block">Unit</label><input id="f-po-unit" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="tons"></div><div><label class="text-xs text-slate-400 mb-1 block">Unit Price</label><input id="f-po-price" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="$"></div></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Delivery Date</label><input id="f-po-delivery" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Aug 1"></div>
-                    <button onclick="submitPO()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all">Create PO</button>
-                ` },
-                sub: { t: 'Add Subcontractor', h: `
-                    <div><label class="text-xs text-slate-400 mb-1 block">Company Name</label><input id="f-sub-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="Company name"></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Trade</label><select id="f-sub-trade" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option>Electrical</option><option>Plumbing</option><option>Structural</option><option>HVAC</option><option>Finishes</option></select></div>
-                    <div><label class="text-xs text-slate-400 mb-1 block">Contract Amount ($)</label><input id="f-sub-contract" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0"></div>
-                    <button onclick="submitSub()" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all">Add Subcontractor</button>
-                ` }
+                project: {
+                    t: isEdit ? 'Edit Project' : 'New Project',
+                    h: (d) => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Project Name <span class="text-red-400">*</span></label>
+                            <input id="f-project-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.name||''}" placeholder="e.g. Riverside Tower" required>
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Location</label>
+                            <input id="f-project-location" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.location||''}" placeholder="e.g. 123 Main St"></div>
+                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Budget ($) <span class="text-red-400">*</span></label>
+                            <input id="f-project-budget" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.budget||''}" placeholder="1000000" min="0">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Duration</label>
+                            <input id="f-project-duration" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.duration||''}" placeholder="e.g. 12 months"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Progress (%)</label>
+                            <input id="f-project-progress" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.progress||0}" min="0" max="100">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
+                            <textarea id="f-project-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 h-20" placeholder="Project scope...">${d?.description||''}</textarea></div>
+                        <button onclick="${isEdit ? `submitEditProject('${d.id}')` : 'submitProject()'}" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create Project'}</button>
+                    `
+                },
+                task: {
+                    t: isEdit ? 'Edit Task' : 'New Task',
+                    h: (d) => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Task Name <span class="text-red-400">*</span></label>
+                            <input id="f-task-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" value="${d?.name||''}" placeholder="e.g. Foundation Pour" required>
+                            <div class="error-text"></div></div>
+                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Start %</label>
+                            <input id="f-task-start" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.start||0}" min="0" max="90">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Width %</label>
+                            <input id="f-task-width" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.width||20}" min="5" max="100">
+                            <div class="error-text"></div></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Color</label>
+                            <select id="f-task-color" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                                ${['amber','blue','green','purple','rose','cyan'].map(c => `<option value="${c}" ${d?.color===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
+                            </select></div>
+                        <button onclick="${isEdit ? `submitEditTask('${d.id}')` : 'submitTask()'}" class="w-full py-2.5 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Task'}</button>
+                    `
+                },
+                resource: {
+                    t: 'Add Resource',
+                    h: () => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Resource Type</label>
+                            <select id="f-resource-type" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option value="labor">Labor</option><option value="equipment">Equipment</option><option value="materials">Material</option></select></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Name <span class="text-red-400">*</span></label>
+                            <input id="f-resource-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Crane Operator" required>
+                            <div class="error-text"></div></div>
+                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Required</label>
+                            <input id="f-resource-req" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" min="0">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Available</label>
+                            <input id="f-resource-avail" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" min="0">
+                            <div class="error-text"></div></div></div>
+                        <button onclick="submitResource()" class="w-full py-2.5 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all">Add Resource</button>
+                    `
+                },
+                changeorder: {
+                    t: 'Change Order',
+                    h: () => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Title <span class="text-red-400">*</span></label>
+                            <input id="f-co-title" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Additional electrical work" required>
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
+                            <textarea id="f-co-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white h-20" placeholder="Scope change details..."></textarea></div>
+                        <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Cost Impact ($)</label>
+                            <input id="f-co-cost" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0" min="0">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Schedule Impact</label>
+                            <input id="f-co-schedule" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. +5 days"></div></div>
+                        <button onclick="submitChangeOrder()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Submit Change Order</button>
+                    `
+                },
+                po: {
+                    t: isEdit ? 'Edit Purchase Order' : 'New Purchase Order',
+                    h: (d) => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Supplier <span class="text-red-400">*</span></label>
+                            <input id="f-po-supplier" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.supplier||''}" placeholder="Supplier name" required>
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Item / Material</label>
+                            <input id="f-po-item" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.item||''}" placeholder="e.g. Rebar #4"></div>
+                        <div class="grid grid-cols-3 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Qty</label>
+                            <input id="f-po-qty" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.qty?.split(' ')[0]||''}" placeholder="42"></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Unit</label>
+                            <input id="f-po-unit" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.qty?.split(' ').slice(1).join(' ')||''}" placeholder="tons"></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Unit Price</label>
+                            <input id="f-po-price" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.amount && d?.qty ? Math.round(d.amount / (parseInt(d.qty)||1)) : ''}" placeholder="$" min="0">
+                            <div class="error-text"></div></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Delivery Date</label>
+                            <input id="f-po-delivery" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.delivery||''}" placeholder="e.g. Aug 1"></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Status</label>
+                            <select id="f-po-status" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                                ${['Pending','Ordered','In Transit','Delivered'].map(s => `<option value="${s}" ${d?.status===s?'selected':''}>${s}</option>`).join('')}
+                            </select></div>
+                        <button onclick="${isEdit ? `submitEditPO('${d.id}')` : 'submitPO()'}" class="w-full py-2.5 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create PO'}</button>
+                    `
+                },
+                sub: {
+                    t: isEdit ? 'Edit Subcontractor' : 'Add Subcontractor',
+                    h: (d) => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Company Name <span class="text-red-400">*</span></label>
+                            <input id="f-sub-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.name||''}" placeholder="Company name" required>
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Trade</label>
+                            <select id="f-sub-trade" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                                ${['Electrical','Plumbing','Structural','HVAC','Finishes'].map(t => `<option value="${t}" ${d?.trade===t?'selected':''}>${t}</option>`).join('')}
+                            </select></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Contract Amount ($) <span class="text-red-400">*</span></label>
+                            <input id="f-sub-contract" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.contract||''}" placeholder="0" min="0">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Progress (%)</label>
+                            <input id="f-sub-progress" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.progress||0}" min="0" max="100">
+                            <div class="error-text"></div></div>
+                        <button onclick="${isEdit ? `submitEditSub('${d.id}')` : 'submitSub()'}" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Subcontractor'}</button>
+                    `
+                },
+                budgetItem: {
+                    t: 'Edit Budget Category',
+                    h: (d) => `
+                        <div><label class="text-xs text-slate-400 mb-1 block">Category Name <span class="text-red-400">*</span></label>
+                            <input id="f-budget-category" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.category||''}" placeholder="e.g. Site Work" required>
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Budget ($) <span class="text-red-400">*</span></label>
+                            <input id="f-budget-budget" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.budget||0}" min="0">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Committed ($)</label>
+                            <input id="f-budget-committed" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.committed||0}" min="0">
+                            <div class="error-text"></div></div>
+                        <div><label class="text-xs text-slate-400 mb-1 block">Spent ($)</label>
+                            <input id="f-budget-spent" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" value="${d?.spent||0}" min="0">
+                            <div class="error-text"></div></div>
+                        <button onclick="submitEditBudgetItem('${d.category}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Save Changes</button>
+                    `
+                }
             };
             const f = forms[type] || forms.project;
             title.innerText = f.t;
-            body.innerHTML = f.h;
+            body.innerHTML = typeof f.h === 'function' ? f.h(editData) : f.h;
             overlay.classList.remove('hidden');
             lucide.createIcons();
         }
@@ -984,36 +1324,56 @@
         function closeModal(e) {
             if (e && e.target !== document.getElementById('modal-overlay') && e.target.closest('#modal-content')) return;
             document.getElementById('modal-overlay').classList.add('hidden');
+            modalEditId = null;
         }
 
         // ── Form Submissions ─────────────────────────────────────────
         function submitProject() {
-            const name = document.getElementById('f-project-name')?.value.trim();
-            if (!name) { showToast('Project name is required', 'error'); return; }
+            if (!validateField('f-project-name', [{required: true, message: 'Project name is required'}])) return;
+            if (!validateField('f-project-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
             data.projects.push({
                 id: 'p' + Date.now(),
-                name,
+                name: document.getElementById('f-project-name').value.trim(),
                 location: document.getElementById('f-project-location')?.value || '',
                 budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0,
                 duration: document.getElementById('f-project-duration')?.value || '',
+                progress: parseInt(document.getElementById('f-project-progress')?.value) || 0,
                 description: document.getElementById('f-project-desc')?.value || '',
                 status: 'active',
-                progress: 0,
                 createdAt: new Date().toISOString().split('T')[0]
             });
             saveData();
             closeModal();
             renderProjects();
             updateKPIs();
-            showToast(`Project "${name}" created!`, 'success');
+            showToast('Project created!', 'success');
+        }
+
+        function submitEditProject(id) {
+            if (!validateField('f-project-name', [{required: true, message: 'Project name is required'}])) return;
+            if (!validateField('f-project-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
+            const p = data.projects.find(x => x.id === id);
+            if (!p) return;
+            p.name = document.getElementById('f-project-name').value.trim();
+            p.location = document.getElementById('f-project-location')?.value || '';
+            p.budget = parseFloat(document.getElementById('f-project-budget')?.value) || 0;
+            p.duration = document.getElementById('f-project-duration')?.value || '';
+            p.progress = parseInt(document.getElementById('f-project-progress')?.value) || 0;
+            p.description = document.getElementById('f-project-desc')?.value || '';
+            saveData();
+            closeModal();
+            renderProjects();
+            updateKPIs();
+            showToast('Project updated!', 'success');
         }
 
         function submitTask() {
-            const name = document.getElementById('f-task-name')?.value.trim();
-            if (!name) { showToast('Task name is required', 'error'); return; }
+            if (!validateField('f-task-name', [{required: true, message: 'Task name is required'}])) return;
+            if (!validateField('f-task-start', [{min: 0, message: 'Start must be 0 or greater'}, {max: 90, message: 'Start must be 90 or less'}])) return;
+            if (!validateField('f-task-width', [{min: 5, message: 'Width must be at least 5'}, {max: 100, message: 'Width must be 100 or less'}])) return;
             data.tasks.push({
                 id: 't' + Date.now(),
-                name,
+                name: document.getElementById('f-task-name').value.trim(),
                 start: parseInt(document.getElementById('f-task-start')?.value) || 0,
                 width: parseInt(document.getElementById('f-task-width')?.value) || 20,
                 color: document.getElementById('f-task-color')?.value || 'amber'
@@ -1021,13 +1381,29 @@
             saveData();
             closeModal();
             renderGantt();
-            showToast(`Task "${name}" added!`, 'success');
+            showToast('Task added!', 'success');
+        }
+
+        function submitEditTask(id) {
+            if (!validateField('f-task-name', [{required: true, message: 'Task name is required'}])) return;
+            if (!validateField('f-task-start', [{min: 0}, {max: 90}])) return;
+            if (!validateField('f-task-width', [{min: 5}, {max: 100}])) return;
+            const t = data.tasks.find(x => x.id === id);
+            if (!t) return;
+            t.name = document.getElementById('f-task-name').value.trim();
+            t.start = parseInt(document.getElementById('f-task-start')?.value) || 0;
+            t.width = parseInt(document.getElementById('f-task-width')?.value) || 20;
+            t.color = document.getElementById('f-task-color')?.value || 'amber';
+            saveData();
+            closeModal();
+            renderGantt();
+            showToast('Task updated!', 'success');
         }
 
         function submitResource() {
+            if (!validateField('f-resource-name', [{required: true, message: 'Resource name is required'}])) return;
             const type = document.getElementById('f-resource-type')?.value;
-            const name = document.getElementById('f-resource-name')?.value.trim();
-            if (!name) { showToast('Resource name is required', 'error'); return; }
+            const name = document.getElementById('f-resource-name').value.trim();
             const req = parseInt(document.getElementById('f-resource-req')?.value) || 0;
             const avail = parseInt(document.getElementById('f-resource-avail')?.value) || 0;
             data.resources[type].push({ name, required: req, available: avail });
@@ -1035,28 +1411,27 @@
             closeModal();
             renderResources();
             updateKPIs();
-            showToast(`Resource "${name}" added!`, 'success');
+            showToast('Resource added!', 'success');
         }
 
         function submitChangeOrder() {
-            const title = document.getElementById('f-co-title')?.value.trim();
-            if (!title) { showToast('Change order title is required', 'error'); return; }
+            if (!validateField('f-co-title', [{required: true, message: 'Title is required'}])) return;
+            const title = document.getElementById('f-co-title').value.trim();
             const cost = parseFloat(document.getElementById('f-co-cost')?.value) || 0;
             showToast(`Change order "${title}" submitted ($${cost.toLocaleString()})`, 'success');
             closeModal();
         }
 
         function submitPO() {
-            const supplier = document.getElementById('f-po-supplier')?.value.trim();
-            if (!supplier) { showToast('Supplier is required', 'error'); return; }
+            if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
+            const supplier = document.getElementById('f-po-supplier').value.trim();
             const qty = document.getElementById('f-po-qty')?.value || '0';
             const unit = document.getElementById('f-po-unit')?.value || '';
             const price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
             const poId = `PO-2024-${String(data.nextPO).padStart(3, '0')}`;
             data.nextPO++;
             data.pos.push({
-                id: poId,
-                supplier,
+                id: poId, supplier,
                 item: document.getElementById('f-po-item')?.value || '',
                 qty: unit ? `${qty} ${unit}` : qty,
                 amount: price * (parseInt(qty) || 1),
@@ -1069,26 +1444,75 @@
             showToast(`PO ${poId} created!`, 'success');
         }
 
+        function submitEditPO(id) {
+            if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
+            const po = data.pos.find(x => x.id === id);
+            if (!po) return;
+            po.supplier = document.getElementById('f-po-supplier').value.trim();
+            po.item = document.getElementById('f-po-item')?.value || '';
+            const qty = document.getElementById('f-po-qty')?.value || '0';
+            const unit = document.getElementById('f-po-unit')?.value || '';
+            po.qty = unit ? `${qty} ${unit}` : qty;
+            const price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
+            po.amount = price * (parseInt(qty) || 1);
+            po.delivery = document.getElementById('f-po-delivery')?.value || 'TBD';
+            po.status = document.getElementById('f-po-status')?.value || 'Pending';
+            saveData();
+            closeModal();
+            renderPOTable();
+            showToast('PO updated!', 'success');
+        }
+
         function submitSub() {
-            const name = document.getElementById('f-sub-name')?.value.trim();
-            if (!name) { showToast('Company name is required', 'error'); return; }
+            if (!validateField('f-sub-name', [{required: true, message: 'Company name is required'}])) return;
+            if (!validateField('f-sub-contract', [{min: 0, message: 'Contract must be 0 or greater'}])) return;
+            const name = document.getElementById('f-sub-name').value.trim();
             const trade = document.getElementById('f-sub-trade')?.value || 'General';
             const contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
             const colors = ['from-blue-500 to-cyan-600', 'from-green-500 to-emerald-600', 'from-amber-500 to-orange-600', 'from-purple-500 to-pink-600', 'from-rose-500 to-red-600'];
             data.subs.push({
                 id: 's' + Date.now(),
                 initials: name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(),
-                name,
-                trade,
-                contract,
-                progress: 0,
-                status: 'Active',
+                name, trade, contract, progress: 0, status: 'Active',
                 color: colors[data.subs.length % colors.length]
             });
             saveData();
             closeModal();
             renderSubs();
-            showToast(`Subcontractor "${name}" added!`, 'success');
+            showToast('Subcontractor added!', 'success');
+        }
+
+        function submitEditSub(id) {
+            if (!validateField('f-sub-name', [{required: true, message: 'Company name is required'}])) return;
+            if (!validateField('f-sub-contract', [{min: 0, message: 'Contract must be 0 or greater'}])) return;
+            const s = data.subs.find(x => x.id === id);
+            if (!s) return;
+            s.name = document.getElementById('f-sub-name').value.trim();
+            s.trade = document.getElementById('f-sub-trade')?.value || 'General';
+            s.contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
+            s.progress = parseInt(document.getElementById('f-sub-progress')?.value) || 0;
+            s.initials = s.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            saveData();
+            closeModal();
+            renderSubs();
+            showToast('Subcontractor updated!', 'success');
+        }
+
+        function submitEditBudgetItem(oldCategory) {
+            if (!validateField('f-budget-category', [{required: true, message: 'Category name is required'}])) return;
+            if (!validateField('f-budget-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
+            const c = data.budget.find(x => x.category === oldCategory);
+            if (!c) return;
+            c.category = document.getElementById('f-budget-category').value.trim();
+            c.budget = parseFloat(document.getElementById('f-budget-budget')?.value) || 0;
+            c.committed = parseFloat(document.getElementById('f-budget-committed')?.value) || 0;
+            c.spent = parseFloat(document.getElementById('f-budget-spent')?.value) || 0;
+            saveData();
+            closeModal();
+            renderBudgetSummary();
+            renderBudgetTable();
+            updateKPIs();
+            showToast('Budget category updated!', 'success');
         }
 
         // ── Export ────────────────────────────────────────────────────

@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConstructERP // Project Management Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0f1a;
+            --panel: rgba(18, 22, 36, 0.85);
+            --border: rgba(45, 55, 80, 0.5);
+            --accent: #f59e0b;
+            --accent-dim: rgba(245, 158, 11, 0.15);
+            --green: #10b981;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --purple: #8b5cf6;
+        }
+        * { -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #94a3b8; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass { background: var(--panel); backdrop-filter: blur(16px); border: 1px solid var(--border); }
+        .glass-hover { transition: all 0.2s; }
+        .glass-hover:hover { background: rgba(30, 41, 59, 0.7); border-color: rgba(245, 158, 11, 0.25); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(45,55,80,0.5); border-radius: 2px; }
+        .tab-btn { transition: all 0.2s; position: relative; }
+        .tab-btn.active { color: var(--accent); }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 2px; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fade-in 0.3s ease-out; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+        .stat-card { transition: all 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(245,158,11,0.3); }
+        .progress-bar { height: 6px; border-radius: 3px; background: rgba(45,55,80,0.5); overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+        input, select, textarea { transition: all 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: rgba(245,158,11,0.5); box-shadow: 0 0 0 3px rgba(245,158,11,0.1); outline: none; }
+        .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+        .gantt-bar { transition: all 0.3s; }
+        .gantt-bar:hover { filter: brightness(1.2); transform: scaleY(1.15); }
+        .toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; animation: fade-in 0.3s ease-out; }
+        .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
+        .search-input { padding-left: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
+        .delete-btn { opacity: 0; transition: opacity 0.2s; }
+        tr:hover .delete-btn, .card-hover:hover .delete-btn { opacity: 1; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex">
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- SIDEBAR                                                          -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <aside class="w-64 glass border-r border-slate-800 flex flex-col h-full z-20 flex-shrink-0">
+        <div class="p-5 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">CE</div>
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-tight">Construct<span class="text-amber-400">ERP</span></h1>
+                    <div class="text-[9px] mono text-slate-600">Project Management Suite</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400"></i> Dashboard
+            </button>
+            <button onclick="switchTab('projects')" id="tab-projects" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i> Projects
+            </button>
+            <button onclick="switchTab('schedule')" id="tab-schedule" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="calendar-range" class="w-4 h-4 text-purple-400"></i> Schedule
+            </button>
+            <button onclick="switchTab('resources')" id="tab-resources" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="hard-hat" class="w-4 h-4 text-green-400"></i> Resources
+            </button>
+            <button onclick="switchTab('budget')" id="tab-budget" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="wallet" class="w-4 h-4 text-yellow-400"></i> Budget
+            </button>
+            <button onclick="switchTab('procurement')" id="tab-procurement" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="truck" class="w-4 h-4 text-orange-400"></i> Procurement
+            </button>
+            <button onclick="switchTab('subs')" id="tab-subs" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i> Subcontractors
+            </button>
+            <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i data-lucide="file-bar-chart" class="w-4 h-4 text-rose-400"></i> Reports
+            </button>
+        </nav>
+
+        <div class="p-3 border-t border-slate-800 bg-slate-950/50">
+            <div class="flex items-center justify-between text-[10px] mono">
+                <span class="text-slate-600">v2.0.0</span>
+                <div class="flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
+                    <span class="text-green-400/70">LIVE</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- MAIN                                                              -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+
+        <!-- Header -->
+        <header class="h-14 glass border-b border-slate-800 flex items-center justify-between px-6 z-10 flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <span class="text-slate-500 text-sm">ERP / <span class="text-white font-medium" id="page-title">Dashboard</span></span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg glass text-[10px] mono">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
+                    <span class="text-slate-400">System</span>
+                    <span class="text-white font-semibold">ONLINE</span>
+                </div>
+                <button onclick="refreshAll()" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-amber-400">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- DASHBOARD                                                        -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 scrollbar-thin">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Active Projects</span>
+                            <i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mono" id="kpi-projects">0</div>
+                        <div class="text-xs text-slate-500 mt-1"><span class="text-green-400" id="kpi-projects-change">+0</span> this quarter</div>
+                    </div>
+                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Total Budget</span>
+                            <i data-lucide="wallet" class="w-4 h-4 text-yellow-400"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mono" id="kpi-budget">$0</div>
+                        <div class="text-xs text-slate-500 mt-1"><span class="text-amber-400" id="kpi-budget-pct">0%</span> allocated</div>
+                    </div>
+                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Workforce</span>
+                            <i data-lucide="hard-hat" class="w-4 h-4 text-green-400"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mono" id="kpi-workforce">0</div>
+                        <div class="text-xs text-slate-500 mt-1"><span class="text-green-400" id="kpi-workforce-status">On-site</span></div>
+                    </div>
+                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">On Schedule</span>
+                            <i data-lucide="calendar-check" class="w-4 h-4 text-purple-400"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mono" id="kpi-schedule">0%</div>
+                        <div class="text-xs text-slate-500 mt-1"><span class="text-amber-400" id="kpi-schedule-status">Tracking</span></div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2 glass rounded-2xl p-6 border border-slate-800">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                                <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Budget vs. Actual
+                            </h3>
+                            <span class="text-[10px] mono text-slate-600">YTD</span>
+                        </div>
+                        <div id="budget-chart" class="relative h-64">
+                            <canvas id="budgetChartCanvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-slate-800">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                                <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i> Alerts
+                            </h3>
+                            <span class="text-[10px] mono text-slate-600" id="alert-count">3</span>
+                        </div>
+                        <div id="alert-list" class="space-y-3">
+                            <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 fade-in">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-red-400 mt-1.5 flex-shrink-0"></div>
+                                    <div><div class="text-xs text-white font-medium">Permit Delay</div><div class="text-[10px] text-slate-500 mt-0.5">Building permit #B-2024-089 delayed 2 weeks</div></div>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 fade-in">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></div>
+                                    <div><div class="text-xs text-white font-medium">Material Shortage</div><div class="text-[10px] text-slate-500 mt-0.5">Steel rebar delivery rescheduled to Aug 12</div></div>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-green-500/10 border border-green-500/20 fade-in">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-green-400 mt-1.5 flex-shrink-0"></div>
+                                    <div><div class="text-xs text-white font-medium">Phase Complete</div><div class="text-[10px] text-slate-500 mt-0.5">Structural framing passed inspection</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity + Upcoming -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass rounded-2xl p-6 border border-slate-800">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                                <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i> Recent Activity
+                            </h3>
+                        </div>
+                        <div id="activity-feed" class="space-y-3">
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-slate-400">Inspection passed</span><span class="text-slate-600 ml-auto">2h ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-400">PO #PO-2024-042 issued</span><span class="text-slate-600 ml-auto">4h ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div><span class="text-slate-400">Change order #CO-003 submitted</span><span class="text-slate-600 ml-auto">6h ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-slate-400">Subcontractor bid awarded</span><span class="text-slate-600 ml-auto">1d ago</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span class="text-slate-400">Safety report filed</span><span class="text-slate-600 ml-auto">1d ago</span></div>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-slate-800">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i> Upcoming Milestones
+                            </h3>
+                        </div>
+                        <div id="milestone-list" class="space-y-3">
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot"></div><span class="text-white font-medium">Concrete Pour</span><span class="text-slate-500 ml-auto">Jul 12</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-400">Steel Erection</span><span class="text-slate-500 ml-auto">Jul 18</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-slate-400">Roofing Start</span><span class="text-slate-500 ml-auto">Aug 5</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-slate-400">MEP Rough-In</span><span class="text-slate-500 ml-auto">Aug 14</span></div>
+                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span class="text-slate-400">Drywall</span><span class="text-slate-500 ml-auto">Sep 2</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- PROJECTS                                                          -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-projects" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Projects</h2>
+                    <button onclick="showModal('project')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> New Project
+                    </button>
+                </div>
+                <div id="projects-grid" class="grid grid-cols-3 gap-4">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- SCHEDULE (Gantt)                                                  -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-schedule" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Schedule</h2>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] mono text-slate-600">Week 28 / 2024</span>
+                        <button onclick="showModal('task')" class="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add Task
+                        </button>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6 border border-slate-800">
+                    <div class="flex items-center justify-between mb-4 text-xs text-slate-500">
+                        <span class="w-48 flex-shrink-0 font-medium text-slate-400">Task</span>
+                        <div class="flex-1 flex">
+                            <span class="flex-1 text-center">Jul 7</span>
+                            <span class="flex-1 text-center">Jul 14</span>
+                            <span class="flex-1 text-center">Jul 21</span>
+                            <span class="flex-1 text-center">Jul 28</span>
+                            <span class="flex-1 text-center">Aug 4</span>
+                        </div>
+                    </div>
+                    <div id="gantt-chart" class="space-y-2">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- RESOURCES                                                         -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-resources" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Resources</h2>
+                    <button onclick="showModal('resource')" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Resource
+                    </button>
+                </div>
+                <div id="resources-grid" class="grid grid-cols-3 gap-4">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- BUDGET                                                            -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-budget" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Budget & Cost Control</h2>
+                    <button onclick="showModal('changeorder')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <i data-lucide="file-plus" class="w-4 h-4"></i> Change Order
+                    </button>
+                </div>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="glass rounded-2xl p-5 border border-slate-800">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Budget</div>
+                        <div class="text-xl font-bold text-white mono" id="budget-total">$0</div>
+                        <div class="text-[10px] text-slate-500">Total approved</div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 border border-slate-800">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Committed</div>
+                        <div class="text-xl font-bold text-amber-400 mono" id="budget-committed">$0</div>
+                        <div class="text-[10px] text-slate-500" id="budget-committed-pct">0% of budget</div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 border border-slate-800">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Spent</div>
+                        <div class="text-xl font-bold text-blue-400 mono" id="budget-spent">$0</div>
+                        <div class="text-[10px] text-slate-500" id="budget-spent-pct">0% of budget</div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 border border-slate-800">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">Remaining</div>
+                        <div class="text-xl font-bold text-green-400 mono" id="budget-remaining">$0</div>
+                        <div class="text-[10px] text-slate-500" id="budget-remaining-pct">0% remaining</div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl overflow-hidden border border-slate-800">
+                    <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                        <h3 class="text-white font-semibold text-sm">Cost Breakdown</h3>
+                        <input type="text" id="budget-search" oninput="renderBudgetTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search categories...">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-950/50 border-b border-slate-800">
+                                <tr class="text-[10px] uppercase tracking-widest text-slate-600">
+                                    <th class="text-left p-4 font-semibold">Category</th>
+                                    <th class="text-right p-4 font-semibold">Budget</th>
+                                    <th class="text-right p-4 font-semibold">Committed</th>
+                                    <th class="text-right p-4 font-semibold">Spent</th>
+                                    <th class="text-right p-4 font-semibold">Remaining</th>
+                                    <th class="text-right p-4 font-semibold">% Used</th>
+                                    <th class="text-right p-4 font-semibold"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="budget-table-body" class="divide-y divide-slate-800/30">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- PROCUREMENT                                                       -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-procurement" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Procurement</h2>
+                    <button onclick="showModal('po')" class="px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> New PO
+                    </button>
+                </div>
+                <div class="glass rounded-2xl overflow-hidden border border-slate-800">
+                    <div class="p-3 border-b border-slate-800 flex items-center gap-3">
+                        <input type="text" id="po-search" oninput="renderPOTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search POs...">
+                        <select id="po-status-filter" onchange="renderPOTable()" class="bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
+                            <option value="all">All Status</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Ordered">Ordered</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-950/50 border-b border-slate-800">
+                                <tr class="text-[10px] uppercase tracking-widest text-slate-600">
+                                    <th class="text-left p-4 font-semibold">PO #</th>
+                                    <th class="text-left p-4 font-semibold">Supplier</th>
+                                    <th class="text-left p-4 font-semibold">Item</th>
+                                    <th class="text-right p-4 font-semibold">Qty</th>
+                                    <th class="text-right p-4 font-semibold">Amount</th>
+                                    <th class="text-left p-4 font-semibold">Status</th>
+                                    <th class="text-left p-4 font-semibold">Delivery</th>
+                                    <th class="text-right p-4 font-semibold"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="po-table-body" class="divide-y divide-slate-800/30">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- SUBCONTRACTORS                                                    -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-subs" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Subcontractors</h2>
+                    <button onclick="showModal('sub')" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Sub
+                    </button>
+                </div>
+                <div id="subs-grid" class="grid grid-cols-3 gap-4">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- REPORTS                                                            -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div id="view-reports" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-white font-bold text-lg">Reports</h2>
+                    <button onclick="exportAll()" class="px-4 py-2 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> Export All
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Daily Progress Report...')">
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i><span class="text-white font-medium text-sm">Daily Progress Report</span></div>
+                        <div class="text-xs text-slate-500">Labor hours, material usage, completed tasks, delays</div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Cost Report...')">
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i><span class="text-white font-medium text-sm">Cost Report</span></div>
+                        <div class="text-xs text-slate-500">Budget vs actual, committed costs, forecast</div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Safety Report...')">
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-green-400"></i><span class="text-white font-medium text-sm">Safety Report</span></div>
+                        <div class="text-xs text-slate-500">Incidents, inspections, near-misses, compliance</div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Schedule Report...')">
+                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-purple-400"></i><span class="text-white font-medium text-sm">Schedule Report</span></div>
+                        <div class="text-xs text-slate-500">Milestone tracking, critical path, delays</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- MODALS                                                            -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div id="modal-overlay" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center" onclick="closeModal(event)">
+        <div id="modal-content" class="glass rounded-2xl border border-slate-800 w-full max-w-lg max-h-[80vh] overflow-y-auto scrollbar-thin" onclick="event.stopPropagation()">
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+                <h3 id="modal-title" class="text-white font-semibold text-sm">New Project</h3>
+                <button onclick="closeModal()" class="p-1 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="p-5 space-y-4">
+                <p class="text-slate-500 text-xs">Modal content placeholder</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+
+    <script>
+        // ── Data Store (localStorage-backed) ─────────────────────────
+        const STORE_KEY = 'construct_erp_data';
+
+        const DEFAULT_DATA = {
+            projects: [
+                { id: 'p1', name: 'Riverside Tower', location: '123 Main St', budget: 1450000, duration: '18 months', description: 'Mixed-use commercial tower', status: 'active', progress: 62, createdAt: '2024-01-15' },
+                { id: 'p2', name: 'Harbor Bridge', location: '456 Bay Ave', budget: 3200000, duration: '24 months', description: 'Suspension bridge rehabilitation', status: 'active', progress: 34, createdAt: '2024-03-01' },
+                { id: 'p3', name: 'Greenfield School', location: '789 Oak Dr', budget: 890000, duration: '12 months', description: 'K-12 educational facility', status: 'active', progress: 78, createdAt: '2024-02-10' }
+            ],
+            tasks: [
+                { id: 't1', name: 'Site Preparation', start: 0, width: 18, color: 'amber' },
+                { id: 't2', name: 'Foundation Excavation', start: 5, width: 22, color: 'blue' },
+                { id: 't3', name: 'Concrete Foundation', start: 15, width: 25, color: 'green' },
+                { id: 't4', name: 'Structural Steel', start: 30, width: 30, color: 'purple' },
+                { id: 't5', name: 'MEP Rough-In', start: 45, width: 28, color: 'rose' },
+                { id: 't6', name: 'Interior Finishes', start: 60, width: 35, color: 'cyan' }
+            ],
+            resources: {
+                labor: [
+                    { name: 'Carpenters', required: 15, available: 12 },
+                    { name: 'Electricians', required: 8, available: 6 },
+                    { name: 'Operators', required: 4, available: 4 },
+                    { name: 'Laborers', required: 20, available: 18 }
+                ],
+                equipment: [
+                    { name: 'Excavators', required: 3, available: 3 },
+                    { name: 'Cranes', required: 2, available: 1 },
+                    { name: 'Forklifts', required: 4, available: 4 },
+                    { name: 'Dump Trucks', required: 6, available: 5 }
+                ],
+                materials: [
+                    { name: 'Steel (tons)', required: 85, available: 42 },
+                    { name: 'Concrete (yd³)', required: 600, available: 320 },
+                    { name: 'Lumber (bdft)', required: 18000, available: 12000 },
+                    { name: 'Rebar (tons)', required: 32, available: 18 }
+                ]
+            },
+            budget: [
+                { category: 'Site Work', budget: 180000, committed: 165000, spent: 148000 },
+                { category: 'Foundation', budget: 280000, committed: 260000, spent: 245000 },
+                { category: 'Structure', budget: 650000, committed: 520000, spent: 480000 },
+                { category: 'MEP', budget: 220000, committed: 180000, spent: 155000 },
+                { category: 'Finishes', budget: 120000, committed: 95000, spent: 64000 }
+            ],
+            pos: [
+                { id: 'PO-2024-038', supplier: 'BuildCo Steel', item: 'Structural Steel', qty: '42 tons', amount: 168000, status: 'Delivered', delivery: 'Jul 2' },
+                { id: 'PO-2024-039', supplier: 'Concrete Supply Co', item: 'Ready-Mix Concrete', qty: '320 yd³', amount: 96000, status: 'In Transit', delivery: 'Jul 10' },
+                { id: 'PO-2024-040', supplier: 'Electrical Wholesale', item: 'Cable & Wiring', qty: '5,000 ft', amount: 24500, status: 'Ordered', delivery: 'Jul 15' },
+                { id: 'PO-2024-041', supplier: 'Lumber Yard Inc', item: 'Framing Lumber', qty: '12,000 bdft', amount: 38400, status: 'Pending', delivery: 'Jul 22' },
+                { id: 'PO-2024-042', supplier: 'HVAC Distributors', item: 'HVAC Units', qty: '6 units', amount: 72000, status: 'In Transit', delivery: 'Jul 18' }
+            ],
+            subs: [
+                { id: 's1', initials: 'EC', name: 'Elite Electrical', trade: 'Electrical', contract: 185000, progress: 62, status: 'Active', color: 'from-blue-500 to-cyan-600' },
+                { id: 's2', initials: 'MP', name: 'Metro Plumbing', trade: 'Plumbing', contract: 142000, progress: 45, status: 'Active', color: 'from-green-500 to-emerald-600' },
+                { id: 's3', initials: 'SF', name: 'Steel Fabricators Inc', trade: 'Structural', contract: 420000, progress: 88, status: 'Active', color: 'from-amber-500 to-orange-600' }
+            ],
+            nextPO: 43
+        };
+
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    // Merge with defaults to handle new fields
+                    return deepMerge(DEFAULT_DATA, parsed);
+                }
+            } catch (e) { console.warn('Failed to load data, using defaults', e); }
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        function deepMerge(defaults, overrides) {
+            const result = JSON.parse(JSON.stringify(defaults));
+            for (const key in overrides) {
+                if (overrides.hasOwnProperty(key)) {
+                    if (typeof overrides[key] === 'object' && !Array.isArray(overrides[key]) && overrides[key] !== null && result[key]) {
+                        result[key] = deepMerge(result[key], overrides[key]);
+                    } else {
+                        result[key] = overrides[key];
+                    }
+                }
+            }
+            return result;
+        }
+
+        function saveData() {
+            localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        }
+
+        let data = loadData();
+
+        // ── Toast Notifications ───────────────────────────────────────
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const colors = { info: 'bg-blue-500/20 border-blue-500/30 text-blue-300', success: 'bg-green-500/20 border-green-500/30 text-green-300', error: 'bg-red-500/20 border-red-500/30 text-red-300' };
+            const icons = { info: 'info', success: 'check-circle', error: 'alert-circle' };
+            const toast = document.createElement('div');
+            toast.className = `glass rounded-xl px-4 py-3 border text-sm flex items-center gap-3 fade-in ${colors[type] || colors.info}`;
+            toast.innerHTML = `<i data-lucide="${icons[type]}" class="w-4 h-4 flex-shrink-0"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        // ── Tab Switching ─────────────────────────────────────────────
+        // ── Budget vs. Actual Chart ──────────────────────────────────
+        let budgetChart = null;
+        function renderBudgetChart() {
+            const canvas = document.getElementById('budgetChartCanvas');
+            if (!canvas) return;
+            // Destroy previous instance to prevent memory leaks
+            if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+            const fmt = (v) => '$' + v.toLocaleString('en-US');
+            budgetChart = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.budget.map(c => c.category),
+                    datasets: [
+                        {
+                            label: 'Budget',
+                            data: data.budget.map(c => c.budget),
+                            backgroundColor: 'rgba(96, 165, 250, 0.8)',
+                            borderColor: 'rgba(96, 165, 250, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Spent',
+                            data: data.budget.map(c => c.spent),
+                            backgroundColor: 'rgba(251, 191, 36, 0.8)',
+                            borderColor: 'rgba(251, 191, 36, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e2e8f0', font: { size: 11 }, boxWidth: 12, padding: 16 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#e2e8f0',
+                            borderColor: 'rgba(148, 163, 184, 0.2)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                            ticks: { color: '#cbd5e1', font: { size: 10 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                            ticks: {
+                                color: '#cbd5e1',
+                                font: { size: 10 },
+                                callback: (v) => '$' + (v / 1000) + 'k'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchTab(tab) {
+            const titles = { dashboard:'Dashboard', projects:'Projects', schedule:'Schedule', resources:'Resources', budget:'Budget', procurement:'Procurement', subs:'Subcontractors', reports:'Reports' };
+            document.getElementById('page-title').innerText = titles[tab] || tab;
+            Object.keys(titles).forEach(t => {
+                document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
+                document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+            });
+            // Re-render active tab content
+            if (tab === 'dashboard') renderBudgetChart();
+            if (tab === 'projects') renderProjects();
+            if (tab === 'schedule') renderGantt();
+            if (tab === 'resources') renderResources();
+            if (tab === 'budget') { renderBudgetSummary(); renderBudgetTable(); }
+            if (tab === 'procurement') renderPOTable();
+            if (tab === 'subs') renderSubs();
+            lucide.createIcons();
+        }
+
+        function refreshAll() {
+            updateKPIs();
+            renderProjects();
+            renderGantt();
+            renderResources();
+            renderBudgetSummary();
+            renderBudgetTable();
+            renderBudgetChart();
+            renderPOTable();
+            renderSubs();
+            lucide.createIcons();
+            showToast('All data refreshed', 'success');
+        }
+
+        // ── KPI Updates ──────────────────────────────────────────────
+        function updateKPIs() {
+            const activeProjects = data.projects.filter(p => p.status === 'active').length;
+            const totalBudget = data.budget.reduce((s, c) => s + c.budget, 0);
+            const totalSpent = data.budget.reduce((s, c) => s + c.spent, 0);
+            const totalWorkforce = data.resources.labor.reduce((s, r) => s + r.available, 0);
+            const avgProgress = data.projects.length ? Math.round(data.projects.reduce((s, p) => s + p.progress, 0) / data.projects.length) : 0;
+
+            document.getElementById('kpi-projects').innerText = activeProjects;
+            document.getElementById('kpi-projects-change').innerText = `+${activeProjects}`;
+            document.getElementById('kpi-budget').innerText = '$' + (totalBudget / 1000000).toFixed(2) + 'M';
+            document.getElementById('kpi-budget-pct').innerText = totalBudget ? Math.round((totalSpent / totalBudget) * 100) + '%' : '0%';
+            document.getElementById('kpi-workforce').innerText = totalWorkforce;
+            document.getElementById('kpi-schedule').innerText = avgProgress + '%';
+        }
+
+        // ── Projects ─────────────────────────────────────────────────
+        function renderProjects() {
+            const grid = document.getElementById('projects-grid');
+            if (!data.projects.length) {
+                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12">No projects yet. Click "New Project" to create one.</div>';
+                return;
+            }
+            grid.innerHTML = data.projects.map(p => `
+                <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
+                    <button onclick="deleteProject('${p.id}')" class="delete-btn absolute top-3 right-3 p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">${p.name.charAt(0)}</div>
+                        <div>
+                            <div class="text-white font-medium text-sm">${p.name}</div>
+                            <div class="text-[10px] text-slate-500">${p.location}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between"><span class="text-slate-500">Budget</span><span class="text-white mono">$${(p.budget / 1000000).toFixed(1)}M</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Duration</span><span class="text-slate-400">${p.duration}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Progress</span><span class="text-amber-400 mono">${p.progress}%</span></div>
+                        <div class="progress-bar mt-2"><div class="progress-fill bg-amber-400" style="width:${p.progress}%"></div></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteProject(id) {
+            data.projects = data.projects.filter(p => p.id !== id);
+            saveData();
+            renderProjects();
+            updateKPIs();
+            showToast('Project deleted', 'info');
+        }
+
+        // ── Gantt Chart ──────────────────────────────────────────────
+        function renderGantt() {
+            const chart = document.getElementById('gantt-chart');
+            const colors = { amber: 'bg-amber-500/60', blue: 'bg-blue-500/60', green: 'bg-green-500/60', purple: 'bg-purple-500/60', rose: 'bg-rose-500/60', cyan: 'bg-cyan-500/60' };
+            if (!data.tasks.length) {
+                chart.innerHTML = '<div class="text-slate-600 italic text-sm text-center py-8">No tasks scheduled. Click "Add Task" to create one.</div>';
+                return;
+            }
+            chart.innerHTML = data.tasks.map(t => `
+                <div class="flex items-center gap-4 h-8 fade-in group">
+                    <span class="w-48 text-xs text-slate-300 truncate flex-shrink-0">${t.name}</span>
+                    <div class="flex-1 relative h-6 bg-slate-800/30 rounded">
+                        <div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div>
+                    </div>
+                    <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function deleteTask(id) {
+            data.tasks = data.tasks.filter(t => t.id !== id);
+            saveData();
+            renderGantt();
+            showToast('Task removed', 'info');
+        }
+
+        // ── Resources ─────────────────────────────────────────────────
+        function renderResources() {
+            const grid = document.getElementById('resources-grid');
+            const r = data.resources;
+            grid.innerHTML = `
+                <div class="glass rounded-2xl p-5 border border-slate-800">
+                    <div class="flex items-center gap-3 mb-4"><i data-lucide="users" class="w-5 h-5 text-cyan-400"></i><span class="text-white font-semibold text-sm">Labor</span></div>
+                    <div class="space-y-3 text-xs">
+                        ${r.labor.map(l => `<div class="flex justify-between"><span class="text-slate-400">${l.name}</span><span class="text-white mono">${l.available} / ${l.required}</span></div>`).join('')}
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 border border-slate-800">
+                    <div class="flex items-center gap-3 mb-4"><i data-lucide="tractor" class="w-5 h-5 text-green-400"></i><span class="text-white font-semibold text-sm">Equipment</span></div>
+                    <div class="space-y-3 text-xs">
+                        ${r.equipment.map(e => `<div class="flex justify-between"><span class="text-slate-400">${e.name}</span><span class="text-white mono">${e.available} / ${e.required}</span></div>`).join('')}
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 border border-slate-800">
+                    <div class="flex items-center gap-3 mb-4"><i data-lucide="package" class="w-5 h-5 text-amber-400"></i><span class="text-white font-semibold text-sm">Materials On-Site</span></div>
+                    <div class="space-y-3 text-xs">
+                        ${r.materials.map(m => `<div class="flex justify-between"><span class="text-slate-400">${m.name}</span><span class="text-white mono">${m.available.toLocaleString()} / ${m.required.toLocaleString()}</span></div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── Budget ───────────────────────────────────────────────────
+        function renderBudgetSummary() {
+            const total = data.budget.reduce((s, c) => s + c.budget, 0);
+            const committed = data.budget.reduce((s, c) => s + c.committed, 0);
+            const spent = data.budget.reduce((s, c) => s + c.spent, 0);
+            const remaining = total - spent;
+            document.getElementById('budget-total').innerText = '$' + total.toLocaleString();
+            document.getElementById('budget-committed').innerText = '$' + committed.toLocaleString();
+            document.getElementById('budget-committed-pct').innerText = total ? Math.round((committed / total) * 100) + '% of budget' : '0% of budget';
+            document.getElementById('budget-spent').innerText = '$' + spent.toLocaleString();
+            document.getElementById('budget-spent-pct').innerText = total ? Math.round((spent / total) * 100) + '% of budget' : '0% of budget';
+            document.getElementById('budget-remaining').innerText = '$' + remaining.toLocaleString();
+            document.getElementById('budget-remaining-pct').innerText = total ? Math.round((remaining / total) * 100) + '% remaining' : '0% remaining';
+        }
+
+        function renderBudgetTable() {
+            const tbody = document.getElementById('budget-table-body');
+            const search = (document.getElementById('budget-search')?.value || '').toLowerCase();
+            const filtered = data.budget.filter(c => c.category.toLowerCase().includes(search));
+            tbody.innerHTML = filtered.map(c => {
+                const pct = c.budget ? Math.round((c.spent / c.budget) * 100) : 0;
+                const remaining = c.budget - c.spent;
+                const color = pct > 85 ? 'text-red-400' : pct > 70 ? 'text-amber-400' : pct > 50 ? 'text-blue-400' : 'text-green-400';
+                return `<tr class="hover:bg-slate-800/20">
+                    <td class="p-4 text-slate-300">${c.category}</td>
+                    <td class="p-4 text-right text-white mono">$${c.budget.toLocaleString()}</td>
+                    <td class="p-4 text-right text-white mono">$${c.committed.toLocaleString()}</td>
+                    <td class="p-4 text-right text-white mono">$${c.spent.toLocaleString()}</td>
+                    <td class="p-4 text-right text-green-400 mono">$${remaining.toLocaleString()}</td>
+                    <td class="p-4 text-right"><span class="${color} text-[10px] mono">${pct}%</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteBudgetItem('${c.category}')" class="delete-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-600 text-sm">No matching categories</td></tr>';
+            }
+        }
+
+        function deleteBudgetItem(category) {
+            data.budget = data.budget.filter(c => c.category !== category);
+            saveData();
+            renderBudgetSummary();
+            renderBudgetTable();
+            updateKPIs();
+            showToast(`Category "${category}" removed`, 'info');
+        }
+
+        // ── Procurement ──────────────────────────────────────────────
+        function renderPOTable() {
+            const tbody = document.getElementById('po-table-body');
+            const search = (document.getElementById('po-search')?.value || '').toLowerCase();
+            const statusFilter = document.getElementById('po-status-filter')?.value || 'all';
+            const statusColors = { Delivered: 'bg-green-500/10 text-green-400 border-green-500/20', 'In Transit': 'bg-amber-500/10 text-amber-400 border-amber-500/20', Ordered: 'bg-blue-500/10 text-blue-400 border-blue-500/20', Pending: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
+            let filtered = data.pos.filter(po =>
+                (po.supplier.toLowerCase().includes(search) || po.item.toLowerCase().includes(search) || po.id.toLowerCase().includes(search)) &&
+                (statusFilter === 'all' || po.status === statusFilter)
+            );
+            tbody.innerHTML = filtered.map(po => `
+                <tr class="hover:bg-slate-800/20">
+                    <td class="p-4 text-cyan-400 mono text-xs">${po.id}</td>
+                    <td class="p-4 text-slate-300">${po.supplier}</td>
+                    <td class="p-4 text-slate-400">${po.item}</td>
+                    <td class="p-4 text-right text-white mono">${po.qty}</td>
+                    <td class="p-4 text-right text-white mono">$${po.amount.toLocaleString()}</td>
+                    <td class="p-4"><span class="text-[10px] px-2 py-0.5 rounded ${statusColors[po.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}">${po.status}</span></td>
+                    <td class="p-4 text-slate-500 text-xs">${po.delivery}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="deletePO('${po.id}')" class="delete-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-600 text-sm">No purchase orders found</td></tr>';
+            }
+        }
+
+        function deletePO(id) {
+            data.pos = data.pos.filter(po => po.id !== id);
+            saveData();
+            renderPOTable();
+            showToast(`PO ${id} deleted`, 'info');
+        }
+
+        // ── Subcontractors ────────────────────────────────────────────
+        function renderSubs() {
+            const grid = document.getElementById('subs-grid');
+            if (!data.subs.length) {
+                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12">No subcontractors yet. Click "Add Sub" to add one.</div>';
+                return;
+            }
+            grid.innerHTML = data.subs.map(s => {
+                const progressColor = s.progress > 80 ? 'text-green-400' : s.progress > 50 ? 'text-amber-400' : 'text-blue-400';
+                return `
+                <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative">
+                    <button onclick="deleteSub('${s.id}')" class="delete-btn absolute top-3 right-3 p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white font-bold">${s.initials}</div>
+                        <div>
+                            <div class="text-white font-medium text-sm">${s.name}</div>
+                            <div class="text-[10px] text-slate-500">${s.trade}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between"><span class="text-slate-500">Contract</span><span class="text-white mono">$${s.contract.toLocaleString()}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Progress</span><span class="${progressColor} mono">${s.progress}%</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Status</span><span class="text-green-400">${s.status}</span></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function deleteSub(id) {
+            data.subs = data.subs.filter(s => s.id !== id);
+            saveData();
+            renderSubs();
+            showToast('Subcontractor removed', 'info');
+        }
+
+        // ── Modals ─────────────────────────────────────────────────────
+        function showModal(type) {
+            const overlay = document.getElementById('modal-overlay');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            const forms = {
+                project: { t: 'New Project', h: `
+                    <div><label class="text-xs text-slate-400 mb-1 block">Project Name</label><input id="f-project-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. Riverside Tower"></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Location</label><input id="f-project-location" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. 123 Main St"></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Budget ($)</label><input id="f-project-budget" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="1000000"></div><div><label class="text-xs text-slate-400 mb-1 block">Duration</label><input id="f-project-duration" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. 12 months"></div></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Description</label><textarea id="f-project-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 h-20" placeholder="Project scope..."></textarea></div>
+                    <button onclick="submitProject()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Create Project</button>
+                ` },
+                task: { t: 'New Task', h: `
+                    <div><label class="text-xs text-slate-400 mb-1 block">Task Name</label><input id="f-task-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600" placeholder="e.g. Foundation Pour"></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Start %</label><input id="f-task-start" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0" min="0" max="90"></div><div><label class="text-xs text-slate-400 mb-1 block">Width %</label><input id="f-task-width" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="20" min="5" max="100"></div></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Color</label><select id="f-task-color" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option value="amber">Amber</option><option value="blue">Blue</option><option value="green">Green</option><option value="purple">Purple</option><option value="rose">Rose</option><option value="cyan">Cyan</option></select></div>
+                    <button onclick="submitTask()" class="w-full py-2.5 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all">Add Task</button>
+                ` },
+                resource: { t: 'Add Resource', h: `
+                    <div><label class="text-xs text-slate-400 mb-1 block">Resource Type</label><select id="f-resource-type" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option value="labor">Labor</option><option value="equipment">Equipment</option><option value="materials">Material</option></select></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Name</label><input id="f-resource-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Crane Operator"></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Required</label><input id="f-resource-req" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"></div><div><label class="text-xs text-slate-400 mb-1 block">Available</label><input id="f-resource-avail" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"></div></div>
+                    <button onclick="submitResource()" class="w-full py-2.5 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all">Add Resource</button>
+                ` },
+                changeorder: { t: 'Change Order', h: `
+                    <div><label class="text-xs text-slate-400 mb-1 block">Title</label><input id="f-co-title" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Additional electrical work"></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Description</label><textarea id="f-co-desc" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white h-20" placeholder="Scope change details..."></textarea></div>
+                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Cost Impact ($)</label><input id="f-co-cost" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0"></div><div><label class="text-xs text-slate-400 mb-1 block">Schedule Impact</label><input id="f-co-schedule" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. +5 days"></div></div>
+                    <button onclick="submitChangeOrder()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Submit Change Order</button>
+                ` },
+                po: { t: 'New Purchase Order', h: `
+                    <div><label class="text-xs text-slate-400 mb-1 block">Supplier</label><input id="f-po-supplier" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="Supplier name"></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Item / Material</label><input id="f-po-item" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Rebar #4"></div>
+                    <div class="grid grid-cols-3 gap-3"><div><label class="text-xs text-slate-400 mb-1 block">Qty</label><input id="f-po-qty" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="42"></div><div><label class="text-xs text-slate-400 mb-1 block">Unit</label><input id="f-po-unit" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="tons"></div><div><label class="text-xs text-slate-400 mb-1 block">Unit Price</label><input id="f-po-price" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="$"></div></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Delivery Date</label><input id="f-po-delivery" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="e.g. Aug 1"></div>
+                    <button onclick="submitPO()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all">Create PO</button>
+                ` },
+                sub: { t: 'Add Subcontractor', h: `
+                    <div><label class="text-xs text-slate-400 mb-1 block">Company Name</label><input id="f-sub-name" type="text" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="Company name"></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Trade</label><select id="f-sub-trade" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white"><option>Electrical</option><option>Plumbing</option><option>Structural</option><option>HVAC</option><option>Finishes</option></select></div>
+                    <div><label class="text-xs text-slate-400 mb-1 block">Contract Amount ($)</label><input id="f-sub-contract" type="number" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white" placeholder="0"></div>
+                    <button onclick="submitSub()" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all">Add Subcontractor</button>
+                ` }
+            };
+            const f = forms[type] || forms.project;
+            title.innerText = f.t;
+            body.innerHTML = f.h;
+            overlay.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== document.getElementById('modal-overlay') && e.target.closest('#modal-content')) return;
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        // ── Form Submissions ─────────────────────────────────────────
+        function submitProject() {
+            const name = document.getElementById('f-project-name')?.value.trim();
+            if (!name) { showToast('Project name is required', 'error'); return; }
+            data.projects.push({
+                id: 'p' + Date.now(),
+                name,
+                location: document.getElementById('f-project-location')?.value || '',
+                budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0,
+                duration: document.getElementById('f-project-duration')?.value || '',
+                description: document.getElementById('f-project-desc')?.value || '',
+                status: 'active',
+                progress: 0,
+                createdAt: new Date().toISOString().split('T')[0]
+            });
+            saveData();
+            closeModal();
+            renderProjects();
+            updateKPIs();
+            showToast(`Project "${name}" created!`, 'success');
+        }
+
+        function submitTask() {
+            const name = document.getElementById('f-task-name')?.value.trim();
+            if (!name) { showToast('Task name is required', 'error'); return; }
+            data.tasks.push({
+                id: 't' + Date.now(),
+                name,
+                start: parseInt(document.getElementById('f-task-start')?.value) || 0,
+                width: parseInt(document.getElementById('f-task-width')?.value) || 20,
+                color: document.getElementById('f-task-color')?.value || 'amber'
+            });
+            saveData();
+            closeModal();
+            renderGantt();
+            showToast(`Task "${name}" added!`, 'success');
+        }
+
+        function submitResource() {
+            const type = document.getElementById('f-resource-type')?.value;
+            const name = document.getElementById('f-resource-name')?.value.trim();
+            if (!name) { showToast('Resource name is required', 'error'); return; }
+            const req = parseInt(document.getElementById('f-resource-req')?.value) || 0;
+            const avail = parseInt(document.getElementById('f-resource-avail')?.value) || 0;
+            data.resources[type].push({ name, required: req, available: avail });
+            saveData();
+            closeModal();
+            renderResources();
+            updateKPIs();
+            showToast(`Resource "${name}" added!`, 'success');
+        }
+
+        function submitChangeOrder() {
+            const title = document.getElementById('f-co-title')?.value.trim();
+            if (!title) { showToast('Change order title is required', 'error'); return; }
+            const cost = parseFloat(document.getElementById('f-co-cost')?.value) || 0;
+            showToast(`Change order "${title}" submitted ($${cost.toLocaleString()})`, 'success');
+            closeModal();
+        }
+
+        function submitPO() {
+            const supplier = document.getElementById('f-po-supplier')?.value.trim();
+            if (!supplier) { showToast('Supplier is required', 'error'); return; }
+            const qty = document.getElementById('f-po-qty')?.value || '0';
+            const unit = document.getElementById('f-po-unit')?.value || '';
+            const price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
+            const poId = `PO-2024-${String(data.nextPO).padStart(3, '0')}`;
+            data.nextPO++;
+            data.pos.push({
+                id: poId,
+                supplier,
+                item: document.getElementById('f-po-item')?.value || '',
+                qty: unit ? `${qty} ${unit}` : qty,
+                amount: price * (parseInt(qty) || 1),
+                status: 'Pending',
+                delivery: document.getElementById('f-po-delivery')?.value || 'TBD'
+            });
+            saveData();
+            closeModal();
+            renderPOTable();
+            showToast(`PO ${poId} created!`, 'success');
+        }
+
+        function submitSub() {
+            const name = document.getElementById('f-sub-name')?.value.trim();
+            if (!name) { showToast('Company name is required', 'error'); return; }
+            const trade = document.getElementById('f-sub-trade')?.value || 'General';
+            const contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
+            const colors = ['from-blue-500 to-cyan-600', 'from-green-500 to-emerald-600', 'from-amber-500 to-orange-600', 'from-purple-500 to-pink-600', 'from-rose-500 to-red-600'];
+            data.subs.push({
+                id: 's' + Date.now(),
+                initials: name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(),
+                name,
+                trade,
+                contract,
+                progress: 0,
+                status: 'Active',
+                color: colors[data.subs.length % colors.length]
+            });
+            saveData();
+            closeModal();
+            renderSubs();
+            showToast(`Subcontractor "${name}" added!`, 'success');
+        }
+
+        // ── Export ────────────────────────────────────────────────────
+        function exportAll() {
+            const exportData = JSON.stringify(data, null, 2);
+            const blob = new Blob([exportData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `construct_erp_export_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Data exported as JSON', 'success');
+        }
+
+        // ── Init ──────────────────────────────────────────────────────
+        updateKPIs();
+        renderProjects();
+        renderGantt();
+        renderResources();
+        renderBudgetSummary();
+        renderBudgetTable();
+        renderBudgetChart();
+        renderPOTable();
+        renderSubs();
+        lucide.createIcons();
+    </script>
+</body>
+</html>

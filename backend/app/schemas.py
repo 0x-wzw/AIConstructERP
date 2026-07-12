@@ -1,15 +1,16 @@
-"""Pydantic v2 request/response schemas.
+"""Pydantic v2 schemas for the AI-native ERP entity system.
 
-Convention per entity:
-  * <Entity>Base    — shared writable fields
-  * <Entity>Create  — POST body
-  * <Entity>Update  — PATCH body (all fields optional)
-  * <Entity>Read    — response (adds id / server fields)
+Instead of 50+ entity-specific schemas, we have:
+  - EntityCreate/Read/Update — universal, accepts dynamic attributes
+  - EntityType/AttributeDefinition — metamodel schemas
+  - EntityRelationship — graph edge schemas
+  - EntityActivity/EntityComment — activity stream schemas
+  - EntityFile — file attachment schemas
 """
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Literal, Optional
+from datetime import date, datetime
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -17,220 +18,22 @@ ORM = ConfigDict(from_attributes=True)
 
 RoleLiteral = Literal["admin", "project_manager", "accounting", "viewer"]
 
-ProjectStatus = Literal["active", "planning", "on_hold", "complete"]
-TaskColor = Literal["amber", "blue", "green", "purple", "rose", "cyan"]
-ResourceCategory = Literal["labor", "equipment", "materials"]
-POStatus = Literal["Pending", "Ordered", "In Transit", "Delivered"]
+
+# ══════════════════════════════════════════════════════════════════════════
+# AUTH / Users
+# ══════════════════════════════════════════════════════════════════════════
 
 
-# ── Projects ──────────────────────────────────────────────────────────
-class ProjectBase(BaseModel):
-    name: str = Field(min_length=1, max_length=200)
-    location: str = ""
-    budget: float = Field(default=0, ge=0)
-    duration: str = ""
-    description: str = ""
-    status: ProjectStatus = "active"
-    progress: int = Field(default=0, ge=0, le=100)
-
-
-class ProjectCreate(ProjectBase):
-    pass
-
-
-class ProjectUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    location: Optional[str] = None
-    budget: Optional[float] = Field(default=None, ge=0)
-    duration: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[ProjectStatus] = None
-    progress: Optional[int] = Field(default=None, ge=0, le=100)
-
-
-class ProjectRead(ProjectBase):
-    model_config = ORM
-    id: int
-    created_at: datetime
-
-
-# ── Tasks ─────────────────────────────────────────────────────────────
-class TaskBase(BaseModel):
-    name: str = Field(min_length=1, max_length=200)
-    start: int = Field(default=0, ge=0, le=100)
-    width: int = Field(default=20, ge=1, le=100)
-    color: TaskColor = "amber"
-    project_id: Optional[int] = None
-
-
-class TaskCreate(TaskBase):
-    pass
-
-
-class TaskUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    start: Optional[int] = Field(default=None, ge=0, le=100)
-    width: Optional[int] = Field(default=None, ge=1, le=100)
-    color: Optional[TaskColor] = None
-    project_id: Optional[int] = None
-
-
-class TaskRead(TaskBase):
-    model_config = ORM
-    id: int
-
-
-# ── Resources ─────────────────────────────────────────────────────────
-class ResourceBase(BaseModel):
-    category: ResourceCategory
-    name: str = Field(min_length=1, max_length=200)
-    required: int = Field(default=0, ge=0)
-    available: int = Field(default=0, ge=0)
-    unit: str = ""
-
-
-class ResourceCreate(ResourceBase):
-    pass
-
-
-class ResourceUpdate(BaseModel):
-    category: Optional[ResourceCategory] = None
-    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    required: Optional[int] = Field(default=None, ge=0)
-    available: Optional[int] = Field(default=None, ge=0)
-    unit: Optional[str] = None
-
-
-class ResourceRead(ResourceBase):
-    model_config = ORM
-    id: int
-
-
-# ── Budget items ──────────────────────────────────────────────────────
-class BudgetItemBase(BaseModel):
-    category: str = Field(min_length=1, max_length=120)
-    budget: float = Field(default=0, ge=0)
-    committed: float = Field(default=0, ge=0)
-    spent: float = Field(default=0, ge=0)
-
-
-class BudgetItemCreate(BudgetItemBase):
-    pass
-
-
-class BudgetItemUpdate(BaseModel):
-    category: Optional[str] = Field(default=None, min_length=1, max_length=120)
-    budget: Optional[float] = Field(default=None, ge=0)
-    committed: Optional[float] = Field(default=None, ge=0)
-    spent: Optional[float] = Field(default=None, ge=0)
-
-
-class BudgetItemRead(BudgetItemBase):
-    model_config = ORM
-    id: int
-
-
-# ── Purchase orders ───────────────────────────────────────────────────
-class PurchaseOrderBase(BaseModel):
-    supplier: str = Field(min_length=1, max_length=200)
-    item: str = Field(min_length=1, max_length=200)
-    qty: str = ""
-    amount: float = Field(default=0, ge=0)
-    status: POStatus = "Pending"
-    delivery: str = "TBD"
-
-
-class PurchaseOrderCreate(PurchaseOrderBase):
-    # Auto-generated (PO-YYYY-NNN) when omitted.
-    po_number: Optional[str] = None
-
-
-class PurchaseOrderUpdate(BaseModel):
-    supplier: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    item: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    qty: Optional[str] = None
-    amount: Optional[float] = Field(default=None, ge=0)
-    status: Optional[POStatus] = None
-    delivery: Optional[str] = None
-
-
-class PurchaseOrderRead(PurchaseOrderBase):
-    model_config = ORM
-    id: int
-    po_number: str
-    created_at: datetime
-
-
-# ── Subcontractors ────────────────────────────────────────────────────
-class SubcontractorBase(BaseModel):
-    name: str = Field(min_length=1, max_length=200)
-    initials: str = ""
-    trade: str = "General"
-    contract: float = Field(default=0, ge=0)
-    progress: int = Field(default=0, ge=0, le=100)
-    status: str = "Active"
-    color: str = "from-slate-500 to-slate-600"
-
-
-class SubcontractorCreate(SubcontractorBase):
-    pass
-
-
-class SubcontractorUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    initials: Optional[str] = None
-    trade: Optional[str] = None
-    contract: Optional[float] = Field(default=None, ge=0)
-    progress: Optional[int] = Field(default=None, ge=0, le=100)
-    status: Optional[str] = None
-    color: Optional[str] = None
-
-
-class SubcontractorRead(SubcontractorBase):
-    model_config = ORM
-    id: int
-
-
-# ── Change orders ─────────────────────────────────────────────────────
-class ChangeOrderBase(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
-    description: str = ""
-    cost_impact: float = 0
-    schedule_impact: str = ""
-    status: str = "Pending"
-
-
-class ChangeOrderCreate(ChangeOrderBase):
-    pass
-
-
-class ChangeOrderUpdate(BaseModel):
-    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    cost_impact: Optional[float] = None
-    schedule_impact: Optional[str] = None
-    status: Optional[str] = None
-
-
-class ChangeOrderRead(ChangeOrderBase):
-    model_config = ORM
-    id: int
-    created_at: datetime
-
-
-# ── Auth / Users ──────────────────────────────────────────────────────
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str = ""
 
 
 class UserRegister(UserBase):
-    """Public self-signup — role is forced to 'viewer' server-side."""
     password: str = Field(min_length=6, max_length=128)
 
 
 class UserAdminCreate(UserRegister):
-    """Admin-created user with an explicit role."""
     role: RoleLiteral = "viewer"
 
 
@@ -253,4 +56,345 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: RoleLiteral
-    expires_in: int  # seconds
+    expires_in: int
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# FILE METADATA
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class FileMetadataBase(BaseModel):
+    original_name: str = Field(min_length=1, max_length=500)
+    content_type: str = ""
+    size_bytes: int = 0
+    checksum_sha256: str = ""
+
+
+class FileMetadataCreate(FileMetadataBase):
+    storage_path: str = Field(min_length=1, max_length=1000)
+    version: int = 1
+    uploaded_by: Optional[int] = None
+
+
+class FileMetadataRead(FileMetadataBase):
+    model_config = ORM
+    id: int
+    storage_path: str
+    version: int
+    uploaded_by: Optional[int] = None
+    uploaded_at: datetime
+    is_deleted: bool
+
+
+class UploadResponse(BaseModel):
+    file_id: int
+    original_name: str
+    size_bytes: int
+    storage_path: str
+    checksum_sha256: str
+    upload_url: str = ""
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENTITY SYSTEM — CORE
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class AttributeValue(BaseModel):
+    """A single attribute value for an entity.
+    
+    Only one value_* field should be set, matching the attr_type.
+    """
+    slug: str = Field(min_length=1, max_length=60)
+    value_string: Optional[str] = None
+    value_text: Optional[str] = None
+    value_number: Optional[float] = None
+    value_date: Optional[date] = None
+    value_datetime: Optional[datetime] = None
+    value_boolean: Optional[bool] = None
+    value_json: Optional[Dict[str, Any]] = None
+    value_entity_id: Optional[int] = None
+    value_user_id: Optional[int] = None
+
+
+class EntityCreate(BaseModel):
+    """Create any entity in the system.
+    
+    Example for a project:
+    {
+      "entity_type_slug": "project",
+      "title": "Riverside Tower",
+      "reference_no": "PRJ-2026-001",
+      "status": "active",
+      "parent_id": null,
+      "attributes": [
+        {"slug": "location", "value_string": "123 Main St"},
+        {"slug": "budget", "value_number": 1450000},
+        {"slug": "duration", "value_string": "18 months"},
+        {"slug": "progress", "value_number": 62}
+      ]
+    }
+    """
+    entity_type_slug: str = Field(min_length=1, max_length=60)
+    title: str = Field(min_length=1, max_length=500)
+    reference_no: str = ""
+    status: str = "active"
+    parent_id: Optional[int] = None
+    summary: str = ""
+    attributes: List[AttributeValue] = []
+
+
+class EntityUpdate(BaseModel):
+    """Update any entity. Only provided fields are changed."""
+    title: Optional[str] = Field(default=None, min_length=1, max_length=500)
+    reference_no: Optional[str] = None
+    status: Optional[str] = None
+    parent_id: Optional[int] = None
+    summary: Optional[str] = None
+    attributes: Optional[List[AttributeValue]] = None
+
+
+class EntityAttributeRead(BaseModel):
+    """Attribute value as returned in API responses."""
+    model_config = ORM
+    id: int
+    slug: str
+    value_string: Optional[str] = None
+    value_text: Optional[str] = None
+    value_number: Optional[float] = None
+    value_date: Optional[date] = None
+    value_datetime: Optional[datetime] = None
+    value_boolean: Optional[bool] = None
+    value_json: Optional[Dict[str, Any]] = None
+    value_entity_id: Optional[int] = None
+    value_user_id: Optional[int] = None
+
+
+class EntityRead(BaseModel):
+    """Any entity in the system, with all its attributes."""
+    model_config = ORM
+    id: int
+    entity_type_id: int
+    title: str
+    reference_no: str
+    status: str
+    parent_id: Optional[int] = None
+    owner_id: Optional[int] = None
+    tenant_id: str
+    summary: str
+    ai_embedding_id: str
+    created_at: datetime
+    updated_at: datetime
+    archived_at: Optional[datetime] = None
+    attributes: List[EntityAttributeRead] = []
+
+
+class EntityBrief(BaseModel):
+    """Minimal entity representation for relationships and lists."""
+    model_config = ORM
+    id: int
+    title: str
+    reference_no: str
+    status: str
+    entity_type_id: int
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENTITY SYSTEM — METAMODEL
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class AttributeDefinitionCreate(BaseModel):
+    slug: str = Field(min_length=1, max_length=60)
+    name: str = Field(min_length=1, max_length=200)
+    description: str = ""
+    attr_type: str = "string"
+    is_required: bool = False
+    is_unique: bool = False
+    is_searchable: bool = True
+    is_filterable: bool = True
+    default_value: Optional[str] = None
+    options_json: Optional[Dict[str, Any]] = None
+    validation_rules: Optional[Dict[str, Any]] = None
+    display_order: int = 0
+
+
+class AttributeDefinitionRead(BaseModel):
+    model_config = ORM
+    id: int
+    entity_type_id: int
+    slug: str
+    name: str
+    description: str
+    attr_type: str
+    is_required: bool
+    is_unique: bool
+    is_searchable: bool
+    is_filterable: bool
+    default_value: Optional[str] = None
+    options_json: Optional[Dict[str, Any]] = None
+    validation_rules: Optional[Dict[str, Any]] = None
+    display_order: int
+    is_active: bool
+    created_at: datetime
+
+
+class EntityTypeCreate(BaseModel):
+    slug: str = Field(min_length=1, max_length=60)
+    name: str = Field(min_length=1, max_length=200)
+    plural_name: str = ""
+    description: str = ""
+    icon: str = ""
+    color: str = ""
+    config_json: Optional[Dict[str, Any]] = None
+    attributes: List[AttributeDefinitionCreate] = []
+
+
+class EntityTypeRead(BaseModel):
+    model_config = ORM
+    id: int
+    slug: str
+    name: str
+    plural_name: str
+    description: str
+    icon: str
+    color: str
+    is_builtin: bool
+    is_active: bool
+    config_json: Optional[Dict[str, Any]] = None
+    created_at: datetime
+    attributes: List[AttributeDefinitionRead] = []
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENTITY SYSTEM — GRAPH
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class EntityRelationshipCreate(BaseModel):
+    source_id: int
+    target_id: int
+    relationship_type: str = Field(min_length=1, max_length=60)
+    label: str = ""
+    metadata_json: Optional[Dict[str, Any]] = None
+
+
+class EntityRelationshipRead(BaseModel):
+    model_config = ORM
+    id: int
+    source_id: int
+    target_id: int
+    relationship_type: str
+    label: str
+    metadata_json: Optional[Dict[str, Any]] = None
+    is_active: bool
+    created_at: datetime
+    created_by: Optional[int] = None
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENTITY SYSTEM — ACTIVITY STREAM
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class EntityActivityRead(BaseModel):
+    model_config = ORM
+    id: int
+    entity_id: int
+    activity_type: str
+    description: str
+    previous_state: Optional[Dict[str, Any]] = None
+    new_state: Optional[Dict[str, Any]] = None
+    metadata_json: Optional[Dict[str, Any]] = None
+    performed_by: Optional[int] = None
+    is_ai_generated: bool
+    created_at: datetime
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENTITY SYSTEM — COMMENTS
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class EntityCommentCreate(BaseModel):
+    entity_id: int
+    parent_id: Optional[int] = None
+    body: str = Field(min_length=1)
+    comment_type: str = "comment"
+
+
+class EntityCommentRead(BaseModel):
+    model_config = ORM
+    id: int
+    entity_id: int
+    parent_id: Optional[int] = None
+    body: str
+    comment_type: str
+    author_id: Optional[int] = None
+    is_ai_generated: bool
+    created_at: datetime
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENTITY SYSTEM — FILES
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class EntityFileCreate(BaseModel):
+    entity_id: int
+    file_metadata_id: int
+    file_category: str = ""
+    title: str = ""
+    description: str = ""
+    is_encrypted: bool = False
+
+
+class EntityFileRead(BaseModel):
+    model_config = ORM
+    id: int
+    entity_id: int
+    file_metadata_id: int
+    file_category: str
+    title: str
+    description: str
+    is_encrypted: bool
+    uploaded_by: Optional[int] = None
+    created_at: datetime
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# GRAPH TRAVERSAL
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class GraphQuery(BaseModel):
+    """Query the entity graph.
+    
+    Example: find all vendors that bid on tenders for project 1
+    {
+      "source_type": "project",
+      "source_id": 1,
+      "relationship_types": ["has_tender"],
+      "target_types": ["tender"],
+      "depth": 2
+    }
+    """
+    source_type: Optional[str] = None
+    source_id: Optional[int] = None
+    target_type: Optional[str] = None
+    target_id: Optional[int] = None
+    relationship_types: List[str] = []
+    depth: int = 1
+
+
+class GraphNode(BaseModel):
+    """A node in the entity graph response."""
+    entity: EntityBrief
+    relationships: List[EntityRelationshipRead] = []
+
+
+class GraphResponse(BaseModel):
+    """Response from a graph traversal query."""
+    nodes: List[GraphNode] = []
+    edges: List[EntityRelationshipRead] = []

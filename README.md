@@ -1,47 +1,108 @@
-# ConstructERP 🏗️
+# AIConstructERP 🏗️🤖
 
-**Construction Project Management Suite** — a dark glassmorphism ERP dashboard for construction project management.
+**AI-Native Construction Project Management Suite** — a unified entity system with dynamic attributes, graph relationships, activity streams, and AI-ready context.
 
-![Version](https://img.shields.io/badge/version-2.0.0-amber)
-![Status](https://img.shields.io/badge/status-prototype-yellow)
+![Version](https://img.shields.io/badge/version-3.0.0-amber)
+![Status](https://img.shields.io/badge/status-ai--native-green)
 
-## Features
+## Architecture
 
-- **Dashboard** — KPI cards, Budget vs Actual chart (Chart.js), alerts, activity feed, milestones
-- **Projects** — Create, view, and manage construction projects with budget tracking
-- **Schedule** — Gantt chart for task scheduling and timeline visualization
-- **Resources** — Track labor, equipment, and materials inventory
-- **Budget** — Cost breakdown table with search, budget vs committed vs spent tracking
-- **Procurement** — Purchase order management with search and status filtering
-- **Subcontractors** — Subcontractor directory with contract and progress tracking
-- **Reports** — Exportable data and report generation
+Instead of 56 rigid tables, AIConstructERP uses a **unified entity system**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    ENTITY SYSTEM                         │
+├─────────────────────────────────────────────────────────┤
+│  entity_types        — Schema definitions (16 built-in)  │
+│  attribute_definitions — Field definitions per type      │
+│  entities            — ALL domain objects (one table)    │
+│  entity_attributes   — Dynamic key-value fields          │
+│  entity_relationships — Graph edges (any→any)            │
+│  entity_activities   — Activity/audit stream             │
+│  entity_comments     — Threaded discussions              │
+│  entity_files        — File attachments                  │
+├─────────────────────────────────────────────────────────┤
+│  users               — Auth (JWT, RBAC)                  │
+│  file_metadata       — File storage (local FS or S3)     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Key Capabilities
+
+- **Zero-migration field additions** — just POST an attribute
+- **New entity types at runtime** — POST to `/api/entity-types`
+- **Graph traversal** — find all vendors for a project, all tenders a vendor bid on
+- **Activity stream** — every state change auto-recorded for audit & AI context
+- **Threaded comments** — discussions on any entity
+- **File attachments** — upload once, attach anywhere
+- **Multi-tenancy** — `tenant_id` on every entity
+- **AI-ready** — `summary`, `ai_embedding_id`, full activity history
+
+## 16 Built-in Entity Types
+
+| Type | Attributes |
+|---|---|
+| **Project** | location, budget, duration, progress, start/end dates, description |
+| **Vendor** | registration_no, tax_id, contact, email, phone, category, classification, pre-qualified |
+| **Tender** | description, category, open/close dates, budget estimate, currency |
+| **Contract** | description, contract value, start/end dates |
+| **BOQ Item** | item_no, description, unit, quantity, rate estimate, category |
+| **Bidder** | bid amount, technical/financial/total scores, submission time |
+| **Defect** | description, location, severity, assigned to, target resolution |
+| **Inspection** | description, location, type, scheduled date, result |
+| **Site Diary** | entry date, weather, temperature, work summary, issues, safety, labour count |
+| **Submittal** | description, category, review comments, due date |
+| **Consultant RFP** | description, scope of work, category, open/close dates, budget |
+| **Cost Plan** | version, total estimated/approved, notes |
+| **Purchase Request** | description, notes |
+| **RFQ** | description, response deadline |
+| **Goods Receipt** | supplier, delivery note, received date, notes |
+| **E-Invoice** | supplier, invoice/due dates, total/tax/net amounts |
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| **UI** | Vanilla JS + Tailwind CSS (CDN) |
-| **Icons** | Lucide (CDN) |
-| **Charts** | Chart.js 4.4.7 (CDN) |
-| **Persistence** | localStorage |
-| **Fonts** | Inter + JetBrains Mono (Google Fonts) |
+| **Backend** | FastAPI + SQLAlchemy |
+| **Database** | SQLite (dev) / PostgreSQL (prod) |
+| **Auth** | JWT (OAuth2 password flow) with RBAC |
+| **File Storage** | Local FS (dev) / S3 or MinIO (prod) |
+| **Frontend** | Vanilla JS + Tailwind CSS + Chart.js (included) |
 
-## Getting Started
-
-Just open `construct_erp.html` in any modern browser — no build step, no server required.
+## Quick Start
 
 ```bash
-open construct_erp.html
+cd backend
+pip install -r requirements.txt
+rm -f constructerp.db
+uvicorn app.main:app --reload --port 8787
 ```
 
-## Roadmap to Enterprise
+Then open:
+- **Swagger UI:** http://localhost:8787/docs
+- **Health:** http://localhost:8787/api/health
 
-- [ ] Backend API (FastAPI + PostgreSQL)
-- [ ] Auth (OAuth2/OIDC, RBAC, MFA)
-- [ ] Frontend framework (React/Vite)
-- [ ] Real CRUD with API persistence
-- [ ] Multi-tenancy & audit logging
-- [ ] CI/CD, automated tests, WCAG compliance
+### Demo Users
+
+| Email | Password | Role |
+|---|---|---|
+| admin@constructerp.dev | admin123 | admin |
+| pm@constructerp.dev | pm123 | project_manager |
+| accounting@constructerp.dev | acct123 | accounting |
+| viewer@constructerp.dev | viewer123 | viewer |
+
+## API Overview
+
+| Endpoint | Purpose |
+|---|---|
+| `POST/GET /api/entity-types` | Metamodel management |
+| `POST/GET/PATCH/DELETE /api/entities` | Universal CRUD with dynamic attributes |
+| `POST/GET/DELETE /api/relationships` | Graph edge management |
+| `POST /api/graph/traverse` | Graph traversal (depth-based) |
+| `GET /api/entities/{id}/activities` | Activity stream |
+| `POST/GET /api/comments` | Threaded comments |
+| `POST/GET /api/entities/{id}/files` | File attachments |
+| `POST/GET/DELETE /api/files/upload` | File upload/download |
 
 ## License
 

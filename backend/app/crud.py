@@ -1,8 +1,8 @@
-"""Generic CRUD router factory.
+"""Generic CRUD router factory — adapted for the AI-native entity system.
 
-Builds a full REST resource (list / create / retrieve / update / delete) for a
-SQLAlchemy model + its Pydantic schemas, keeping every entity consistent and
-DRY. `on_create` lets an entity hook in extra logic (e.g. PO number gen).
+The old per-table CRUD is replaced by a single entity CRUD that handles
+dynamic attributes, plus specialized routers for the metamodel, graph,
+activity stream, comments, and files.
 """
 from typing import Callable, List, Optional, Type
 
@@ -19,14 +19,13 @@ def make_crud_router(
     model: Type,
     read_schema: Type,
     create_schema: Type,
-    update_schema: Type,
+    update_schema: Optional[Type] = None,
     prefix: str,
     tag: str,
     search_fields: Optional[List[str]] = None,
     on_create: Optional[Callable] = None,
     write_roles: Optional[List[str]] = None,
 ) -> APIRouter:
-    # Reads: any authenticated user. Writes: listed roles (admin always allowed).
     read_dep = [Depends(get_current_active_user)]
     write_dep = [Depends(require_roles(*(write_roles or [])))]
     router = APIRouter(prefix=prefix, tags=[tag])
@@ -68,15 +67,16 @@ def make_crud_router(
     def get_item(item_id: int, db: Session = Depends(get_db)):
         return _get_or_404(item_id, db)
 
-    @router.patch("/{item_id}", response_model=read_schema, summary=f"Update {tag}",
-                  dependencies=write_dep)
-    def update_item(item_id: int, payload: update_schema, db: Session = Depends(get_db)):
-        obj = _get_or_404(item_id, db)
-        for key, value in payload.model_dump(exclude_unset=True).items():
-            setattr(obj, key, value)
-        db.commit()
-        db.refresh(obj)
-        return obj
+    if update_schema is not None:
+        @router.patch("/{item_id}", response_model=read_schema, summary=f"Update {tag}",
+                      dependencies=write_dep)
+        def update_item(item_id: int, payload: update_schema, db: Session = Depends(get_db)):  # type: ignore[valid-type]
+            obj = _get_or_404(item_id, db)
+            for key, value in payload.model_dump(exclude_unset=True).items():
+                setattr(obj, key, value)
+            db.commit()
+            db.refresh(obj)
+            return obj
 
     @router.delete("/{item_id}", status_code=204, summary=f"Delete {tag}",
                    dependencies=write_dep)
@@ -86,19 +86,3 @@ def make_crud_router(
         db.commit()
 
     return router
-
-
-def generate_po_number(obj, db: Session) -> None:
-    """Assign the next PO-YYYY-NNN number if one wasn't supplied."""
-    from .models import PurchaseOrder
-
-    if getattr(obj, "po_number", None):
-        return
-    existing = db.query(PurchaseOrder.po_number).all()
-    nums = [
-        int(n.rsplit("-", 1)[-1])
-        for (n,) in existing
-        if n and n.rsplit("-", 1)[-1].isdigit()
-    ]
-    nxt = (max(nums) + 1) if nums else 1
-    obj.po_number = f"PO-2024-{nxt:03d}"

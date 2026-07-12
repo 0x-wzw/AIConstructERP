@@ -1,52 +1,84 @@
-# ConstructERP — Mesh Collaboration
+# AIConstructERP — Mesh Collaboration
 
 ## Project
-Single-page construction ERP dashboard (`construct_erp.html`).
-Dark glassmorphism UI with 8 tabs, localStorage persistence, Chart.js, Lucide icons.
+AI-native construction ERP with unified entity system, graph relationships, activity streams, and dynamic attributes.
 
-## Current State (v2.0.0)
-- ✅ localStorage persistence (all data survives refresh)
-- ✅ Modal forms wired up (Project, Task, Resource, Change Order, PO, Sub)
-- ✅ Dynamic rendering for all views (Projects grid, Gantt, Resources, Budget table, PO table, Subs)
-- ✅ Search/filter on Budget table and PO table
-- ✅ Delete buttons on all data rows/cards
-- ✅ Toast notifications
-- ✅ JSON export
-- ✅ Chart.js loaded (ready for real charts)
-- ✅ KPI cards update from live data
-
-## Open Tasks / Next Steps
-
-### High Priority
-- [ ] **Replace static progress bars with a real Chart.js chart** on the Dashboard (Budget vs Actual)
-- [ ] **Add edit functionality** — clicking a row/card should open a pre-filled modal to edit
-- [ ] **Add form validation** — required field indicators, number range checks, date validation
-
-### Medium Priority
-- [ ] **Add responsive breakpoints** — collapse sidebar, stack grids on mobile
-- [ ] **Add sorting** — click column headers in Budget/PO tables to sort
-- [ ] **Add pagination** — for large PO lists
-- [ ] **Add dark/light theme toggle**
-
-### Low Priority
-- [ ] **Add a real Gantt chart** — replace the CSS-based bars with a proper interactive Gantt
-- [ ] **Add daily log / notes** per project
-- [ ] **Add file attachments** to POs and change orders
-- [ ] **Add user authentication** (simple login screen)
+## Current State (v3.0.0)
+- ✅ **Unified entity system** — 8 core tables replace 56 rigid tables
+- ✅ **16 built-in entity types** — project, vendor, tender, contract, BOQ, bidder, defect, inspection, site diary, submittal, consultant RFP, cost plan, purchase request, RFQ, goods receipt, e-invoice
+- ✅ **Dynamic attributes** — add fields at runtime, no migrations
+- ✅ **Graph relationships** — any entity can relate to any other entity
+- ✅ **Graph traversal** — depth-based queries across the entity graph
+- ✅ **Activity stream** — auto-recorded on every create/update/relate
+- ✅ **Threaded comments** — discussions on any entity
+- ✅ **File attachments** — upload once, attach to any entity
+- ✅ **JWT auth with RBAC** — 4 roles (admin, project_manager, accounting, viewer)
+- ✅ **File storage** — local FS (dev) / S3 or MinIO (prod)
+- ✅ **Custom fields** — JSON + tags on every entity
+- ✅ **Demo data** — seeded on first run
+- ✅ **Swagger docs** — auto-generated at /docs
 
 ## Architecture
-- **Data layer**: `data` object in JS, backed by `localStorage` key `construct_erp_data`
-- **Rendering**: Pure DOM manipulation via `innerHTML` — no framework
-- **Styling**: Tailwind CSS (CDN) + custom CSS variables
-- **Icons**: Lucide (CDN)
-- **Charts**: Chart.js (CDN) — loaded but not yet used
+
+```
+backend/
+├── app/
+│   ├── config.py       # env-driven settings
+│   ├── database.py     # engine, session, Base
+│   ├── models.py       # 8 core tables (entity system)
+│   ├── schemas.py      # Pydantic v2 schemas
+│   ├── crud.py         # generic CRUD router factory
+│   ├── main.py         # FastAPI app + all endpoints
+│   ├── auth.py         # auth endpoints
+│   ├── security.py     # JWT, password hashing, RBAC
+│   ├── seed.py         # built-in types + demo data
+│   └── filestore.py    # FileStore ABC (local/S3)
+├── tests/
+├── requirements.txt
+└── README.md
+```
+
+## API Endpoints (30+)
+
+| Method | Path | Description |
+|---|---|---|
+| GET/POST | `/api/entity-types` | List/create entity type definitions |
+| GET | `/api/attribute-definitions` | List attribute definitions |
+| POST | `/api/entities` | Create any entity with dynamic attributes |
+| GET | `/api/entities` | List entities (filter by type, status, search) |
+| GET | `/api/entities/{id}` | Get entity with all attributes |
+| PATCH | `/api/entities/{id}` | Update entity and attributes |
+| DELETE | `/api/entities/{id}` | Archive entity |
+| POST | `/api/relationships` | Create graph edge |
+| GET | `/api/relationships` | Query relationships |
+| DELETE | `/api/relationships/{id}` | Deactivate relationship |
+| POST | `/api/graph/traverse` | Depth-based graph traversal |
+| GET | `/api/entities/{id}/activities` | Activity stream |
+| POST | `/api/comments` | Add comment |
+| GET | `/api/entities/{id}/comments` | List comments |
+| POST | `/api/entities/{id}/files` | Attach file |
+| GET | `/api/entities/{id}/files` | List attached files |
+| POST | `/api/files/upload` | Upload file |
+| GET | `/api/files/{id}/download` | Download file |
+| POST | `/api/auth/token` | Login |
+| POST | `/api/auth/register` | Self-signup |
+| GET | `/api/health` | Health check |
 
 ## How to Collaborate
-1. Pick a task from the list above
-2. Edit `construct_erp.html` directly
-3. Test by opening in browser (`open construct_erp.html`)
-4. Update this file's task list when done
+1. Pick a task from the roadmap below
+2. Edit files in `backend/app/`
+3. Test: `cd backend && uvicorn app.main:app --reload --port 8787`
+4. Update this file when done
+
+## Roadmap
+- [ ] Frontend integration (login + entity CRUD UI)
+- [ ] AI-powered entity summarization
+- [ ] Embedding search across entities
+- [ ] WebSocket for real-time activity stream
+- [ ] Multi-tenancy isolation
+- [ ] Alembic migrations
+- [ ] Refresh tokens + token revocation
+- [ ] CI/CD pipeline
 
 ## Agents
 - **Hermes Agent** — primary developer, full tool access
-- **Claude Code** — invited collaborator, can edit and test

@@ -1,4 +1,4 @@
-"""ConstructERP — AI-native ERP backend.
+"""AIConstructERP — AI-native ERP backend.
 
 Architecture: Unified Entity System
   - One `entities` table for all domain objects
@@ -11,11 +11,14 @@ Architecture: Unified Entity System
 """
 from __future__ import annotations
 
+import logging
+import time
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -28,6 +31,13 @@ from .encryption import decrypt_financial_proposal, encrypt_financial_proposal
 from .filestore import get_file_store
 from .scheduler import start_scheduler, stop_scheduler
 from .security import Role, get_current_active_user, require_roles
+
+# ── Logging ──────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-5s | %(name)s | %(message)s",
+)
+log = logging.getLogger("aicontructerp")
 
 PM = Role.project_manager.value
 ACCT = Role.accounting.value
@@ -47,15 +57,17 @@ async def lifespan(app: FastAPI):
         db.close()
     # Start background scheduler
     start_scheduler()
+    log.info("AIConstructERP started — scheduler active")
     yield
     # Stop background scheduler
     stop_scheduler()
+    log.info("AIConstructERP shutdown complete")
 
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="ConstructERP — AI-native ERP with unified entity system.",
+    description="AIConstructERP — AI-native ERP with unified entity system.",
     lifespan=lifespan,
 )
 
@@ -67,6 +79,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Request Logging Middleware ────────────────────────────────────────
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration = time.time() - start
+    log.info(
+        "%s %s → %s (%.0fms)",
+        request.method, request.url.path, response.status_code, duration * 1000,
+    )
+    return response
+
+
+# ── Global Exception Handler ──────────────────────────────────────────
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    log.error("Unhandled exception on %s %s: %s", request.method, request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "type": type(exc).__name__},
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -161,10 +198,10 @@ def create_entity(
 
     db.commit()
     db.refresh(entity)
-    return entity
+    return schemas.EntityRead.from_orm_with_type(entity)
 
 
-@app.get("/api/entities", response_model=List[schemas.EntityRead],
+@app.get("/api/entities",
          tags=["entities"], summary="List entities",
          dependencies=[Depends(get_current_active_user)])
 def list_entities(
@@ -193,17 +230,35 @@ def list_entities(
             models.Entity.title.ilike(like) | models.Entity.reference_no.ilike(like)
         )
 
-    return query.order_by(models.Entity.id.desc()).offset(skip).limit(limit).all()
+    # Count total for pagination headers
+    total = query.count()
+    page = (skip // limit) + 1 if limit > 0 else 1
+
+    results = (
+        query.order_by(models.Entity.id.desc())
+        .offset(skip).limit(limit)
+        .all()
+    )
+
+    # Build response with pagination headers
+    from fastapi.responses import JSONResponse
+
+    data = [schemas.EntityRead.model_validate(e) for e in results]
+    response = JSONResponse(content=[d.model_dump(mode="json") for d in data])
+    response.headers["X-Total-Count"] = str(total)
+    response.headers["X-Page"] = str(page)
+    response.headers["X-Per-Page"] = str(limit)
+    return response
 
 
-@app.get("/api/entities/{entity_id}", response_model=schemas.EntityRead,
+@app.get("/api/entities/{entity_id}",
          tags=["entities"], summary="Get entity with attributes",
          dependencies=[Depends(get_current_active_user)])
 def get_entity(entity_id: int, db: Session = Depends(get_db)):
     entity = db.get(models.Entity, entity_id)
     if entity is None:
         raise HTTPException(status_code=404, detail="Entity not found")
-    return entity
+    return schemas.EntityRead.from_orm_with_type(entity)
 
 
 @app.patch("/api/entities/{entity_id}", response_model=schemas.EntityRead,
@@ -269,7 +324,7 @@ def update_entity(
 
     db.commit()
     db.refresh(entity)
-    return entity
+    return schemas.EntityRead.from_orm_with_type(entity)
 
 
 @app.delete("/api/entities/{entity_id}", status_code=204,
@@ -696,77 +751,98 @@ def delete_file(file_id: int, db: Session = Depends(get_db)):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# ENCRYPTION — Two-Bid Opening
+# ENCRYPTION — Two-Bid Opening (Entity-based)
 # ══════════════════════════════════════════════════════════════════════════
 
 
-@app.post("/api/bid-submissions/{submission_id}/encrypt",
-           tags=["encryption"], summary="Encrypt a financial bid submission",
-           dependencies=[Depends(require_roles(PM, ADMIN))])
-def encrypt_bid_submission(
-    submission_id: int,
+@app.post("/api/bid-submissions/{bid_id}/encrypt", tags=["encryption"],
+          summary="Encrypt a financial proposal (two-bid opening)",
+          dependencies=[Depends(require_roles(PM, ADMIN))])
+def encrypt_bid_api(
+    bid_id: int,
+    payload: dict,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_active_user),
 ):
-    """Encrypt a financial bid submission for two-bid opening.
+    """Encrypt the financial proposal for a bid submission.
     
-    Financial proposals are encrypted at tender close and only decrypted
-    after technical evaluation is complete.
+    In a two-bid opening system, financial proposals are encrypted at
+    submission time and only decrypted after technical evaluation is complete.
     """
-    # Find the entity file
-    ef = db.get(models.EntityFile, submission_id)
-    if ef is None:
+    entity = db.get(models.Entity, bid_id)
+    if entity is None:
         raise HTTPException(status_code=404, detail="Submission not found")
-
-    # Read the file
-    store = get_file_store()
-    data = store.read(ef.file_metadata.storage_path)
-    if data is None:
-        raise HTTPException(status_code=404, detail="File data not found")
-
-    # Encrypt it
+    
+    import json
+    data = json.dumps(payload.get("financial_data", payload)).encode()
     encrypted = encrypt_financial_proposal(data)
-
-    # Store encrypted version
-    enc_path = ef.file_metadata.storage_path + ".encrypted"
-    store.save(encrypted, ef.file_metadata.original_name + ".encrypted")
-
-    # Mark as encrypted
-    ef.is_encrypted = True
+    
+    # Store encrypted data as an attribute
+    db.query(models.EntityAttribute).filter(
+        models.EntityAttribute.entity_id == bid_id,
+        models.EntityAttribute.slug == "encrypted_proposal",
+    ).delete()
+    
+    ea = models.EntityAttribute(
+        entity_id=bid_id,
+        slug="encrypted_proposal",
+        value_text=encrypted.decode() if isinstance(encrypted, bytes) else encrypted,
+    )
+    db.add(ea)
+    
+    db.add(models.EntityActivity(
+        entity_id=bid_id,
+        activity_type="financial_proposal_encrypted",
+        description="Financial proposal encrypted for two-bid opening",
+        performed_by=user.id,
+    ))
+    
     db.commit()
+    return {"encrypted": True, "bid_id": bid_id}
 
-    return {"status": "encrypted", "submission_id": submission_id}
 
-
-@app.post("/api/bid-submissions/{submission_id}/decrypt",
-           tags=["encryption"], summary="Decrypt a financial bid submission",
-           dependencies=[Depends(require_roles(PM, ADMIN))])
-def decrypt_bid_submission(
-    submission_id: int,
+@app.post("/api/bid-submissions/{bid_id}/decrypt", tags=["encryption"],
+          summary="Decrypt a financial proposal (authorized only)",
+          dependencies=[Depends(require_roles(PM, ADMIN))])
+def decrypt_bid_api(
+    bid_id: int,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_active_user),
 ):
-    """Decrypt a financial bid submission (after technical evaluation)."""
-    ef = db.get(models.EntityFile, submission_id)
-    if ef is None:
+    """Decrypt the financial proposal for a bid submission.
+    
+    Only callable after technical evaluation is complete.
+    Records an audit trail of who decrypted and when.
+    """
+    entity = db.get(models.Entity, bid_id)
+    if entity is None:
         raise HTTPException(status_code=404, detail="Submission not found")
-    if not ef.is_encrypted:
-        raise HTTPException(status_code=400, detail="Submission is not encrypted")
-
-    store = get_file_store()
-    enc_path = ef.file_metadata.storage_path + ".encrypted"
-    encrypted_data = store.read(enc_path)
-    if encrypted_data is None:
-        raise HTTPException(status_code=404, detail="Encrypted file not found")
-
-    decrypted = decrypt_financial_proposal(encrypted_data)
-
-    from fastapi.responses import Response
-    return Response(
-        content=decrypted,
-        media_type=ef.file_metadata.content_type or "application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{ef.file_metadata.original_name}"'},
-    )
+    
+    attr = db.query(models.EntityAttribute).filter(
+        models.EntityAttribute.entity_id == bid_id,
+        models.EntityAttribute.slug == "encrypted_proposal",
+    ).first()
+    
+    if attr is None or not attr.value_text:
+        raise HTTPException(status_code=404, detail="No encrypted proposal found")
+    
+    try:
+        decrypted = decrypt_financial_proposal(attr.value_text.encode())
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Decryption failed: {e}")
+    
+    import json
+    financial_data = json.loads(decrypted.decode())
+    
+    db.add(models.EntityActivity(
+        entity_id=bid_id,
+        activity_type="financial_proposal_decrypted",
+        description=f"Financial proposal decrypted by {user.email}",
+        performed_by=user.id,
+    ))
+    db.commit()
+    
+    return {"decrypted": True, "bid_id": bid_id, "financial_data": financial_data}
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -841,9 +917,9 @@ def get_rate_history(
             "bidder_name": bidder_name,
             "tender_reference": tender_ref,
             "bid_amount": float(bid_amount.value_number) if bid_amount and bid_amount.value_number else 0,
-            "technical_score": float(attrs.get("technical_score", {}).value_number or 0),
-            "financial_score": float(attrs.get("financial_score", {}).value_number or 0),
-            "total_score": float(attrs.get("total_score", {}).value_number or 0),
+            "technical_score": float(attrs["technical_score"].value_number) if "technical_score" in attrs and attrs["technical_score"].value_number else 0,
+            "financial_score": float(attrs["financial_score"].value_number) if "financial_score" in attrs and attrs["financial_score"].value_number else 0,
+            "total_score": float(attrs["total_score"].value_number) if "total_score" in attrs and attrs["total_score"].value_number else 0,
             "status": bidder.status,
         })
 

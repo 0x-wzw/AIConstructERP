@@ -176,6 +176,7 @@ class EntityRead(BaseModel):
     model_config = ORM
     id: int
     entity_type_id: int
+    entity_type_slug: str = ""
     title: str
     reference_no: str
     status: str
@@ -187,7 +188,29 @@ class EntityRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     archived_at: Optional[datetime] = None
-    attributes: List[EntityAttributeRead] = []
+    attributes: List[EntityAttributeRead] = Field(default_factory=list)
+
+    @classmethod
+    def from_orm_with_type(cls, obj):
+        """Create EntityRead from ORM model, populating entity_type_slug."""
+        d = {
+            'id': obj.id,
+            'entity_type_id': obj.entity_type_id,
+            'entity_type_slug': obj.entity_type.slug if obj.entity_type else '',
+            'title': obj.title,
+            'reference_no': obj.reference_no,
+            'status': obj.status,
+            'parent_id': obj.parent_id,
+            'owner_id': obj.owner_id,
+            'tenant_id': obj.tenant_id,
+            'summary': obj.summary,
+            'ai_embedding_id': obj.ai_embedding_id,
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'archived_at': obj.archived_at,
+            'attributes': [EntityAttributeRead.from_orm(a) for a in obj.attributes],
+        }
+        return cls(**d)
 
 
 class EntityBrief(BaseModel):

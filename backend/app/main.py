@@ -12,7 +12,7 @@ Architecture: Unified Entity System
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,10 +20,13 @@ from sqlalchemy.orm import Session
 
 from . import models, schemas
 from .auth import router as auth_router
+from .chunked_upload import router as chunked_upload_router
 from .config import settings
 from .crud import make_crud_router
 from .database import Base, SessionLocal, engine, get_db
+from .encryption import decrypt_financial_proposal, encrypt_financial_proposal
 from .filestore import get_file_store
+from .scheduler import start_scheduler, stop_scheduler
 from .security import Role, get_current_active_user, require_roles
 
 PM = Role.project_manager.value
@@ -42,7 +45,11 @@ async def lifespan(app: FastAPI):
         seed_demo_data(db)
     finally:
         db.close()
+    # Start background scheduler
+    start_scheduler()
     yield
+    # Stop background scheduler
+    stop_scheduler()
 
 
 app = FastAPI(
@@ -84,6 +91,7 @@ ROUTERS = [
 ]
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(chunked_upload_router)
 for r in ROUTERS:
     app.include_router(r, prefix="/api")
 
@@ -614,6 +622,34 @@ async def upload_file(
     )
 
 
+# ══════════════════════════════════════════════════════════════════════════
+# PRE-SIGNED URL UPLOADS (S3 direct upload)
+# ══════════════════════════════════════════════════════════════════════════
+
+
+@app.get("/api/files/presigned", tags=["files"],
+         summary="Get a pre-signed URL for direct S3 upload",
+         dependencies=[Depends(get_current_active_user)])
+def get_presigned_upload_url(
+    filename: str = Query(..., description="Original filename"),
+    content_type: str = Query("application/octet-stream"),
+    expires_in: int = Query(3600, description="URL expiry in seconds"),
+):
+    """Generate a pre-signed URL for direct upload to S3/MinIO.
+    
+    Bidders can upload their proposal files directly to S3 without going
+    through the API server. Only works with S3 storage backend.
+    """
+    store = get_file_store()
+    if not hasattr(store, "generate_presigned_upload_url"):
+        raise HTTPException(
+            status_code=400,
+            detail="Pre-signed URLs only available with S3 storage backend. "
+                   "Set FILE_STORAGE_BACKEND=s3 in your .env.",
+        )
+    url = store.generate_presigned_upload_url(filename, content_type, expires_in)
+    return {"upload_url": url, "expires_in": expires_in, "filename": filename}
+
 @app.get("/api/files/{file_id}", response_model=schemas.FileMetadataRead,
          tags=["files"], summary="Get file metadata",
          dependencies=[Depends(get_current_active_user)])
@@ -654,6 +690,164 @@ def delete_file(file_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="File not found")
     fm.is_deleted = True
     db.commit()
+
+
+
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENCRYPTION — Two-Bid Opening
+# ══════════════════════════════════════════════════════════════════════════
+
+
+@app.post("/api/bid-submissions/{submission_id}/encrypt",
+           tags=["encryption"], summary="Encrypt a financial bid submission",
+           dependencies=[Depends(require_roles(PM, ADMIN))])
+def encrypt_bid_submission(
+    submission_id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_active_user),
+):
+    """Encrypt a financial bid submission for two-bid opening.
+    
+    Financial proposals are encrypted at tender close and only decrypted
+    after technical evaluation is complete.
+    """
+    # Find the entity file
+    ef = db.get(models.EntityFile, submission_id)
+    if ef is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # Read the file
+    store = get_file_store()
+    data = store.read(ef.file_metadata.storage_path)
+    if data is None:
+        raise HTTPException(status_code=404, detail="File data not found")
+
+    # Encrypt it
+    encrypted = encrypt_financial_proposal(data)
+
+    # Store encrypted version
+    enc_path = ef.file_metadata.storage_path + ".encrypted"
+    store.save(encrypted, ef.file_metadata.original_name + ".encrypted")
+
+    # Mark as encrypted
+    ef.is_encrypted = True
+    db.commit()
+
+    return {"status": "encrypted", "submission_id": submission_id}
+
+
+@app.post("/api/bid-submissions/{submission_id}/decrypt",
+           tags=["encryption"], summary="Decrypt a financial bid submission",
+           dependencies=[Depends(require_roles(PM, ADMIN))])
+def decrypt_bid_submission(
+    submission_id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_active_user),
+):
+    """Decrypt a financial bid submission (after technical evaluation)."""
+    ef = db.get(models.EntityFile, submission_id)
+    if ef is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    if not ef.is_encrypted:
+        raise HTTPException(status_code=400, detail="Submission is not encrypted")
+
+    store = get_file_store()
+    enc_path = ef.file_metadata.storage_path + ".encrypted"
+    encrypted_data = store.read(enc_path)
+    if encrypted_data is None:
+        raise HTTPException(status_code=404, detail="Encrypted file not found")
+
+    decrypted = decrypt_financial_proposal(encrypted_data)
+
+    from fastapi.responses import Response
+    return Response(
+        content=decrypted,
+        media_type=ef.file_metadata.content_type or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{ef.file_metadata.original_name}"'},
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# RATE HISTORY — Materialized View
+# ══════════════════════════════════════════════════════════════════════════
+
+
+@app.get("/api/rate-history", tags=["analytics"],
+         summary="Get rate comparison data across tenders",
+         dependencies=[Depends(get_current_active_user)])
+def get_rate_history(
+    tender_id: Optional[int] = Query(None, description="Filter by tender"),
+    boq_item_slug: str = Query("", description="Filter by BOQ item slug"),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+):
+    """Get historical rate comparison data across tenders.
+    
+    Returns rates quoted by bidders for similar items across different tenders,
+    enabling rate benchmarking and rationalisation.
+    """
+    # Find the tender entity type
+    tender_type = db.query(models.EntityType).filter(
+        models.EntityType.slug == "tender"
+    ).first()
+    bidder_type = db.query(models.EntityType).filter(
+        models.EntityType.slug == "bidder"
+    ).first()
+    boq_type = db.query(models.EntityType).filter(
+        models.EntityType.slug == "boq_item"
+    ).first()
+
+    if not all([tender_type, bidder_type, boq_type]):
+        return []
+
+    # Get all bidders with their attributes
+    query = db.query(models.Entity).filter(
+        models.Entity.entity_type_id == bidder_type.id
+    )
+
+    if tender_id:
+        # Find bidders related to this tender
+        rels = db.query(models.EntityRelationship).filter(
+            models.EntityRelationship.source_id == tender_id,
+            models.EntityRelationship.relationship_type == "has_bidder",
+        ).all()
+        bidder_ids = [r.target_id for r in rels]
+        if bidder_ids:
+            query = query.filter(models.Entity.id.in_(bidder_ids))
+
+    bidders = query.order_by(models.Entity.id.desc()).limit(limit).all()
+
+    results = []
+    for bidder in bidders:
+        attrs = {a.slug: a for a in bidder.attributes}
+        bid_amount = attrs.get("bid_amount")
+        bidder_name = bidder.title
+
+        # Find the tender this bidder belongs to
+        parent_rel = db.query(models.EntityRelationship).filter(
+            models.EntityRelationship.target_id == bidder.id,
+            models.EntityRelationship.relationship_type == "has_bidder",
+        ).first()
+
+        tender_ref = ""
+        if parent_rel:
+            parent = db.get(models.Entity, parent_rel.source_id)
+            if parent:
+                tender_ref = parent.reference_no
+
+        results.append({
+            "bidder_name": bidder_name,
+            "tender_reference": tender_ref,
+            "bid_amount": float(bid_amount.value_number) if bid_amount and bid_amount.value_number else 0,
+            "technical_score": float(attrs.get("technical_score", {}).value_number or 0),
+            "financial_score": float(attrs.get("financial_score", {}).value_number or 0),
+            "total_score": float(attrs.get("total_score", {}).value_number or 0),
+            "status": bidder.status,
+        })
+
+    return results
 
 
 # ══════════════════════════════════════════════════════════════════════════

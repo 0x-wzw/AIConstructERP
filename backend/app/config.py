@@ -6,46 +6,61 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # ── Database ────────────────────────────────────────────────────────
-    # Default: SQLite for zero-setup dev. Switch to PostgreSQL for prod:
-    #   DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/constructerp
     database_url: str = "sqlite:///./constructerp.db"
-
-    # Comma-separated list of allowed CORS origins ("*" allows any).
     cors_origins: str = "*"
-
-    app_name: str = "ConstructERP API"
-    app_version: str = "0.3.0"
+    app_name: str = "AIConstructERP API"
+    app_version: str = "3.1.0"
 
     # ── Auth ────────────────────────────────────────────────────────────
-    # DEV DEFAULT ONLY — override with a strong random value in production:
-    #   export SECRET_KEY="$(python -c 'import secrets;print(secrets.token_hex(32))')"
     secret_key: str = "dev-insecure-change-me-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
-
-    # If set, demo users (admin/pm/accounting/viewer) are seeded on first run.
     seed_demo_users: bool = True
 
     # ── File Storage ────────────────────────────────────────────────────
-    # Backend: "local" (default) or "s3"
     file_storage_backend: str = "local"
-
-    # Local storage: files are stored under this directory
     file_storage_local_path: str = "./storage"
-
-    # S3 / MinIO storage
-    s3_endpoint_url: str = ""           # e.g. "https://s3.amazonaws.com" or "http://localhost:9000"
+    s3_endpoint_url: str = ""
     s3_access_key_id: str = ""
     s3_secret_access_key: str = ""
     s3_region: str = "us-east-1"
     s3_bucket: str = "constructerp"
-    s3_force_path_style: bool = False   # True for MinIO
-
-    # Max upload size in bytes (default: 500 MB)
+    s3_force_path_style: bool = False
     max_upload_size_bytes: int = 500 * 1024 * 1024
-
-    # Chunked upload: chunk size in bytes (default: 10 MB)
     upload_chunk_size_bytes: int = 10 * 1024 * 1024
+
+    # ── Chunked Upload ──────────────────────────────────────────────────
+    # Temp directory for assembling chunks
+    chunk_temp_dir: str = "./storage/chunks"
+    # Max chunks per upload session
+    max_chunks_per_upload: int = 1000
+    # Chunk upload TTL (seconds) — incomplete uploads are cleaned up
+    chunk_ttl_seconds: int = 86400
+
+    # ── Encryption (Two-Bid Opening) ────────────────────────────────────
+    # Key for encrypting financial proposals. In production, use a KMS.
+    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    encryption_key: str = ""
+    # Path to public key for bidder-side encryption (if using asymmetric)
+    encryption_public_key_path: str = ""
+
+    # ── Async Workers ──────────────────────────────────────────────────
+    # Backend: "none" (sync inline), "threadpool", or "redis" (RQ/Celery)
+    async_worker_backend: str = "threadpool"
+    # Redis URL for task queue (if using redis backend)
+    redis_url: str = "redis://localhost:6379/0"
+    # Virus scanning: "none", "clamav" (requires clamd running)
+    virus_scan_backend: str = "none"
+    clamav_host: str = "localhost"
+    clamav_port: int = 3310
+    # PDF text extraction: "none" or "pypdf"
+    pdf_extraction_backend: str = "pypdf"
+
+    # ── Cron / Scheduling ──────────────────────────────────────────────
+    # Tender auto-close: check interval in seconds
+    tender_auto_close_interval: int = 300  # 5 minutes
+    # Tender countdown notification threshold (hours before close)
+    tender_countdown_threshold_hours: int = 24
 
 
 settings = Settings()

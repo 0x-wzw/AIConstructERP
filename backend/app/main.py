@@ -45,6 +45,7 @@ from .brd_schemas2 import (
     TenderAddendumCreate, TenderAddendumRead, TenderAddendumUpdate,
 )
 from .chat_routes import router as chat_router
+from .chunked_upload import router as chunked_upload_router
 from .config import settings
 from .crud import generate_po_number, make_crud_router
 from .database import Base, SessionLocal, engine, get_db
@@ -336,6 +337,7 @@ ROUTERS = [
 app.include_router(auth_router, prefix="/api")
 app.include_router(tenants_router, prefix="/api")
 app.include_router(files_router, prefix="/api")
+app.include_router(chunked_upload_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
 app.include_router(audit_router, prefix="/api")
 app.include_router(auction_router, prefix="/api")

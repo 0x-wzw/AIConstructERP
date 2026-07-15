@@ -1,4 +1,5 @@
 """File upload, listing, download, and delete — with auth + tenant isolation."""
+import json
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -8,7 +9,9 @@ from sqlalchemy.orm import Session
 from . import models
 from .audit import log_action
 from .database import get_db
+from .ingestion import ingest_file
 from .models import User
+from .schemas import PresignedUploadResponse
 from .security import get_current_active_user
 from .storage import (
     generate_storage_path,
@@ -33,8 +36,13 @@ class FileRead(BaseModel):
     content_type: str
     size_bytes: int
     storage_backend: str
+    storage_bucket: str = ""
+    checksum_sha256: str = ""
     category: str
     ocr_processed: bool
+    ingest_status: str = "pending"
+    ingested_entity_type: Optional[str] = None
+    ingested_entity_id: Optional[int] = None
     uploaded_at: str
 
 
@@ -47,8 +55,13 @@ def _file_to_read(f: models.FileUpload) -> dict:
         "content_type": f.content_type,
         "size_bytes": f.size_bytes,
         "storage_backend": f.storage_backend,
+        "storage_bucket": f.storage_bucket or "",
+        "checksum_sha256": f.checksum_sha256 or "",
         "category": f.category,
         "ocr_processed": f.ocr_processed,
+        "ingest_status": f.ingest_status or "pending",
+        "ingested_entity_type": f.ingested_entity_type or None,
+        "ingested_entity_id": f.ingested_entity_id,
         "uploaded_at": f.uploaded_at.isoformat() if f.uploaded_at else "",
     }
 
@@ -90,7 +103,7 @@ async def upload_file(
         raise HTTPException(status_code=400, detail=error)
 
     path = generate_storage_path(user.tenant_id, file.filename or "unnamed")
-    file_info = await storage.save(content, path)
+    file_info = await storage.save(content, path, file.content_type or "")
     file_category = category or guess_file_category(file.filename or "", file.content_type or "")
 
     db_file = models.FileUpload(
@@ -100,7 +113,9 @@ async def upload_file(
         content_type=file.content_type or "",
         size_bytes=size,
         storage_backend=file_info.storage_backend,
+        storage_bucket=file_info.storage_bucket,
         storage_path=path,
+        checksum_sha256=file_info.checksum_sha256,
         category=file_category,
     )
     db.add(db_file)
@@ -155,3 +170,54 @@ async def delete_file(file_id: int, db: Session = Depends(get_db),
     log_action(db, user=user, action="archive", entity_type="file_uploads",
                entity_id=file_id, summary=f"Archived file: {f.original_filename}")
     db.commit()
+
+
+@router.post("/{file_id}/ingest", summary="Ingest a file into structured DB format")
+def ingest(file_id: int, db: Session = Depends(get_db),
+           user: User = Depends(get_current_active_user)):
+    """Run the ingestion pipeline: extract structured fields from the document
+    and, for recognized invoices, create and link an EInvoice record."""
+    f = _get_file_or_404(db, file_id, user)
+    return ingest_file(db, f, user)
+
+
+@router.get("/{file_id}/extracted", summary="Get a file's extracted structured data")
+def get_extracted(file_id: int, db: Session = Depends(get_db),
+                  user: User = Depends(get_current_active_user)):
+    f = _get_file_or_404(db, file_id, user)
+    return {
+        "file_id": f.id,
+        "ingest_status": f.ingest_status or "pending",
+        "category": f.category,
+        "extracted_data": json.loads(f.extracted_data) if f.extracted_data else {},
+        "linked_entity_type": f.ingested_entity_type or None,
+        "linked_entity_id": f.ingested_entity_id,
+    }
+
+
+class PresignRequest(BaseModel):
+    filename: str
+    content_type: str = "application/octet-stream"
+
+
+@router.post("/presign-upload", response_model=PresignedUploadResponse,
+             summary="Get a pre-signed URL for direct-to-cloud upload")
+async def presign_upload(req: PresignRequest,
+                         user: User = Depends(get_current_active_user)):
+    """Return a pre-signed PUT URL so large files upload straight to cloud
+    storage without proxying bytes through the API. Only available on the S3
+    backend; the local backend returns 400."""
+    from .config import settings
+
+    path = generate_storage_path(user.tenant_id, req.filename)
+    url = await storage.generate_presigned_upload_url(path, req.content_type)
+    if not url:
+        raise HTTPException(
+            status_code=400,
+            detail="Pre-signed uploads require the S3 storage backend.",
+        )
+    return PresignedUploadResponse(
+        storage_path=path,
+        url=url,
+        expires_in=settings.s3_presigned_expiry_seconds,
+    )

@@ -267,3 +267,25 @@ class Token(BaseModel):
     token_type: str = "bearer"
     role: RoleLiteral
     expires_in: int  # seconds
+
+
+# ── Chunked upload ────────────────────────────────────────────────────
+class UploadResponse(BaseModel):
+    """Result of completing a chunked upload — mirrors a FileUpload row."""
+    model_config = ORM
+    file_id: int
+    original_name: str
+    size_bytes: int
+    storage_backend: str
+    storage_bucket: str = ""
+    storage_path: str
+    checksum_sha256: str
+    upload_url: str
+
+
+class PresignedUploadResponse(BaseModel):
+    """A pre-signed URL letting the client upload straight to cloud storage."""
+    storage_path: str
+    url: str
+    expires_in: int
+    method: str = "PUT"

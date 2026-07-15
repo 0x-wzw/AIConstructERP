@@ -717,9 +717,26 @@ class FileUpload(Base):
     size_bytes: Mapped[int] = mapped_column(Integer, default=0)
     storage_backend: Mapped[str] = mapped_column(String(20), default="local")
     storage_path: Mapped[str] = mapped_column(String(500))
+    # Which specific cloud container the object lives in (S3/MinIO bucket);
+    # empty for the local backend.
+    storage_bucket: Mapped[str] = mapped_column(String(200), default="")
+    # SHA-256 of the stored bytes — integrity check + content de-duplication.
+    checksum_sha256: Mapped[str] = mapped_column(String(64), default="", index=True)
     category: Mapped[str] = mapped_column(String(50), default="")
     ocr_text: Mapped[str] = mapped_column(Text, default="")
     ocr_processed: Mapped[bool] = mapped_column(default=False)
+    # ── Ingestion into system database format ────────────────────────
+    # pending → processing → ingested | failed. Tracks the pipeline that turns
+    # a raw file into structured domain data.
+    ingest_status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    # Normalized fields extracted from the document (JSON, portable across
+    # SQLite/Postgres — stored as Text and (de)serialized in the app layer).
+    extracted_data: Mapped[str] = mapped_column(Text, default="")
+    # When ingestion creates/links a domain record (e.g. an e-invoice), point
+    # back to it so the file and the structured entity stay connected.
+    ingested_entity_type: Mapped[str] = mapped_column(String(50), default="")
+    ingested_entity_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    ingested_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 

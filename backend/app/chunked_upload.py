@@ -13,7 +13,6 @@ Chunks are stored in a temp directory and cleaned up after TTL.
 """
 from __future__ import annotations
 
-import hashlib
 import shutil
 import threading
 import time
@@ -24,12 +23,21 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from . import models, schemas
+from .audit import log_action
 from .config import settings
 from .database import get_db
-from .filestore import get_file_store
 from .security import get_current_active_user
+from .storage import (
+    generate_storage_path,
+    get_storage_backend,
+    guess_file_category,
+)
 
-router = APIRouter(prefix="/api/files/upload", tags=["chunked_upload"])
+# Prefix has no leading /api — main.py mounts every router under /api, and the
+# single-shot upload route lives at /api/files. This gives /api/files/upload/*.
+router = APIRouter(prefix="/files/upload", tags=["chunked_upload"])
+
+storage = get_storage_backend()
 
 # In-memory session tracking
 # upload_id -> {"filename": ..., "total_chunks": ..., "received_chunks": set, "chunk_size": ..., "total_size": ..., "created_at": ...}
@@ -161,14 +169,15 @@ async def upload_chunk(
 
 @router.post("/{upload_id}/complete", response_model=schemas.UploadResponse,
              summary="Complete a chunked upload and assemble the file")
-def complete_upload(
+async def complete_upload(
     upload_id: str,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_active_user),
 ):
-    """Assemble all chunks into the final file, compute checksum, and store.
-    
-    Returns the file_metadata_id for attaching to entities via entity_files.
+    """Assemble all chunks into the final file, compute checksum, and store it
+    via the unified storage backend as a FileUpload row.
+
+    Returns the file_id for attaching to entities / running ingestion.
     """
     session = _upload_sessions.get(upload_id)
     if session is None:
@@ -182,48 +191,56 @@ def complete_upload(
                    f"Received {len(session['received_chunks'])}/{session['total_chunks']}.",
         )
 
-    # Assemble chunks in order
+    # Assemble chunks in order.
     chunk_dir = _get_chunk_dir(upload_id)
-    sha256 = hashlib.sha256()
     assembled = bytearray()
-
     for i in range(session["total_chunks"]):
         chunk_path = chunk_dir / f"{i:06d}"
         if not chunk_path.exists():
             raise HTTPException(status_code=500, detail=f"Chunk {i} missing from disk")
-        data = chunk_path.read_bytes()
-        sha256.update(data)
-        assembled.extend(data)
+        assembled.extend(chunk_path.read_bytes())
 
-    # Save to file store
-    store = get_file_store()
-    storage_path, original_name, size_bytes, checksum = store.save(
-        bytes(assembled), session["filename"], session["content_type"]
-    )
+    original_name = session["filename"]
+    content_type = session["content_type"]
 
-    # Record metadata in DB
-    fm = models.FileMetadata(
-        original_name=original_name,
-        storage_path=storage_path,
-        content_type=session["content_type"],
-        size_bytes=size_bytes,
-        checksum_sha256=checksum,
-        uploaded_by=user.id,
+    # Persist through the same storage layer as single-shot uploads, in a
+    # tenant-scoped path. FileInfo carries the checksum + bucket.
+    path = generate_storage_path(user.tenant_id, original_name)
+    info = await storage.save(bytes(assembled), path, content_type)
+
+    db_file = models.FileUpload(
+        tenant_id=user.tenant_id,
+        filename=info.filename,
+        original_filename=original_name,
+        content_type=content_type,
+        size_bytes=info.size_bytes,
+        storage_backend=info.storage_backend,
+        storage_bucket=info.storage_bucket,
+        storage_path=info.storage_path,
+        checksum_sha256=info.checksum_sha256,
+        category=guess_file_category(original_name, content_type),
     )
-    db.add(fm)
+    db.add(db_file)
+    db.flush()
+    log_action(db, user=user, action="create", entity_type="file_uploads",
+               entity_id=db_file.id,
+               summary=f"Chunked upload complete: {original_name} "
+                       f"({info.size_bytes} bytes)")
     db.commit()
-    db.refresh(fm)
+    db.refresh(db_file)
 
-    # Cleanup temp files
+    # Cleanup temp files.
     _cleanup_session(upload_id)
 
     return schemas.UploadResponse(
-        file_id=fm.id,
+        file_id=db_file.id,
         original_name=original_name,
-        size_bytes=size_bytes,
-        storage_path=storage_path,
-        checksum_sha256=checksum,
-        upload_url=store.get_url(storage_path),
+        size_bytes=info.size_bytes,
+        storage_backend=info.storage_backend,
+        storage_bucket=info.storage_bucket,
+        storage_path=info.storage_path,
+        checksum_sha256=info.checksum_sha256,
+        upload_url=await storage.get_url(info.storage_path),
     )
 
 

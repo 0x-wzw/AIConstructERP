@@ -40,12 +40,28 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 50
 
-    # S3 / MinIO
+    # S3 / MinIO / R2 / Spaces (any S3-compatible object store)
     s3_bucket: str = ""
     s3_key: str = ""
     s3_secret: str = ""
     s3_region: str = "us-east-1"
-    s3_endpoint: str = ""  # set to MinIO URL for local S3
+    s3_endpoint: str = ""  # set to MinIO/R2 URL for non-AWS object stores
+    # MinIO and some self-hosted stores need path-style addressing
+    # (http://host/bucket/key) instead of virtual-host style.
+    s3_force_path_style: bool = False
+    # Lifetime of pre-signed direct-to-cloud upload/download URLs.
+    s3_presigned_expiry_seconds: int = 3600
+
+    # ── Chunked / resumable upload (large tender docs, 50–500 MB) ─────
+    chunk_temp_dir: str = "./uploads/_chunks"
+    upload_chunk_size_bytes: int = 8 * 1024 * 1024      # 8 MB per chunk
+    max_chunks_per_upload: int = 1024                    # ⇒ up to ~8 GB
+    chunk_ttl_seconds: int = 24 * 3600                   # abandon after 24h
+
+    @property
+    def max_upload_size_bytes(self) -> int:
+        """Byte ceiling for a single (assembled) upload."""
+        return self.max_upload_size_mb * 1024 * 1024
 
     # ── AI agent ──────────────────────────────────────────────────────
     ai_provider: str = "ollama"  # openai | ollama | disabled

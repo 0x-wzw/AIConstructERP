@@ -1,31 +1,56 @@
-"""Storage backend abstraction.
+"""Storage backend abstraction — the single canonical file-storage layer.
 
-Supports local filesystem and S3/MinIO. The backend is selected by the
-`STORAGE_BACKEND` setting (local | s3).
+Supports local filesystem and S3/MinIO-compatible object storage. The backend
+is selected by the `STORAGE_BACKEND` setting (local | s3).
+
+Every stored object records its backend, bucket/container, and a SHA-256
+checksum so integrity can be verified on read and the same content can be
+de-duplicated. S3 additionally supports pre-signed URLs for direct
+browser-to-cloud upload and download without proxying bytes through the API.
 """
+import hashlib
 import os
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import BinaryIO, Optional
+
+
+def compute_checksum(content: bytes) -> str:
+    """SHA-256 hex digest — the content-addressable identity of a file."""
+    return hashlib.sha256(content).hexdigest()
 
 
 class FileInfo:
     """Lightweight container for storage operation results."""
 
     def __init__(self, filename: str, content_type: str, size_bytes: int,
-                 storage_path: str, storage_backend: str):
+                 storage_path: str, storage_backend: str,
+                 checksum_sha256: str = "", storage_bucket: str = ""):
         self.filename = filename
         self.content_type = content_type
         self.size_bytes = size_bytes
         self.storage_path = storage_path
         self.storage_backend = storage_backend
+        self.checksum_sha256 = checksum_sha256
+        self.storage_bucket = storage_bucket
 
 
 class StorageBackend:
-    """Abstract base — all methods are async."""
+    """Abstract base — all methods are async.
 
-    async def save(self, content: bytes, path: str) -> FileInfo:
+    `bucket` names the specific cloud container (S3 bucket / MinIO bucket) or is
+    empty for the local backend.
+    """
+
+    bucket: str = ""
+
+    async def save(self, content: bytes, path: str, content_type: str = "") -> FileInfo:
         raise NotImplementedError
+
+    async def save_stream(self, stream: BinaryIO, path: str,
+                          content_type: str = "") -> FileInfo:
+        """Save from a file-like object (used for large/assembled uploads)."""
+        return await self.save(stream.read(), path, content_type)
 
     async def read(self, path: str) -> bytes:
         raise NotImplementedError
@@ -38,6 +63,13 @@ class StorageBackend:
 
     async def get_url(self, path: str) -> str:
         raise NotImplementedError
+
+    async def generate_presigned_upload_url(
+        self, path: str, content_type: str = "", expires_in: int = 3600
+    ) -> Optional[str]:
+        """Return a pre-signed PUT URL for direct-to-cloud upload, or None if
+        the backend does not support it (e.g. local filesystem)."""
+        return None
 
 
 def get_storage_backend() -> StorageBackend:

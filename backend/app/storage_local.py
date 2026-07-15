@@ -2,10 +2,12 @@
 import os
 
 from .config import settings
-from .storage import FileInfo, StorageBackend
+from .storage import FileInfo, StorageBackend, compute_checksum
 
 
 class LocalStorage(StorageBackend):
+    bucket = ""  # local filesystem has no bucket
+
     def __init__(self):
         self.base_path = os.path.abspath(settings.upload_dir)
         os.makedirs(self.base_path, exist_ok=True)
@@ -13,17 +15,19 @@ class LocalStorage(StorageBackend):
     def _full_path(self, path: str) -> str:
         return os.path.join(self.base_path, path)
 
-    async def save(self, content: bytes, path: str) -> FileInfo:
+    async def save(self, content: bytes, path: str, content_type: str = "") -> FileInfo:
         full_path = self._full_path(path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
         with open(full_path, "wb") as f:
             f.write(content)
         return FileInfo(
             filename=os.path.basename(path),
-            content_type=self._guess_type(path),
+            content_type=content_type or self._guess_type(path),
             size_bytes=len(content),
             storage_path=path,
             storage_backend="local",
+            checksum_sha256=compute_checksum(content),
+            storage_bucket="",
         )
 
     async def read(self, path: str) -> bytes:

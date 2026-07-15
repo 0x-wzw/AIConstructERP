@@ -947,3 +947,123 @@ def test_sse_stream_endpoint(client):
 
 def test_sse_requires_auth(client):
     assert client.post("/api/ai/chat/stream", json={"message": "hi"}).status_code == 401
+
+
+# ── File storage: checksums + cloud linkage ────────────────────────────
+def test_upload_records_checksum_and_backend(client):
+    import hashlib
+
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    body = b"blueprint bytes for checksum test"
+    r = client.post(
+        "/api/files/upload",
+        files={"file": ("site-plan.pdf", body, "application/pdf")},
+        headers=hdr(t),
+    )
+    assert r.status_code == 201, r.text
+    data = r.json()
+    assert data["storage_backend"] == "local"
+    assert data["checksum_sha256"] == hashlib.sha256(body).hexdigest()
+    assert data["ingest_status"] == "pending"
+
+
+def test_presign_upload_rejected_on_local_backend(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    r = client.post("/api/files/presign-upload",
+                    json={"filename": "big.pdf", "content_type": "application/pdf"},
+                    headers=hdr(t))
+    # Local backend cannot pre-sign — should be a clean 400, not a 500.
+    assert r.status_code == 400
+    assert "S3" in r.json()["detail"]
+
+
+# ── Ingestion into system database format ──────────────────────────────
+INVOICE_TEXT = b"""Tax Invoice
+Invoice No: INV-2026-0042
+Vendor: Acme Steel Supplies Sdn Bhd
+Date: 2026-07-10
+Subtotal: 10,000.00
+SST (8%): 800.00
+Grand Total: 10,800.00
+"""
+
+
+def test_ingest_invoice_creates_and_links_einvoice(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+
+    up = client.post(
+        "/api/files/upload",
+        files={"file": ("invoice-0042.txt", INVOICE_TEXT, "text/plain")},
+        headers=hdr(t),
+    )
+    assert up.status_code == 201, up.text
+    file_id = up.json()["id"]
+    assert up.json()["category"] == "invoice"  # auto-classified
+
+    # Run ingestion.
+    r = client.post(f"/api/files/{file_id}/ingest", headers=hdr(t))
+    assert r.status_code == 200, r.text
+    out = r.json()
+    assert out["status"] == "ingested"
+    fields = out["extracted_data"]
+    assert fields["invoice_no"] == "INV-2026-0042"
+    assert fields["total_amount"] == 10800.0
+    assert fields["subtotal"] == 10000.0
+    assert fields["tax_amount"] == 800.0
+    assert "Acme Steel" in fields["vendor_name"]
+
+    # A linked EInvoice entity was created.
+    assert out["linked_entity_type"] == "e_invoices"
+    eid = out["linked_entity_id"]
+    assert isinstance(eid, int)
+
+    # The EInvoice is retrievable via its API with the extracted values.
+    inv = client.get(f"/api/e-invoices/{eid}", headers=hdr(t))
+    assert inv.status_code == 200, inv.text
+    assert inv.json()["invoice_no"] == "INV-2026-0042"
+    assert float(inv.json()["total_amount"]) == 10800.0
+
+    # File now reflects ingested status + extracted data.
+    meta = client.get(f"/api/files/{file_id}", headers=hdr(t)).json()
+    assert meta["ingest_status"] == "ingested"
+    assert meta["ingested_entity_id"] == eid
+    ext = client.get(f"/api/files/{file_id}/extracted", headers=hdr(t)).json()
+    assert ext["extracted_data"]["invoice_no"] == "INV-2026-0042"
+
+
+def test_ingest_requires_auth(client):
+    assert client.post("/api/files/1/ingest").status_code == 401
+
+
+# ── Chunked upload (large tender docs) ─────────────────────────────────
+def test_chunked_upload_roundtrip(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    payload = b"A" * 5000 + b"B" * 5000  # 10 KB across 2 logical parts
+
+    init = client.post("/api/files/upload/init",
+                       data={"filename": "tender.pdf", "total_size": str(len(payload)),
+                             "content_type": "application/pdf"},
+                       headers=hdr(t))
+    assert init.status_code == 200, init.text
+    upload_id = init.json()["upload_id"]
+    total_chunks = init.json()["total_chunks"]
+
+    # Single chunk is fine for a small payload (chunk_size default 8MB).
+    for i in range(total_chunks):
+        c = client.post(f"/api/files/upload/{upload_id}/chunk",
+                        data={"chunk_index": str(i)},
+                        files={"file": ("chunk", payload, "application/octet-stream")},
+                        headers=hdr(t))
+        assert c.status_code == 200, c.text
+
+    done = client.post(f"/api/files/upload/{upload_id}/complete", headers=hdr(t))
+    assert done.status_code == 200, done.text
+    d = done.json()
+    import hashlib
+    assert d["checksum_sha256"] == hashlib.sha256(payload).hexdigest()
+    assert d["size_bytes"] == len(payload)
+
+    # The assembled file is a normal FileUpload row, downloadable.
+    got = client.get(f"/api/files/{d['file_id']}/download", headers=hdr(t))
+    assert got.status_code == 200
+    assert got.content == payload

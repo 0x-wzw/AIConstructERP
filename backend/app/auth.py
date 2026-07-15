@@ -1,5 +1,7 @@
 """Authentication & user-management endpoints."""
-from typing import List
+from __future__ import annotations
+
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -11,6 +13,7 @@ from .database import get_db
 from .security import (
     Role,
     create_access_token,
+    create_refresh_token,
     get_current_active_user,
     hash_password,
     require_roles,
@@ -20,7 +23,8 @@ from .security import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _create_user(db: Session, *, email: str, password: str, full_name: str, role: str) -> models.User:
+def _create_user(db: Session, *, email: str, password: str, full_name: str, role: str,
+                 tenant_id: Optional[int] = None) -> models.User:
     if db.query(models.User).filter(models.User.email == email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
     user = models.User(
@@ -28,6 +32,7 @@ def _create_user(db: Session, *, email: str, password: str, full_name: str, role
         full_name=full_name,
         hashed_password=hash_password(password),
         role=role,
+        tenant_id=tenant_id,
     )
     db.add(user)
     db.commit()
@@ -55,9 +60,56 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    token = create_access_token(subject=user.id, role=user.role)
+    token = create_access_token(
+        subject=user.id, role=user.role, tenant_id=user.tenant_id
+    )
+    refresh = create_refresh_token(
+        subject=user.id, role=user.role, tenant_id=user.tenant_id
+    )
     return schemas.Token(
-        access_token=token, role=user.role,
+        access_token=token, refresh_token=refresh, role=user.role,
+        expires_in=settings.access_token_expire_minutes * 60,
+    )
+
+
+@router.post("/refresh", response_model=schemas.Token, summary="Refresh access token")
+def refresh_token(payload: dict, db: Session = Depends(get_db)):
+    """Exchange a valid refresh token for a new access + refresh token pair.
+
+    Body: {"refresh_token": "..."}
+    """
+    import jwt as pyjwt
+    token = payload.get("refresh_token", "")
+    if not token:
+        raise HTTPException(status_code=400, detail="refresh_token is required")
+    try:
+        decoded = pyjwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
+    except pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh token has expired")
+    except pyjwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    if decoded.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Not a refresh token")
+
+    user_id_raw = decoded.get("sub")
+    if user_id_raw is None:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    user_id = int(user_id_raw)
+    user = db.get(models.User, user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
+
+    new_access = create_access_token(
+        subject=user.id, role=user.role, tenant_id=user.tenant_id
+    )
+    new_refresh = create_refresh_token(
+        subject=user.id, role=user.role, tenant_id=user.tenant_id
+    )
+    return schemas.Token(
+        access_token=new_access, refresh_token=new_refresh, role=user.role,
         expires_in=settings.access_token_expire_minutes * 60,
     )
 
@@ -79,7 +131,7 @@ def list_users(db: Session = Depends(get_db)):
 def create_user(payload: schemas.UserAdminCreate, db: Session = Depends(get_db)):
     return _create_user(
         db, email=payload.email, password=payload.password,
-        full_name=payload.full_name, role=payload.role,
+        full_name=payload.full_name, role=payload.role, tenant_id=payload.tenant_id,
     )
 
 

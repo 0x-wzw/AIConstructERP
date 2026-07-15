@@ -5,11 +5,17 @@ from . import models
 from .security import Role, hash_password
 
 # Demo accounts (DEV ONLY). Documented in backend/README.md.
+# The second group maps the frontend's business-role vocabulary
+# (Superadmin / Vendor / Supplier) onto the backend security roles.
 DEMO_USERS = [
     ("admin@constructerp.dev", "admin123", "Ada Admin", Role.admin.value),
     ("pm@constructerp.dev", "pm123", "Pat Manager", Role.project_manager.value),
     ("accounting@constructerp.dev", "acct123", "Cash Ledger", Role.accounting.value),
     ("viewer@constructerp.dev", "viewer123", "Val Viewer", Role.viewer.value),
+    # Frontend-vocabulary aliases:
+    ("superadmin@constructerp.dev", "super123", "Sam Super", Role.admin.value),
+    ("vendor@constructerp.dev", "vendor123", "Vera Vendor", Role.project_manager.value),
+    ("supplier@constructerp.dev", "supplier123", "Sid Supplier", Role.accounting.value),
 ]
 
 

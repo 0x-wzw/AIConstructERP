@@ -32,6 +32,7 @@ class ProjectBase(BaseModel):
     description: str = ""
     status: ProjectStatus = "active"
     progress: int = Field(default=0, ge=0, le=100)
+    tenant_id: Optional[int] = None
 
 
 class ProjectCreate(ProjectBase):
@@ -46,11 +47,13 @@ class ProjectUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[ProjectStatus] = None
     progress: Optional[int] = Field(default=None, ge=0, le=100)
+    tenant_id: Optional[int] = None
 
 
 class ProjectRead(ProjectBase):
     model_config = ORM
     id: int
+    is_archived: bool = False
     created_at: datetime
 
 
@@ -78,6 +81,7 @@ class TaskUpdate(BaseModel):
 class TaskRead(TaskBase):
     model_config = ORM
     id: int
+    is_archived: bool = False
 
 
 # ── Resources ─────────────────────────────────────────────────────────
@@ -104,6 +108,7 @@ class ResourceUpdate(BaseModel):
 class ResourceRead(ResourceBase):
     model_config = ORM
     id: int
+    is_archived: bool = False
 
 
 # ── Budget items ──────────────────────────────────────────────────────
@@ -128,6 +133,7 @@ class BudgetItemUpdate(BaseModel):
 class BudgetItemRead(BudgetItemBase):
     model_config = ORM
     id: int
+    is_archived: bool = False
 
 
 # ── Purchase orders ───────────────────────────────────────────────────
@@ -158,6 +164,7 @@ class PurchaseOrderRead(PurchaseOrderBase):
     model_config = ORM
     id: int
     po_number: str
+    is_archived: bool = False
     created_at: datetime
 
 
@@ -189,6 +196,7 @@ class SubcontractorUpdate(BaseModel):
 class SubcontractorRead(SubcontractorBase):
     model_config = ORM
     id: int
+    is_archived: bool = False
 
 
 # ── Change orders ─────────────────────────────────────────────────────
@@ -215,6 +223,7 @@ class ChangeOrderUpdate(BaseModel):
 class ChangeOrderRead(ChangeOrderBase):
     model_config = ORM
     id: int
+    is_archived: bool = False
     created_at: datetime
 
 
@@ -232,11 +241,13 @@ class UserRegister(UserBase):
 class UserAdminCreate(UserRegister):
     """Admin-created user with an explicit role."""
     role: RoleLiteral = "viewer"
+    tenant_id: Optional[int] = None
 
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     role: Optional[RoleLiteral] = None
+    tenant_id: Optional[int] = None
     is_active: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=6, max_length=128)
 
@@ -245,12 +256,14 @@ class UserRead(UserBase):
     model_config = ORM
     id: int
     role: RoleLiteral
+    tenant_id: Optional[int] = None
     is_active: bool
     created_at: datetime
 
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     role: RoleLiteral
     expires_in: int  # seconds

@@ -1,6 +1,7 @@
 fastapi>=0.110
 uvicorn[standard]>=0.27
 sqlalchemy>=2.0
+alembic>=1.13
 pydantic>=2.6
 pydantic-settings>=2.2
 # auth
@@ -8,6 +9,8 @@ pyjwt>=2.8
 bcrypt>=4.1
 email-validator>=2.1
 python-multipart>=0.0.9
+# storage (S3 is optional — install boto3 to enable s3 backend)
+# boto3>=1.35
 # dev / test
 httpx>=0.27
 pytest>=8.0

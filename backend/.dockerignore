@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+constructerp.db
+constructerp.db-journal
+uploads/
+*.egg-info/
+.venv/
+venv/
+.env
+.git/
+.gitignore

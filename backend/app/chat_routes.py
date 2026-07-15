@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .ai import ai_agent
-from .audit import log_action
 from .brd_schemas2 import (
     ChatMessageCreate,
     ChatMessageRead,
@@ -86,7 +85,7 @@ def list_messages(session_id: int, db: Session = Depends(get_db),
 def send_message(session_id: int, payload: ChatMessageCreate,
                  db: Session = Depends(get_db),
                  user: User = Depends(get_current_active_user)):
-    session = _get_session_or_404(db, session_id, user)
+    _get_session_or_404(db, session_id, user)  # 404-guard: validates ownership
 
     # Save the user's message.
     user_msg = models.ChatMessage(
@@ -114,7 +113,6 @@ def send_message(session_id: int, payload: ChatMessageCreate,
             q = q.filter(tf)
         return q.all()
 
-    import json
 
     data_context = {
         "projects": [{"id": p.id, "name": p.name, "progress": p.progress} for p in scoped(models.Project)],

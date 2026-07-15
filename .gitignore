@@ -35,3 +35,7 @@ venv/
 .env
 .pytest_cache/
 storage/
+
+# User-uploaded files — runtime data, must never be committed
+uploads/
+backend/uploads/

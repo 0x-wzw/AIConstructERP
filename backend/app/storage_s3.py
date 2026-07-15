@@ -1,6 +1,5 @@
 """S3 / MinIO storage backend (optional — requires boto3)."""
 import os
-from typing import Optional
 
 from .config import settings
 from .storage import FileInfo, StorageBackend

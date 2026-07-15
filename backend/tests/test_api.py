@@ -425,8 +425,8 @@ def test_audit_log_records_actions(client):
 
     # Check audit log
     logs = client.get("/api/audit", headers=hdr(t)).json()
-    project_logs = [l for l in logs if l["entity_type"] == "projects" and l["entity_id"] == pid]
-    actions = [l["action"] for l in project_logs]
+    project_logs = [e for e in logs if e["entity_type"] == "projects" and e["entity_id"] == pid]
+    actions = [e["action"] for e in project_logs]
     assert "create" in actions
     assert "update" in actions
     assert "archive" in actions
@@ -438,7 +438,7 @@ def test_audit_log_filtered_by_entity_type(client):
 
     # Filter by entity_type
     logs = client.get("/api/audit?entity_type=projects", headers=hdr(t)).json()
-    assert all(l["entity_type"] == "projects" for l in logs)
+    assert all(e["entity_type"] == "projects" for e in logs)
 
 
 def test_audit_log_requires_auth(client):

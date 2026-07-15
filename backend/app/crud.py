@@ -63,8 +63,7 @@ def make_crud_router(
     write_roles: Optional[List[str]] = None,
 ) -> APIRouter:
     # Reads: any authenticated user. Writes: listed roles (admin always allowed).
-    read_dep = [Depends(get_current_active_user)]
-    write_dep = [Depends(require_roles(*(write_roles or [])))]
+    # RBAC is enforced inline per-route below via Depends(require_roles(...)).
     router = APIRouter(prefix=prefix, tags=[tag])
 
     def _get_or_404(item_id: int, db: Session, user: User):

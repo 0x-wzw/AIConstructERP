@@ -15,7 +15,6 @@ from .audit import log_action
 from .brd_schemas2 import (
     AuctionBidCreate,
     AuctionBidRead,
-    ReverseAuctionRead,
 )
 from .database import get_db
 from .models import User

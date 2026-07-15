@@ -1,6 +1,5 @@
 """Local filesystem storage backend."""
 import os
-from typing import Optional
 
 from .config import settings
 from .storage import FileInfo, StorageBackend

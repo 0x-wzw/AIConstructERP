@@ -2,7 +2,7 @@
 
 **Construction Project Management Suite** — a FastAPI backend with multi-tenancy, RBAC, file management, and AI agent capabilities.
 
-![Version](https://img.shields.io/badge/version-0.3.0-amber)
+![Version](https://img.shields.io/badge/version-0.4.0-amber)
 ![Status](https://img.shields.io/badge/status-active-green)
 
 ## Features

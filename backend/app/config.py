@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
 
     app_name: str = "ConstructERP API"
-    app_version: str = "0.5.0"
+    app_version: str = "0.4.0"
 
     # ── Auth ──────────────────────────────────────────────────────────
     # Auto-generated per install so no two dev instances share a key.

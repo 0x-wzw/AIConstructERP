@@ -7,12 +7,10 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .audit import log_action
-from .config import settings
 from .database import get_db
 from .models import User
-from .security import get_current_active_user, require_roles
+from .security import get_current_active_user
 from .storage import (
-    FileInfo,
     generate_storage_path,
     get_storage_backend,
     guess_file_category,

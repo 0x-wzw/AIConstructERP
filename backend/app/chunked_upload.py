@@ -14,14 +14,11 @@ Chunks are stored in a temp directory and cleaned up after TTL.
 from __future__ import annotations
 
 import hashlib
-import json
-import os
 import shutil
 import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session

@@ -3,1555 +3,1334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConstructERP // Project Management Suite</title>
+    <title>AIConstructERP — AI-Native Construction Enterprise Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg: #0c0f1a;
-            --bg-alt: #0a0d16;
-            --panel: rgba(18, 22, 36, 0.85);
-            --panel-solid: #121624;
-            --border: rgba(45, 55, 80, 0.5);
+            --bg-deep: #07080d;
+            --bg: #0a0c14;
+            --bg-surface: #0e101a;
+            --bg-elevated: #12141e;
+            --bg-card: rgba(18, 22, 36, 0.6);
+            --bg-card-hover: rgba(24, 28, 44, 0.8);
+            --border: rgba(45, 55, 80, 0.3);
+            --border-light: rgba(45, 55, 80, 0.15);
+            --border-accent: rgba(245, 158, 11, 0.25);
             --accent: #f59e0b;
-            --accent-dim: rgba(245, 158, 11, 0.15);
+            --accent-glow: rgba(245, 158, 11, 0.15);
+            --accent-gradient: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
             --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.15);
             --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.15);
             --blue: #3b82f6;
+            --blue-glow: rgba(59, 130, 246, 0.15);
             --purple: #8b5cf6;
-            --text-primary: #f8fafc;
+            --purple-glow: rgba(139, 92, 246, 0.15);
+            --cyan: #06b6d4;
+            --cyan-glow: rgba(6, 182, 212, 0.15);
+            --rose: #f43f5e;
+            --orange: #f97316;
+            --teal: #14b8a6;
+            --pink: #ec4899;
+            --indigo: #6366f1;
+            --lime: #84cc16;
+            --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --text-muted: #475569;
             --text-inverse: #0f172a;
-            --input-bg: rgba(15, 23, 42, 0.6);
-            --input-border: rgba(51, 65, 85, 0.5);
-            --table-stripe: rgba(30, 41, 59, 0.3);
-            --hover-bg: rgba(30, 41, 59, 0.7);
-            --scrollbar-thumb: rgba(45, 55, 80, 0.5);
-            --chart-grid: rgba(148, 163, 184, 0.1);
-            --chart-text: #cbd5e1;
-            --chart-tooltip-bg: rgba(15, 23, 42, 0.95);
-            --chart-tooltip-border: rgba(148, 163, 184, 0.2);
-            --badge-bg: rgba(15, 23, 42, 0.5);
-            --search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            --sidebar-w: 240px;
+            --header-h: 56px;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 20px rgba(245,158,11,0.1);
         }
         .light-mode {
-            --bg: #f1f5f9;
-            --bg-alt: #e2e8f0;
-            --panel: rgba(255, 255, 255, 0.92);
-            --panel-solid: #ffffff;
-            --border: rgba(203, 213, 225, 0.7);
+            --bg-deep: #f0f2f5;
+            --bg: #f4f6f9;
+            --bg-surface: #f8fafc;
+            --bg-elevated: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --border: rgba(203, 213, 225, 0.5);
+            --border-light: rgba(203, 213, 225, 0.25);
+            --border-accent: rgba(217, 119, 6, 0.2);
             --accent: #d97706;
-            --accent-dim: rgba(217, 119, 6, 0.12);
+            --accent-glow: rgba(217, 119, 6, 0.1);
+            --accent-gradient: linear-gradient(135deg, #d97706, #b45309, #92400e);
             --green: #059669;
+            --green-glow: rgba(5, 150, 105, 0.1);
             --red: #dc2626;
+            --red-glow: rgba(220, 38, 38, 0.1);
             --blue: #2563eb;
+            --blue-glow: rgba(37, 99, 235, 0.1);
             --purple: #7c3aed;
+            --purple-glow: rgba(124, 58, 237, 0.1);
+            --cyan: #0891b2;
+            --cyan-glow: rgba(8, 145, 178, 0.1);
             --text-primary: #0f172a;
             --text-secondary: #475569;
             --text-muted: #94a3b8;
             --text-inverse: #f8fafc;
-            --input-bg: rgba(255, 255, 255, 0.8);
-            --input-border: rgba(203, 213, 225, 0.7);
-            --table-stripe: rgba(241, 245, 249, 0.5);
-            --hover-bg: rgba(241, 245, 249, 0.8);
-            --scrollbar-thumb: rgba(203, 213, 225, 0.7);
-            --chart-grid: rgba(148, 163, 184, 0.2);
-            --chart-text: #475569;
-            --chart-tooltip-bg: rgba(255, 255, 255, 0.98);
-            --chart-tooltip-border: rgba(203, 213, 225, 0.5);
-            --badge-bg: rgba(241, 245, 249, 0.8);
-            --search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
         }
-        * { -webkit-font-smoothing: antialiased; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-secondary); }
+        html { font-size: 14px; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-secondary);
+            overflow: hidden;
+            height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .font-display { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .glass { background: var(--panel); backdrop-filter: blur(16px); border: 1px solid var(--border); }
-        .glass-hover { transition: all 0.2s; }
-        .glass-hover:hover { background: var(--hover-bg); border-color: rgba(245, 158, 11, 0.25); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
-        .tab-btn { transition: all 0.2s; position: relative; color: var(--text-muted); }
-        .tab-btn:hover { color: var(--text-primary); background: rgba(30, 41, 59, 0.3); }
-        .light-mode .tab-btn:hover { background: rgba(203, 213, 225, 0.3); }
-        .tab-btn.active { color: var(--accent); }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 2px; }
-        .tab-btn.restricted { opacity: 0.35; cursor: not-allowed; }
-        .tab-btn.restricted:hover { color: var(--text-muted); background: transparent; }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fade-in 0.3s ease-out; }
-        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
-        .stat-card { transition: all 0.2s; }
-        .stat-card:hover { transform: translateY(-2px); border-color: rgba(245,158,11,0.3); }
-        .progress-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
-        input, select, textarea { transition: all 0.2s; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); }
-        input::placeholder, textarea::placeholder { color: var(--text-muted); }
-        input:focus, select:focus, textarea:focus { border-color: rgba(245,158,11,0.5); box-shadow: 0 0 0 3px rgba(245,158,11,0.1); outline: none; }
-        select { color: var(--text-primary); }
-        .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-        .light-mode .modal-overlay { background: rgba(0,0,0,0.3); }
-        .light-mode .text-slate-400 { color: #475569 !important; }
-        .light-mode .text-slate-500 { color: #64748b !important; }
-        .light-mode .text-slate-600 { color: #94a3b8 !important; }
-        .light-mode .text-white { color: #0f172a !important; }
-        .light-mode .bg-slate-900\/60 { background: rgba(255,255,255,0.8) !important; }
-        .light-mode .border-slate-700 { border-color: rgba(203,213,225,0.7) !important; }
-        .light-mode .bg-slate-950\/50 { background: rgba(241,245,249,0.5) !important; }
-        .light-mode .divide-slate-800\/30 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(203,213,225,0.4) !important; }
-        .light-mode .border-slate-800 { border-color: rgba(203,213,225,0.6) !important; }
-        .light-mode .hover\:bg-slate-800:hover { background: rgba(241,245,249,0.8) !important; }
-        .light-mode .hover\:bg-slate-800\/50:hover { background: rgba(241,245,249,0.8) !important; }
-        .light-mode .placeholder-slate-600::placeholder { color: #94a3b8 !important; }
-        .light-mode .text-slate-300 { color: #334155 !important; }
-        .light-mode .text-slate-900 { color: #0f172a !important; }
-        .light-mode .bg-slate-800\/30 { background: rgba(203,213,225,0.3) !important; }
-        .light-mode .bg-slate-800 { background: rgba(203,213,225,0.5) !important; }
-        .light-mode .hover\:bg-slate-700:hover { background: rgba(203,213,225,0.5) !important; }
-        .light-mode .hover\:text-white:hover { color: #0f172a !important; }
-        .gantt-bar { transition: all 0.3s; }
-        .gantt-bar:hover { filter: brightness(1.2); transform: scaleY(1.15); }
-        .toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; animation: fade-in 0.3s ease-out; }
-        .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
-        .search-input { padding-left: 32px; background-image: var(--search-icon); background-repeat: no-repeat; background-position: 12px center; }
-        .action-btn { opacity: 0; transition: opacity 0.2s; }
-        tr:hover .action-btn, .card-hover:hover .action-btn { opacity: 1; }
-        .sort-btn { cursor: pointer; user-select: none; }
-        .sort-btn:hover { color: var(--accent); }
-        .sort-btn::after { content: ' ↕'; font-size: 9px; opacity: 0.4; }
-        .sort-btn.asc::after { content: ' ↑'; opacity: 1; color: var(--accent); }
-        .sort-btn.desc::after { content: ' ↓'; opacity: 1; color: var(--accent); }
-        .field-error { border-color: #ef4444 !important; }
-        .field-error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.15) !important; }
-        .error-text { color: #ef4444; font-size: 10px; margin-top: 2px; display: none; }
-        .field-error ~ .error-text { display: block; }
-        .pagination-btn { padding: 4px 10px; border-radius: 8px; font-size: 11px; transition: all 0.2s; }
-        .pagination-btn:hover:not(:disabled) { background: rgba(245,158,11,0.15); color: var(--accent); }
-        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .pagination-btn.active { background: rgba(245,158,11,0.2); color: var(--accent); }
-        .tenant-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; background: var(--accent-dim); color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-        .tenant-selector { cursor: pointer; transition: all 0.2s; }
-        .tenant-selector:hover { background: var(--hover-bg); }
-        .tenant-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .tenant-color-0 { background: #f59e0b; }
-        .tenant-color-1 { background: #3b82f6; }
-        .tenant-color-2 { background: #10b981; }
-        .tenant-color-3 { background: #8b5cf6; }
-        .tenant-color-4 { background: #ef4444; }
-        .tenant-color-5 { background: #ec4899; }
-        .tenant-color-6 { background: #14b8a6; }
-        .tenant-color-7 { background: #f97316; }
-        .role-badge { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .role-superadmin { background: rgba(245,158,11,0.2); color: #f59e0b; }
-        .role-vendor { background: rgba(59,130,246,0.2); color: #60a5fa; }
-        .role-supplier { background: rgba(16,185,129,0.2); color: #34d399; }
-        .readonly-row { opacity: 0.7; pointer-events: none; }
-        .readonly-row .action-btn { display: none; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
+        /* Layout */
+        .app-layout { display: flex; height: 100vh; width: 100vw; }
+        .sidebar {
+            width: var(--sidebar-w); height: 100vh; position: fixed; left: 0; top: 0;
+            background: var(--bg-surface); border-right: 1px solid var(--border-light);
+            display: flex; flex-direction: column; z-index: 40;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .main-area { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header {
+            height: var(--header-h); background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-light);
+            display: flex; align-items: center; padding: 0 20px; gap: 12px;
+            flex-shrink: 0; z-index: 30;
+        }
+        .content-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; }
+
+        /* Glass cards */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); backdrop-filter: blur(12px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-glow); }
+        .card-static { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
+        .card-gradient {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+            border: 1px solid var(--border); border-radius: var(--radius);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+            border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
+            transition: all 0.2s; cursor: pointer; border: none;
+            letter-spacing: 0.01em;
+        }
+        .btn-primary {
+            background: var(--accent-gradient); color: #fff;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+        .btn-ghost {
+            background: transparent; color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--bg-card-hover); border-color: var(--border-accent); color: var(--text-primary); }
+        .btn-icon {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+            background: transparent; border: none; color: var(--text-muted);
+        }
+        .btn-icon:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+        /* Inputs */
+        .input {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px;
+            color: var(--text-primary); transition: all 0.2s; outline: none;
+            width: 100%;
+        }
+        .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .input::placeholder { color: var(--text-muted); }
+        select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; }
+
+        /* Tabs */
+        .nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+            border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+            color: var(--text-muted); font-size: 12.5px; font-weight: 500;
+            position: relative; text-decoration: none;
+        }
+        .nav-item:hover { background: var(--bg-card-hover); color: var(--text-secondary); }
+        .nav-item.active {
+            background: var(--accent-glow); color: var(--accent);
+        }
+        .nav-item.active::before {
+            content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0;
+        }
+        .nav-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 16px 14px 6px; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+            border-radius: 999px; font-size: 10px; font-weight: 600;
+        }
+        .badge-amber { background: var(--accent-glow); color: var(--accent); }
+        .badge-green { background: var(--green-glow); color: var(--green); }
+        .badge-red { background: var(--red-glow); color: var(--red); }
+        .badge-blue { background: var(--blue-glow); color: var(--blue); }
+        .badge-purple { background: var(--purple-glow); color: var(--purple); }
+        .badge-cyan { background: var(--cyan-glow); color: var(--cyan); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        .animate-slide-in { animation: slideIn 0.3s ease-out; }
+        .animate-scale-in { animation: scaleIn 0.3s ease-out; }
+        .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+
+        /* Stat card */
+        .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+        .stat-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Progress */
+        .progress { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 10px 12px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border-light); }
+        td { padding: 10px 12px; font-size: 12.5px; border-bottom: 1px solid var(--border-light); color: var(--text-secondary); }
+        tr:hover td { background: var(--bg-card-hover); }
+        .action-btn { opacity: 0; transition: opacity 0.2s; }
+        tr:hover .action-btn { opacity: 1; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px); z-index: 50;
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .modal {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); width: 90%; max-width: 520px;
+            max-height: 85vh; overflow-y: auto;
+            animation: scaleIn 0.25s ease-out;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; }
+
+        /* Toast */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius-sm);
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg); font-size: 12px; color: var(--text-primary);
+            display: flex; align-items: center; gap: 8px;
+            animation: slideIn 0.3s ease-out;
+            min-width: 280px;
+        }
+        .toast.success { border-color: var(--green); }
+        .toast.error { border-color: var(--red); }
+        .toast.info { border-color: var(--blue); }
+
+        /* AI Panel */
+        .ai-panel {
+            position: fixed; right: 0; top: 0; height: 100vh; width: 360px;
+            background: var(--bg-surface); border-left: 1px solid var(--border-light);
+            z-index: 35; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
+        .ai-panel.open { transform: translateX(0); }
+        .ai-msg { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12.5px; line-height: 1.6; }
+        .ai-msg.user { background: var(--accent-glow); color: var(--text-primary); margin-left: 24px; }
+        .ai-msg.assistant { background: var(--bg-card); border: 1px solid var(--border-light); margin-right: 24px; }
+        .ai-msg.system { background: var(--blue-glow); color: var(--blue); text-align: center; font-size: 11px; }
+
+        /* Responsive */
         @media (max-width: 1024px) {
-            .sidebar { width: 56px; }
-            .sidebar .nav-text, .sidebar .brand-text, .sidebar .version-text, .sidebar .tenant-section, .sidebar .role-section { display: none; }
-            .sidebar .brand-icon { margin: 0 auto; }
-            .sidebar nav button { justify-content: center; padding: 10px; }
-            .sidebar nav button i { margin: 0; }
-            .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
-            .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
-            .col-span-2 { grid-column: span 2; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-area { margin-left: 0; }
+            .ai-panel { width: 100vw; }
         }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; left: -64px; width: 64px; z-index: 30; transition: left 0.3s; }
-            .sidebar.open { left: 0; }
-            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 25; }
-            .sidebar.open ~ .sidebar-overlay { display: block; }
-            .grid-cols-4, .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr; }
-            .col-span-2 { grid-column: span 1; }
-            .max-w-7xl { padding: 0 4px; }
-            .p-6 { padding: 12px; }
-            .h-14 { height: 48px; }
-            .w-48 { width: 100px; }
-            .search-input { width: 100% !important; }
-            .table-wrap { overflow-x: auto; }
-            .mobile-menu-btn { display: flex !important; }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
         }
-        @media (min-width: 769px) {
-            .mobile-menu-btn { display: none !important; }
-            .sidebar-overlay { display: none !important; }
+
+        /* Gradient text */
+        .gradient-text {
+            background: var(--accent-gradient); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
         }
+
+        /* Glow effects */
+        .glow-amber { box-shadow: 0 0 20px var(--accent-glow); }
+        .glow-green { box-shadow: 0 0 20px var(--green-glow); }
+        .glow-blue { box-shadow: 0 0 20px var(--blue-glow); }
+        .glow-purple { box-shadow: 0 0 20px var(--purple-glow); }
+
+        /* Grid backgrounds */
+        .grid-bg {
+            background-image:
+                linear-gradient(var(--border-light) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Tab content */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+        .tab-content.active { display: block; }
+
+        /* Entity type colors */
+        .entity-project { --entity-color: var(--accent); --entity-glow: var(--accent-glow); }
+        .entity-vendor { --entity-color: var(--blue); --entity-glow: var(--blue-glow); }
+        .entity-tender { --entity-color: var(--purple); --entity-glow: var(--purple-glow); }
+        .entity-contract { --entity-color: var(--green); --entity-glow: var(--green-glow); }
+        .entity-defect { --entity-color: var(--red); --entity-glow: var(--red-glow); }
+        .entity-inspection { --entity-color: var(--cyan); --entity-glow: var(--cyan-glow); }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex">
+<body>
 
-    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="app-layout">
 
-    <!-- ════════════════════════════════════════════════════════════════ -->
-    <!-- SIDEBAR                                                          -->
-    <!-- ════════════════════════════════════════════════════════════════ -->
-    <aside class="sidebar w-64 glass border-r border-slate-800 flex flex-col h-full z-20 flex-shrink-0">
-        <div class="p-5 border-b border-slate-800">
-            <div class="flex items-center gap-3">
-                <div class="brand-icon w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">CE</div>
-                <div class="brand-text">
-                    <h1 class="text-white font-bold text-sm tracking-tight" style="color: var(--text-primary)">Construct<span class="text-amber-400">ERP</span></h1>
-                    <div class="text-[9px] mono" style="color: var(--text-muted)">Project Management Suite</div>
-                </div>
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 px-4 h-14 border-b border-[var(--border-light)] flex-shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-[var(--accent-gradient)] flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-lg" style="box-shadow: 0 0 12px var(--accent-glow);">AI</div>
+            <div>
+                <div class="font-display font-bold text-sm" style="color: var(--text-primary);">AIConstruct<span class="gradient-text">ERP</span></div>
+                <div class="text-[9px] mono" style="color: var(--text-muted);">v3.1.0 • Enterprise Suite</div>
             </div>
         </div>
 
-        <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin" id="sidebar-nav">
-            <button onclick="switchTab('dashboard'); toggleSidebar(true)" id="tab-dashboard" class="tab-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400 flex-shrink-0"></i> <span class="nav-text">Dashboard</span>
-            </button>
-            <button onclick="switchTab('projects'); toggleSidebar(true)" id="tab-projects" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="building-2" class="w-4 h-4 text-blue-400 flex-shrink-0"></i> <span class="nav-text">Projects</span>
-            </button>
-            <button onclick="switchTab('schedule'); toggleSidebar(true)" id="tab-schedule" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="calendar-range" class="w-4 h-4 text-purple-400 flex-shrink-0"></i> <span class="nav-text">Schedule</span>
-            </button>
-            <button onclick="switchTab('resources'); toggleSidebar(true)" id="tab-resources" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="hard-hat" class="w-4 h-4 text-green-400 flex-shrink-0"></i> <span class="nav-text">Resources</span>
-            </button>
-            <button onclick="switchTab('budget'); toggleSidebar(true)" id="tab-budget" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="wallet" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i> <span class="nav-text">Budget</span>
-            </button>
-            <button onclick="switchTab('procurement'); toggleSidebar(true)" id="tab-procurement" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="truck" class="w-4 h-4 text-orange-400 flex-shrink-0"></i> <span class="nav-text">Procurement</span>
-            </button>
-            <button onclick="switchTab('subs'); toggleSidebar(true)" id="tab-subs" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="users" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i> <span class="nav-text">Subcontractors</span>
-            </button>
-            <button onclick="switchTab('reports'); toggleSidebar(true)" id="tab-reports" class="tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all">
-                <i data-lucide="file-bar-chart" class="w-4 h-4 text-rose-400 flex-shrink-0"></i> <span class="nav-text">Reports</span>
-            </button>
+        <!-- Search -->
+        <div class="px-3 pt-3 pb-1">
+            <div class="relative">
+                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style="color: var(--text-muted);"></i>
+                <input type="text" id="nav-search" oninput="filterNav()" class="input pl-8 text-xs" placeholder="Search modules..." style="height: 32px;">
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto px-2 py-1" id="nav-container">
+            <div class="nav-section">Core</div>
+            <a class="nav-item active" onclick="switchTab('dashboard')" data-nav="dashboard">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 flex-shrink-0" style="color: var(--accent);"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('projects')" data-nav="projects">
+                <i data-lucide="building-2" class="w-4 h-4 flex-shrink-0" style="color: var(--blue);"></i>
+                <span>Projects</span>
+                <span class="badge badge-blue ml-auto" id="project-count">0</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('tenders')" data-nav="tenders">
+                <i data-lucide="file-text" class="w-4 h-4 flex-shrink-0" style="color: var(--purple);"></i>
+                <span>Tenders</span>
+                <span class="badge badge-purple ml-auto" id="tender-count">0</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('contracts')" data-nav="contracts">
+                <i data-lucide="file-signature" class="w-4 h-4 flex-shrink-0" style="color: var(--green);"></i>
+                <span>Contracts</span>
+                <span class="badge badge-green ml-auto" id="contract-count">0</span>
+            </a>
+
+            <div class="nav-section">Procurement</div>
+            <a class="nav-item" onclick="switchTab('vendors')" data-nav="vendors">
+                <i data-lucide="building" class="w-4 h-4 flex-shrink-0" style="color: var(--blue);"></i>
+                <span>Vendors</span>
+                <span class="badge badge-blue ml-auto" id="vendor-count">0</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('procurement')" data-nav="procurement">
+                <i data-lucide="shopping-cart" class="w-4 h-4 flex-shrink-0" style="color: var(--orange);"></i>
+                <span>Procurement</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('e-invoices')" data-nav="e-invoices">
+                <i data-lucide="receipt" class="w-4 h-4 flex-shrink-0" style="color: var(--rose);"></i>
+                <span>E-Invoices</span>
+                <span class="badge badge-amber ml-auto" id="einvoice-count">0</span>
+            </a>
+
+            <div class="nav-section">Site & Quality</div>
+            <a class="nav-item" onclick="switchTab('defects')" data-nav="defects">
+                <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0" style="color: var(--red);"></i>
+                <span>Defects</span>
+                <span class="badge badge-red ml-auto" id="defect-count">0</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('inspections')" data-nav="inspections">
+                <i data-lucide="clipboard-check" class="w-4 h-4 flex-shrink-0" style="color: var(--cyan);"></i>
+                <span>Inspections</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('site-diary')" data-nav="site-diary">
+                <i data-lucide="book-open" class="w-4 h-4 flex-shrink-0" style="color: var(--teal);"></i>
+                <span>Site Diary</span>
+            </a>
+
+            <div class="nav-section">People & Finance</div>
+            <a class="nav-item" onclick="switchTab('subcontractors')" data-nav="subcontractors">
+                <i data-lucide="users" class="w-4 h-4 flex-shrink-0" style="color: var(--cyan);"></i>
+                <span>Subcontractors</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('budget')" data-nav="budget">
+                <i data-lucide="wallet" class="w-4 h-4 flex-shrink-0" style="color: var(--accent);"></i>
+                <span>Budget</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('payments')" data-nav="payments">
+                <i data-lucide="credit-card" class="w-4 h-4 flex-shrink-0" style="color: var(--green);"></i>
+                <span>Payments</span>
+            </a>
+
+            <div class="nav-section">Compliance</div>
+            <a class="nav-item" onclick="switchTab('tax')" data-nav="tax">
+                <i data-lucide="landmark" class="w-4 h-4 flex-shrink-0" style="color: var(--purple);"></i>
+                <span>Tax & Compliance</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('credit')" data-nav="credit">
+                <i data-lucide="shield" class="w-4 h-4 flex-shrink-0" style="color: var(--indigo);"></i>
+                <span>Credit Bureau</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('bim')" data-nav="bim">
+                <i data-lucide="cube" class="w-4 h-4 flex-shrink-0" style="color: var(--cyan);"></i>
+                <span>BIM Digital Twin</span>
+            </a>
+
+            <div class="nav-section">System</div>
+            <a class="nav-item" onclick="switchTab('integrations')" data-nav="integrations">
+                <i data-lucide="link-2" class="w-4 h-4 flex-shrink-0" style="color: var(--pink);"></i>
+                <span>Integrations</span>
+            </a>
+            <a class="nav-item" onclick="switchTab('reports')" data-nav="reports">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 flex-shrink-0" style="color: var(--rose);"></i>
+                <span>Reports</span>
+            </a>
         </nav>
 
-        <!-- Role Selector -->
-        <div class="role-section p-3 border-t border-slate-800">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-[9px] uppercase tracking-wider font-semibold" style="color: var(--text-muted)">Role</span>
-                <button onclick="showModal('role')" class="p-0.5 hover:bg-slate-700 rounded transition-colors" style="color: var(--text-muted)" title="Switch role">
-                    <i data-lucide="shuffle" class="w-3 h-3"></i>
-                </button>
-            </div>
-            <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs" style="background: var(--input-bg);">
-                <span id="role-badge" class="role-badge role-superadmin">Superadmin</span>
-                <span id="role-name" class="truncate" style="color: var(--text-primary)">Full Access</span>
-            </div>
-        </div>
-
-        <!-- Tenant Selector -->
-        <div class="tenant-section p-3 border-t border-slate-800">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-[9px] uppercase tracking-wider font-semibold" style="color: var(--text-muted)">Tenant</span>
-                <button onclick="showModal('tenant')" class="p-0.5 hover:bg-slate-700 rounded transition-colors" style="color: var(--text-muted)" title="Manage tenants">
-                    <i data-lucide="settings-2" class="w-3 h-3"></i>
-                </button>
-            </div>
-            <div id="tenant-selector" class="tenant-selector flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs" onclick="cycleTenant()" title="Click to switch tenant">
-                <div id="tenant-dot" class="tenant-dot tenant-color-0"></div>
-                <span id="tenant-name" class="truncate" style="color: var(--text-primary)">Demo Corp</span>
-                <i data-lucide="chevrons-up-down" class="w-3 h-3 ml-auto flex-shrink-0" style="color: var(--text-muted)"></i>
-            </div>
-        </div>
-
-        <div class="p-3 border-t border-slate-800" style="background: var(--bg-alt);">
-            <div class="flex items-center justify-between text-[10px] mono">
-                <span class="version-text" style="color: var(--text-muted)">v4.0.0</span>
-                <div class="flex items-center gap-1.5">
-                    <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
-                    <span style="color: rgba(16, 185, 129, 0.7)">LIVE</span>
-                </div>
+        <!-- Sidebar footer -->
+        <div class="px-3 py-3 border-t border-[var(--border-light)] flex-shrink-0">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-card-hover)] cursor-pointer transition-colors" onclick="toggleTheme()">
+                <i data-lucide="moon" class="w-4 h-4" id="theme-icon-sidebar" style="color: var(--text-muted);"></i>
+                <span class="text-xs" style="color: var(--text-muted);">Toggle Theme</span>
             </div>
         </div>
     </aside>
 
-    <!-- ════════════════════════════════════════════════════════════════ -->
-    <!-- MAIN                                                              -->
-    <!-- ════════════════════════════════════════════════════════════════ -->
-    <main class="flex-1 flex flex-col h-full overflow-hidden">
+    <!-- ═══ MAIN AREA ═══ -->
+    <div class="main-area" id="main-area">
 
-        <header class="h-14 glass border-b border-slate-800 flex items-center justify-between px-6 z-10 flex-shrink-0">
-            <div class="flex items-center gap-4">
-                <button class="mobile-menu-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-amber-400 transition-colors" onclick="toggleSidebar()">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
-                <span class="text-sm" style="color: var(--text-muted)">ERP / <span class="font-medium" style="color: var(--text-primary)" id="page-title">Dashboard</span></span>
-                <span id="header-tenant-badge" class="tenant-badge">Demo Corp</span>
-                <span id="header-role-badge" class="role-badge role-superadmin">Superadmin</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleTheme()" id="theme-toggle" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors" style="color: var(--text-muted)" title="Toggle theme">
-                    <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
-                </button>
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg glass text-[10px] mono">
-                    <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></div>
-                    <span style="color: var(--text-muted)">System</span>
-                    <span class="font-semibold" style="color: var(--text-primary)">ONLINE</span>
+        <!-- Header -->
+        <header class="header">
+            <button class="btn-icon lg:hidden" onclick="toggleSidebar()">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center gap-2 flex-1">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)]">
+                    <i data-lucide="search" class="w-3.5 h-3.5" style="color: var(--text-muted);"></i>
+                    <input type="text" id="global-search" oninput="globalSearch(this.value)" class="bg-transparent border-none outline-none text-xs" style="color: var(--text-primary); width: 200px;" placeholder="Search entities, vendors, tenders...">
+                    <span class="text-[9px] mono px-1.5 py-0.5 rounded bg-[var(--bg-elevated)]" style="color: var(--text-muted);">⌘K</span>
                 </div>
-                <button onclick="refreshAll()" class="p-1.5 hover:bg-slate-800 rounded-lg transition-colors" style="color: var(--text-muted)">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="btn-icon relative" onclick="toggleAIPanel()" title="AI Assistant">
+                    <i data-lucide="sparkles" class="w-4 h-4" style="color: var(--accent);"></i>
+                    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
                 </button>
+                <button class="btn-icon" onclick="toggleTheme()" title="Toggle theme">
+                    <i data-lucide="moon" class="w-4 h-4" id="theme-icon-header"></i>
+                </button>
+                <div class="flex items-center gap-2 pl-2 border-l border-[var(--border-light)]">
+                    <div class="w-7 h-7 rounded-full bg-[var(--accent-gradient)] flex items-center justify-center text-white font-bold text-xs">AA</div>
+                    <div class="text-xs leading-tight">
+                        <div class="font-medium" style="color: var(--text-primary);">Ada Admin</div>
+                        <div class="text-[10px]" style="color: var(--text-muted);">admin</div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- DASHBOARD -->
-        <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 scrollbar-thin">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">Active Projects</span>
-                            <i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i>
-                        </div>
-                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-projects">0</div>
-                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-green-400" id="kpi-projects-change">+0</span> this quarter</div>
-                    </div>
-                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">Total Budget</span>
-                            <i data-lucide="wallet" class="w-4 h-4 text-yellow-400"></i>
-                        </div>
-                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-budget">$0</div>
-                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-amber-400" id="kpi-budget-pct">0%</span> allocated</div>
-                    </div>
-                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">Workforce</span>
-                            <i data-lucide="hard-hat" class="w-4 h-4 text-green-400"></i>
-                        </div>
-                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-workforce">0</div>
-                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-green-400" id="kpi-workforce-status">On-site</span></div>
-                    </div>
-                    <div class="glass stat-card rounded-2xl p-5 border border-slate-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--text-muted)">On Schedule</span>
-                            <i data-lucide="calendar-check" class="w-4 h-4 text-purple-400"></i>
-                        </div>
-                        <div class="text-2xl font-bold mono" style="color: var(--text-primary)" id="kpi-schedule">0%</div>
-                        <div class="text-xs mt-1" style="color: var(--text-muted)"><span class="text-amber-400" id="kpi-schedule-status">Tracking</span></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="col-span-2 glass rounded-2xl p-6 border border-slate-800">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
-                                <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Budget vs. Actual
-                            </h3>
-                            <span class="text-[10px] mono" style="color: var(--text-muted)">YTD</span>
-                        </div>
-                        <div id="budget-chart" class="relative h-64">
-                            <canvas id="budgetChartCanvas"></canvas>
-                        </div>
-                    </div>
-                    <div class="glass rounded-2xl p-6 border border-slate-800">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
-                                <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i> Alerts
-                            </h3>
-                            <span class="text-[10px] mono" style="color: var(--text-muted)" id="alert-count">3</span>
-                        </div>
-                        <div id="alert-list" class="space-y-3">
-                            <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 fade-in">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-2 h-2 rounded-full bg-red-400 mt-1.5 flex-shrink-0"></div>
-                                    <div><div class="text-xs font-medium" style="color: var(--text-primary)">Permit Delay</div><div class="text-[10px]" style="color: var(--text-muted)">Building permit #B-2024-089 delayed 2 weeks</div></div>
-                                </div>
-                            </div>
-                            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 fade-in">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></div>
-                                    <div><div class="text-xs font-medium" style="color: var(--text-primary)">Material Shortage</div><div class="text-[10px]" style="color: var(--text-muted)">Steel rebar delivery rescheduled to Aug 12</div></div>
-                                </div>
-                            </div>
-                            <div class="p-3 rounded-xl bg-green-500/10 border border-green-500/20 fade-in">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-2 h-2 rounded-full bg-green-400 mt-1.5 flex-shrink-0"></div>
-                                    <div><div class="text-xs font-medium" style="color: var(--text-primary)">Phase Complete</div><div class="text-[10px]" style="color: var(--text-muted)">Structural framing passed inspection</div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="glass rounded-2xl p-6 border border-slate-800">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
-                                <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i> Recent Activity
-                            </h3>
-                        </div>
-                        <div id="activity-feed" class="space-y-3">
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span style="color: var(--text-secondary)">Inspection passed</span><span class="ml-auto" style="color: var(--text-muted)">2h ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span style="color: var(--text-secondary)">PO #PO-2024-042 issued</span><span class="ml-auto" style="color: var(--text-muted)">4h ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div><span style="color: var(--text-secondary)">Change order #CO-003 submitted</span><span class="ml-auto" style="color: var(--text-muted)">6h ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span style="color: var(--text-secondary)">Subcontractor bid awarded</span><span class="ml-auto" style="color: var(--text-muted)">1d ago</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span style="color: var(--text-secondary)">Safety report filed</span><span class="ml-auto" style="color: var(--text-muted)">1d ago</span></div>
-                        </div>
-                    </div>
-                    <div class="glass rounded-2xl p-6 border border-slate-800">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-semibold text-sm flex items-center gap-2" style="color: var(--text-primary)">
-                                <i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i> Upcoming Milestones
-                            </h3>
-                        </div>
-                        <div id="milestone-list" class="space-y-3">
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot"></div><span class="font-medium" style="color: var(--text-primary)">Concrete Pour</span><span class="ml-auto" style="color: var(--text-muted)">Jul 12</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span style="color: var(--text-secondary)">Steel Erection</span><span class="ml-auto" style="color: var(--text-muted)">Jul 18</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span style="color: var(--text-secondary)">Roofing Start</span><span class="ml-auto" style="color: var(--text-muted)">Aug 5</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span style="color: var(--text-secondary)">MEP Rough-In</span><span class="ml-auto" style="color: var(--text-muted)">Aug 14</span></div>
-                            <div class="flex items-center gap-3 text-xs fade-in"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span style="color: var(--text-secondary)">Drywall</span><span class="ml-auto" style="color: var(--text-muted)">Sep 2</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Content -->
+        <div class="content-area" id="content-area">
+            <!-- All tab content rendered by JS -->
         </div>
+    </div>
 
-        <!-- PROJECTS -->
-        <div id="view-projects" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Projects</h2>
-                    <button id="btn-new-project" onclick="showModal('project')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> New Project
-                    </button>
+    <!-- ═══ AI PANEL ═══ -->
+    <div class="ai-panel" id="ai-panel">
+        <div class="flex items-center justify-between px-4 h-14 border-b border-[var(--border-light)] flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-[var(--accent-gradient)] flex items-center justify-center">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
                 </div>
-                <div id="projects-grid" class="grid grid-cols-3 gap-4"></div>
+                <span class="font-display font-semibold text-sm" style="color: var(--text-primary);">AI Assistant</span>
             </div>
+            <button class="btn-icon" onclick="toggleAIPanel()">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
         </div>
-
-        <!-- SCHEDULE -->
-        <div id="view-schedule" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Schedule</h2>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] mono" style="color: var(--text-muted)">Week 28 / 2024</span>
-                        <button id="btn-add-task" onclick="showModal('task')" class="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                            <i data-lucide="plus" class="w-4 h-4"></i> Add Task
-                        </button>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl p-6 border border-slate-800">
-                    <div class="flex items-center justify-between mb-4 text-xs" style="color: var(--text-muted)">
-                        <span class="w-48 flex-shrink-0 font-medium" style="color: var(--text-secondary)">Task</span>
-                        <div class="flex-1 flex">
-                            <span class="flex-1 text-center">Jul 7</span>
-                            <span class="flex-1 text-center">Jul 14</span>
-                            <span class="flex-1 text-center">Jul 21</span>
-                            <span class="flex-1 text-center">Jul 28</span>
-                            <span class="flex-1 text-center">Aug 4</span>
-                        </div>
-                    </div>
-                    <div id="gantt-chart" class="space-y-2"></div>
-                </div>
-            </div>
+        <div class="flex-1 overflow-y-auto p-3 space-y-3" id="ai-messages">
+            <div class="ai-msg system">AI Assistant is ready. Ask me anything about your construction projects.</div>
+            <div class="ai-msg assistant">Hello! I'm your AI construction assistant. I can help you with:
+                <br>• Project status and analytics
+                <br>• Tender evaluation and comparison
+                <br>• Vendor credit checks and compliance
+                <br>• Contract management and variations
+                <br>• Site issues and defect tracking
+                <br>• E-invoice and tax compliance
+                <br><br><em style="color: var(--text-muted);">What would you like to explore?</em></div>
         </div>
-
-        <!-- RESOURCES -->
-        <div id="view-resources" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Resources</h2>
-                    <button id="btn-add-resource" onclick="showModal('resource')" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add Resource
-                    </button>
-                </div>
-                <div id="resources-grid" class="grid grid-cols-3 gap-4"></div>
-            </div>
-        </div>
-
-        <!-- BUDGET -->
-        <div id="view-budget" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Budget & Cost Control</h2>
-                    <button id="btn-change-order" onclick="showModal('changeorder')" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                        <i data-lucide="file-plus" class="w-4 h-4"></i> Change Order
-                    </button>
-                </div>
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Budget</div>
-                        <div class="text-xl font-bold mono" style="color: var(--text-primary)" id="budget-total">$0</div>
-                        <div class="text-[10px]" style="color: var(--text-muted)">Total approved</div>
-                    </div>
-                    <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Committed</div>
-                        <div class="text-xl font-bold text-amber-400 mono" id="budget-committed">$0</div>
-                        <div class="text-[10px]" style="color: var(--text-muted)" id="budget-committed-pct">0% of budget</div>
-                    </div>
-                    <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Spent</div>
-                        <div class="text-xl font-bold text-blue-400 mono" id="budget-spent">$0</div>
-                        <div class="text-[10px]" style="color: var(--text-muted)" id="budget-spent-pct">0% of budget</div>
-                    </div>
-                    <div class="glass rounded-2xl p-5 border border-slate-800">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-1" style="color: var(--text-muted)">Remaining</div>
-                        <div class="text-xl font-bold text-green-400 mono" id="budget-remaining">$0</div>
-                        <div class="text-[10px]" style="color: var(--text-muted)" id="budget-remaining-pct">0% remaining</div>
-                    </div>
-                </div>
-                <div class="glass rounded-2xl overflow-hidden border border-slate-800">
-                    <div class="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
-                        <h3 class="font-semibold text-sm" style="color: var(--text-primary)">Cost Breakdown</h3>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <input type="text" id="budget-search" oninput="renderBudgetTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search categories...">
-                        </div>
-                    </div>
-                    <div class="table-wrap overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-950/50 border-b border-slate-800">
-                                <tr class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted)">
-                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortBudget('category')" id="sort-budget-category">Category</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('budget')" id="sort-budget-budget">Budget</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('committed')" id="sort-budget-committed">Committed</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('spent')" id="sort-budget-spent">Spent</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('remaining')" id="sort-budget-remaining">Remaining</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortBudget('pct')" id="sort-budget-pct">% Used</th>
-                                    <th class="text-right p-4 font-semibold"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="budget-table-body" class="divide-y divide-slate-800/30"></tbody>
-                        </table>
-                    </div>
-                    <div id="budget-pagination" class="flex items-center justify-center gap-2 p-3 border-t border-slate-800"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PROCUREMENT -->
-        <div id="view-procurement" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Procurement</h2>
-                    <button id="btn-new-po" onclick="showModal('po')" class="px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> New PO
-                    </button>
-                </div>
-                <div class="glass rounded-2xl overflow-hidden border border-slate-800">
-                    <div class="p-3 border-b border-slate-800 flex items-center gap-3 flex-wrap">
-                        <input type="text" id="po-search" oninput="renderPOTable()" class="search-input bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 w-48" placeholder="Search POs...">
-                        <select id="po-status-filter" onchange="renderPOTable()" class="bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
-                            <option value="all">All Status</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="In Transit">In Transit</option>
-                            <option value="Ordered">Ordered</option>
-                            <option value="Pending">Pending</option>
-                        </select>
-                    </div>
-                    <div class="table-wrap overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-950/50 border-b border-slate-800">
-                                <tr class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted)">
-                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('id')" id="sort-po-id">PO #</th>
-                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('supplier')" id="sort-po-supplier">Supplier</th>
-                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('item')" id="sort-po-item">Item</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortPO('qty')" id="sort-po-qty">Qty</th>
-                                    <th class="text-right p-4 font-semibold sort-btn" onclick="sortPO('amount')" id="sort-po-amount">Amount</th>
-                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('status')" id="sort-po-status">Status</th>
-                                    <th class="text-left p-4 font-semibold sort-btn" onclick="sortPO('delivery')" id="sort-po-delivery">Delivery</th>
-                                    <th class="text-right p-4 font-semibold"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="po-table-body" class="divide-y divide-slate-800/30"></tbody>
-                        </table>
-                    </div>
-                    <div id="po-pagination" class="flex items-center justify-center gap-2 p-3 border-t border-slate-800"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SUBCONTRACTORS -->
-        <div id="view-subs" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Subcontractors</h2>
-                    <button id="btn-add-sub" onclick="showModal('sub')" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add Sub
-                    </button>
-                </div>
-                <div id="subs-grid" class="grid grid-cols-3 gap-4"></div>
-            </div>
-        </div>
-
-        <!-- REPORTS -->
-        <div id="view-reports" class="flex-1 overflow-y-auto p-6 scrollbar-thin hidden">
-            <div class="max-w-7xl mx-auto space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg" style="color: var(--text-primary)">Reports</h2>
-                    <button onclick="exportAll()" class="px-4 py-2 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                        <i data-lucide="download" class="w-4 h-4"></i> Export All
-                    </button>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Daily Progress Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Daily Progress Report</span></div>
-                        <div class="text-xs" style="color: var(--text-muted)">Labor hours, material usage, completed tasks, delays</div>
-                    </div>
-                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Cost Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Cost Report</span></div>
-                        <div class="text-xs" style="color: var(--text-muted)">Budget vs actual, committed costs, forecast</div>
-                    </div>
-                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Safety Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-green-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Safety Report</span></div>
-                        <div class="text-xs" style="color: var(--text-muted)">Incidents, inspections, near-misses, compliance</div>
-                    </div>
-                    <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover cursor-pointer" onclick="showToast('Generating Schedule Report...')">
-                        <div class="flex items-center gap-3 mb-3"><i data-lucide="file-text" class="w-5 h-5 text-purple-400"></i><span class="font-medium text-sm" style="color: var(--text-primary)">Schedule Report</span></div>
-                        <div class="text-xs" style="color: var(--text-muted)">Milestone tracking, critical path, delays</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- MODALS -->
-    <div id="modal-overlay" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center" onclick="closeModal(event)">
-        <div id="modal-content" class="glass rounded-2xl border border-slate-800 w-full max-w-lg max-h-[80vh] overflow-y-auto scrollbar-thin m-4" onclick="event.stopPropagation()">
-            <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-                <h3 id="modal-title" class="font-semibold text-sm" style="color: var(--text-primary)">New Project</h3>
-                <button onclick="closeModal()" class="p-1 hover:bg-slate-800 rounded-lg" style="color: var(--text-muted); transition: all 0.2s;">
-                    <i data-lucide="x" class="w-4 h-4"></i>
+        <div class="p-3 border-t border-[var(--border-light)] flex-shrink-0">
+            <div class="flex gap-2">
+                <input type="text" id="ai-input" class="input flex-1" placeholder="Ask AI anything..." onkeydown="if(event.key==='Enter')sendAIMessage()">
+                <button class="btn btn-primary" onclick="sendAIMessage()">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
                 </button>
             </div>
-            <div id="modal-body" class="p-5 space-y-4">
-                <p class="text-xs" style="color: var(--text-muted)">Modal content placeholder</p>
+            <div class="flex gap-1.5 mt-2 flex-wrap">
+                <button class="text-[10px] px-2 py-1 rounded-full border border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors" style="color: var(--text-muted);" onclick="quickAIPrompt('Show me project status')">📊 Project Status</button>
+                <button class="text-[10px] px-2 py-1 rounded-full border border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors" style="color: var(--text-muted);" onclick="quickAIPrompt('Compare tender bids')">📋 Tender Comparison</button>
+                <button class="text-[10px] px-2 py-1 rounded-full border border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors" style="color: var(--text-muted);" onclick="quickAIPrompt('List open defects')">⚠️ Open Defects</button>
             </div>
         </div>
     </div>
 
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+    <!-- ═══ MODAL ═══ -->
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+        <div class="modal" id="modal-container">
+            <div class="modal-header">
+                <h3 class="font-display font-semibold text-sm" style="color: var(--text-primary);" id="modal-title">Modal</h3>
+                <button class="btn-icon" onclick="closeModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
 
-    <script>
-        // ── Role-Based Access Control ────────────────────────────────
-        const ROLES = {
-            superadmin: {
-                label: 'Superadmin',
-                description: 'Full Access',
-                badgeClass: 'role-superadmin',
-                tabs: ['dashboard', 'projects', 'schedule', 'resources', 'budget', 'procurement', 'subs', 'reports'],
-                canCreate: true,
-                canEdit: true,
-                canDelete: true,
-                canManageTenants: true,
-                canManageRoles: true,
-                poFilter: 'all' // sees all POs
+    <!-- ═══ TOAST CONTAINER ═══ -->
+    <div class="toast-container" id="toast-container"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// DATA LAYER
+// ══════════════════════════════════════════════════════════════════════════
+
+const API_BASE = 'http://localhost:8787/api';
+let TOKEN = null;
+let currentTab = 'dashboard';
+let isDark = true;
+let aiPanelOpen = false;
+
+// Demo data (fallback when API is unavailable)
+const DEMO = {
+    projects: [
+        { id: 1, title: 'Riverside Tower', reference_no: 'PRJ-2026-001', status: 'active', attrs: { location: '123 Main St', budget: 1450000, progress: 62, duration: '18 months' } },
+        { id: 2, title: 'Harbor Bridge', reference_no: 'PRJ-2026-002', status: 'active', attrs: { location: '456 Bay Ave', budget: 3200000, progress: 34, duration: '24 months' } },
+        { id: 3, title: 'Greenfield School', reference_no: 'PRJ-2026-003', status: 'active', attrs: { location: '789 Oak Dr', budget: 890000, progress: 78, duration: '12 months' } },
+    ],
+    vendors: [
+        { id: 1, title: 'BuildCo Construction Sdn Bhd', reference_no: 'VEN-001', status: 'active', attrs: { category: 'contractor', classification: 'Grade 7', pre_qualified: true } },
+        { id: 2, title: 'SteelMaster Fabricators', reference_no: 'VEN-002', status: 'active', attrs: { category: 'supplier', classification: 'Grade 5', pre_qualified: true } },
+        { id: 3, title: 'MEP Solutions PLT', reference_no: 'VEN-003', status: 'active', attrs: { category: 'contractor', classification: 'Grade 6', pre_qualified: false } },
+        { id: 4, title: 'DesignWorks Architects', reference_no: 'VEN-004', status: 'active', attrs: { category: 'consultant', classification: 'Grade 4', pre_qualified: true } },
+    ],
+    tenders: [
+        { id: 1, title: 'Riverside Tower — Structural Steel Package', reference_no: 'TND-2026-001', status: 'open', attrs: { budget_estimate: 2500000, category: 'selective' } },
+        { id: 2, title: 'Harbor Bridge — Cable Rehabilitation', reference_no: 'TND-2026-002', status: 'draft', attrs: { budget_estimate: 4800000, category: 'public' } },
+    ],
+    defects: [
+        { id: 1, title: 'Crack in column B-12', reference_no: 'DEF-001', status: 'open', attrs: { severity: 'major', location: 'Ground Floor' } },
+        { id: 2, title: 'Paint peeling on level 3 walls', reference_no: 'DEF-002', status: 'in_progress', attrs: { severity: 'minor', location: 'Level 3' } },
+    ],
+    contracts: [],
+    bidders: [
+        { id: 1, title: 'BuildCo Construction — Steel Bid', status: 'submitted', attrs: { bid_amount: 2350000, total_score: 85.6 } },
+        { id: 2, title: 'SteelMaster — Steel Bid', status: 'submitted', attrs: { bid_amount: 2180000, total_score: 86.4 } },
+    ],
+    siteDiaries: [
+        { id: 1, title: 'Daily Log - Day 45', attrs: { weather: 'Sunny 32°C', labour_count: 45, work_summary: 'Steel erection ongoing on floor 8' } },
+        { id: 2, title: 'Daily Log - Day 46', attrs: { weather: 'Partly cloudy 29°C', labour_count: 52, work_summary: 'Concrete pouring for floor 8 slab' } },
+    ],
+    eInvoices: [],
+    payments: [],
+    inspections: [],
+    subcontractors: [],
+    budget: [
+        { category: 'Site Work', budget: 180000, committed: 165000, spent: 148000 },
+        { category: 'Foundation', budget: 280000, committed: 260000, spent: 245000 },
+        { category: 'Structure', budget: 650000, committed: 520000, spent: 480000 },
+        { category: 'MEP', budget: 220000, committed: 180000, spent: 155000 },
+        { category: 'Finishes', budget: 120000, committed: 95000, spent: 64000 },
+    ],
+    pos: [
+        { po_number: 'PO-2024-038', supplier: 'BuildCo Steel', item: 'Structural Steel', amount: 168000, status: 'Delivered' },
+        { po_number: 'PO-2024-039', supplier: 'Concrete Supply Co', item: 'Ready-Mix Concrete', amount: 96000, status: 'In Transit' },
+    ],
+};
+
+let data = JSON.parse(JSON.stringify(DEMO));
+
+// ══════════════════════════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════════════════════════
+
+async function api(method, path, body = null) {
+    try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (TOKEN) opts.headers['Authorization'] = `Bearer ${TOKEN}`;
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(`${API_BASE}${path}`, opts);
+        if (res.status === 401) { await login(); return api(method, path, body); }
+        if (res.status === 204) return null;
+        return await res.json();
+    } catch (e) {
+        console.warn(`API ${method} ${path} failed:`, e.message);
+        return null;
+    }
+}
+
+async function login() {
+    const res = await fetch(`${API_BASE}/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'username=admin@constructerp.dev&password=admin123',
+    });
+    if (res.ok) {
+        const d = await res.json();
+        TOKEN = d.access_token;
+    }
+}
+
+async function loadData() {
+    await login();
+    const [projects, vendors, tenders, defects, contracts] = await Promise.all([
+        api('GET', '/entities?entity_type=project&limit=100'),
+        api('GET', '/entities?entity_type=vendor&limit=100'),
+        api('GET', '/entities?entity_type=tender&limit=100'),
+        api('GET', '/entities?entity_type=defect&limit=100'),
+        api('GET', '/entities?entity_type=contract&limit=100'),
+    ]);
+    if (projects) data.projects = projects;
+    if (vendors) data.vendors = vendors;
+    if (tenders) data.tenders = tenders;
+    if (defects) data.defects = defects;
+    if (contracts) data.contracts = contracts;
+    updateCounts();
+    renderCurrentTab();
+}
+
+function updateCounts() {
+    document.getElementById('project-count').textContent = data.projects.length;
+    document.getElementById('vendor-count').textContent = data.vendors.length;
+    document.getElementById('tender-count').textContent = data.tenders.length;
+    document.getElementById('defect-count').textContent = data.defects.length;
+    document.getElementById('contract-count').textContent = data.contracts.length;
+    document.getElementById('einvoice-count').textContent = data.eInvoices.length;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════════════
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-nav="${tab}"]`)?.classList.add('active');
+    renderCurrentTab();
+    if (window.innerWidth < 1024) toggleSidebar();
+}
+
+function renderCurrentTab() {
+    const area = document.getElementById('content-area');
+    switch (currentTab) {
+        case 'dashboard': renderDashboard(area); break;
+        case 'projects': renderEntityList(area, 'project', data.projects, ['location', 'budget', 'progress', 'duration']); break;
+        case 'vendors': renderEntityList(area, 'vendor', data.vendors, ['category', 'classification', 'pre_qualified']); break;
+        case 'tenders': renderEntityList(area, 'tender', data.tenders, ['category', 'budget_estimate', 'tender_close_at']); break;
+        case 'contracts': renderEntityList(area, 'contract', data.contracts, ['contract_value', 'start_date', 'end_date']); break;
+        case 'defects': renderEntityList(area, 'defect', data.defects, ['severity', 'location', 'assigned_to']); break;
+        case 'procurement': renderProcurement(area); break;
+        case 'budget': renderBudget(area); break;
+        case 'e-invoices': renderEInvoices(area); break;
+        case 'payments': renderPayments(area); break;
+        case 'tax': renderTax(area); break;
+        case 'credit': renderCredit(area); break;
+        case 'bim': renderBIM(area); break;
+        case 'integrations': renderIntegrations(area); break;
+        case 'inspections': renderEntityList(area, 'inspection', data.inspections || [], ['inspection_type', 'status', 'scheduled_date']); break;
+        case 'site-diary': renderSiteDiary(area); break;
+        case 'subcontractors': renderEntityList(area, 'subcontractor', data.subcontractors || [], ['trade', 'contract', 'status']); break;
+        case 'reports': renderReports(area); break;
+        default: renderDashboard(area);
+    }
+    lucide.createIcons();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// RENDERERS
+// ══════════════════════════════════════════════════════════════════════════
+
+function renderDashboard(area) {
+    const totalBudget = data.budget.reduce((s, b) => s + b.budget, 0);
+    const totalSpent = data.budget.reduce((s, b) => s + b.spent, 0);
+    const totalCommitted = data.budget.reduce((s, b) => s + b.committed, 0);
+    const activeProjects = data.projects.filter(p => p.status === 'active').length;
+    const openTenders = data.tenders.filter(t => t.status === 'open').length;
+    const openDefects = data.defects.filter(d => d.status === 'open' || d.status === 'in_progress').length;
+
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <!-- Welcome -->
+      <div class="mb-6">
+        <h1 class="font-display text-xl font-bold" style="color: var(--text-primary);">Good morning, Ada 👋</h1>
+        <p class="text-sm mt-1" style="color: var(--text-muted);">Here's your construction enterprise overview for today.</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        ${[
+          { label: 'Active Projects', value: activeProjects, icon: 'building-2', color: 'blue', change: '+2 this month' },
+          { label: 'Open Tenders', value: openTenders, icon: 'file-text', color: 'purple', change: 'RM${(data.tenders.reduce((s,t) => s + (t.attrs?.budget_estimate || 0), 0)/1e6).toFixed(1)}M total' },
+          { label: 'Open Defects', value: openDefects, icon: 'alert-triangle', color: 'red', change: '${data.defects.filter(d => d.status === 'open').length} critical' },
+          { label: 'Total Budget', value: 'RM${(totalBudget/1e6).toFixed(1)}M', icon: 'wallet', color: 'amber', change: '${((totalSpent/totalBudget)*100).toFixed(0)}% utilized' },
+        ].map(k => `
+          <div class="card p-4 animate-scale-in">
+            <div class="flex items-center justify-between mb-3">
+              <span class="stat-label">${k.label}</span>
+              <div class="w-8 h-8 rounded-lg bg-[var(--${k.color}-glow)] flex items-center justify-center">
+                <i data-lucide="${k.icon}" class="w-4 h-4" style="color: var(--${k.color});"></i>
+              </div>
+            </div>
+            <div class="stat-value">${k.value}</div>
+            <div class="text-[10px] mt-1" style="color: var(--text-muted);">${k.change}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <!-- Budget Chart -->
+        <div class="card p-4 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4" style="color: var(--accent);"></i>
+              <span class="font-display font-semibold text-sm" style="color: var(--text-primary);">Budget vs Actual</span>
+            </div>
+            <span class="badge badge-amber">${((totalSpent/totalBudget)*100).toFixed(0)}% spent</span>
+          </div>
+          <canvas id="budget-chart" height="200"></canvas>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="sparkles" class="w-4 h-4" style="color: var(--accent);"></i>
+            <span class="font-display font-semibold text-sm" style="color: var(--text-primary);">AI Insights</span>
+          </div>
+          <div class="space-y-3">
+            ${[
+              { icon: 'trending-up', color: 'green', text: 'Riverside Tower is 62% complete — ahead of schedule by 2 weeks' },
+              { icon: 'alert-triangle', color: 'red', text: 'TND-2026-001 closes in 23 days — 2 bids received, 1 pending' },
+              { icon: 'shield', color: 'blue', text: 'BuildCo Construction credit check passed (CTOS: A2)' },
+              { icon: 'file-text', color: 'purple', text: '3 e-invoices pending LHDN MyInvois submission' },
+            ].map(ins => `
+              <div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-[var(--bg-card)]">
+                <div class="w-6 h-6 rounded-md bg-[var(--${ins.color}-glow)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <i data-lucide="${ins.icon}" class="w-3 h-3" style="color: var(--${ins.color});"></i>
+                </div>
+                <p class="text-[11.5px] leading-relaxed" style="color: var(--text-secondary);">${ins.text}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity & Projects -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="activity" class="w-4 h-4" style="color: var(--cyan);"></i>
+            <span class="font-display font-semibold text-sm" style="color: var(--text-primary);">Recent Activity</span>
+          </div>
+          <div class="space-y-2">
+            ${data.projects.slice(0, 5).map(p => `
+              <div class="flex items-center gap-3 py-2 border-b border-[var(--border-light)] last:border-0">
+                <div class="w-2 h-2 rounded-full bg-[var(--green)]"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-medium truncate" style="color: var(--text-primary);">${p.title}</div>
+                  <div class="text-[10px]" style="color: var(--text-muted);">${p.reference_no || 'No ref'} • ${p.status}</div>
+                </div>
+                <span class="badge ${p.status === 'active' ? 'badge-green' : 'badge-amber'}">${p.status}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="calendar" class="w-4 h-4" style="color: var(--purple);"></i>
+            <span class="font-display font-semibold text-sm" style="color: var(--text-primary);">Upcoming Milestones</span>
+          </div>
+          <div class="space-y-3">
+            ${data.tenders.filter(t => t.status === 'open').map(t => `
+              <div class="flex items-center gap-3 p-2.5 rounded-lg bg-[var(--bg-card)]">
+                <div class="w-8 h-8 rounded-lg bg-[var(--purple-glow)] flex items-center justify-center">
+                  <i data-lucide="file-text" class="w-4 h-4" style="color: var(--purple);"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-medium truncate" style="color: var(--text-primary);">${t.title}</div>
+                  <div class="text-[10px]" style="color: var(--text-muted);">Closing: ${t.attrs?.tender_close_at ? new Date(t.attrs.tender_close_at).toLocaleDateString() : 'TBD'}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-xs font-semibold" style="color: var(--accent);">RM${((t.attrs?.budget_estimate || 0)/1e6).toFixed(1)}M</div>
+                </div>
+              </div>
+            `).join('') || '<div class="text-xs" style="color: var(--text-muted);">No upcoming milestones</div>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    // Render chart after DOM
+    setTimeout(() => {
+        const ctx = document.getElementById('budget-chart');
+        if (!ctx) return;
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.budget.map(b => b.category),
+                datasets: [
+                    { label: 'Budget', data: data.budget.map(b => b.budget), backgroundColor: 'rgba(245, 158, 11, 0.6)', borderRadius: 4 },
+                    { label: 'Committed', data: data.budget.map(b => b.committed), backgroundColor: 'rgba(59, 130, 246, 0.6)', borderRadius: 4 },
+                    { label: 'Spent', data: data.budget.map(b => b.spent), backgroundColor: 'rgba(239, 68, 68, 0.6)', borderRadius: 4 },
+                ]
             },
-            vendor: {
-                label: 'Vendor',
-                description: 'Procurement & Reports',
-                badgeClass: 'role-vendor',
-                tabs: ['dashboard', 'procurement', 'reports'],
-                canCreate: false,
-                canEdit: false,
-                canDelete: false,
-                canManageTenants: false,
-                canManageRoles: false,
-                poFilter: 'own' // sees only their POs
-            },
-            supplier: {
-                label: 'Supplier',
-                description: 'Procurement (Read-Only)',
-                badgeClass: 'role-supplier',
-                tabs: ['dashboard', 'procurement', 'reports'],
-                canCreate: false,
-                canEdit: false,
-                canDelete: false,
-                canManageTenants: false,
-                canManageRoles: false,
-                poFilter: 'own'
-            }
-        };
-
-        const ROLE_KEY = 'construct_erp_role';
-
-        function getRole() {
-            return localStorage.getItem(ROLE_KEY) || 'superadmin';
-        }
-
-        function setRole(role) {
-            localStorage.setItem(ROLE_KEY, role);
-            applyRole(role);
-        }
-
-        function applyRole(roleId) {
-            const role = ROLES[roleId] || ROLES.superadmin;
-
-            // Update role badge in sidebar
-            const badge = document.getElementById('role-badge');
-            const roleName = document.getElementById('role-name');
-            if (badge) {
-                badge.className = `role-badge ${role.badgeClass}`;
-                badge.textContent = role.label;
-            }
-            if (roleName) roleName.textContent = role.description;
-
-            // Update header role badge
-            const headerBadge = document.getElementById('header-role-badge');
-            if (headerBadge) {
-                headerBadge.className = `role-badge ${role.badgeClass}`;
-                headerBadge.textContent = role.label;
-            }
-
-            // Show/hide sidebar tabs based on role
-            const allTabs = ['dashboard', 'projects', 'schedule', 'resources', 'budget', 'procurement', 'subs', 'reports'];
-            allTabs.forEach(tab => {
-                const btn = document.getElementById(`tab-${tab}`);
-                if (!btn) return;
-                if (role.tabs.includes(tab)) {
-                    btn.classList.remove('hidden', 'restricted');
-                    btn.onclick = function() { switchTab(tab); toggleSidebar(true); };
-                } else {
-                    btn.classList.add('restricted');
-                    btn.onclick = function() { showToast(`"${tab.charAt(0).toUpperCase()+tab.slice(1)}" is restricted for ${role.label}`, 'error'); };
-                }
-            });
-
-            // Show/hide create buttons
-            const createBtns = {
-                'btn-new-project': role.canCreate,
-                'btn-add-task': role.canCreate,
-                'btn-add-resource': role.canCreate,
-                'btn-change-order': role.canCreate,
-                'btn-new-po': role.canCreate,
-                'btn-add-sub': role.canCreate
-            };
-            Object.entries(createBtns).forEach(([id, visible]) => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = visible ? '' : 'none';
-            });
-
-            // If current tab is restricted, switch to dashboard
-            const currentTab = document.querySelector('.tab-btn.active');
-            if (currentTab) {
-                const tabId = currentTab.id.replace('tab-', '');
-                if (!role.tabs.includes(tabId)) {
-                    switchTab('dashboard');
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+                scales: {
+                    x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(45,55,80,0.2)' } },
+                    y: { ticks: { color: '#64748b', font: { size: 9 }, callback: v => 'RM' + (v/1000).toFixed(0) + 'k' }, grid: { color: 'rgba(45,55,80,0.2)' } }
                 }
             }
+        });
+    }, 100);
+}
 
-            // Re-render PO table with role filter
-            renderPOTable();
-        }
+function renderEntityList(area, type, entities, displayAttrs) {
+    const typeColors = { project: 'blue', vendor: 'blue', tender: 'purple', contract: 'green', defect: 'red', inspection: 'cyan' };
+    const typeIcons = { project: 'building-2', vendor: 'building', tender: 'file-text', contract: 'file-signature', defect: 'alert-triangle', inspection: 'clipboard-check' };
+    const color = typeColors[type] || 'amber';
+    const icon = typeIcons[type] || 'file';
 
-        // ── Multi-Tenant System ──────────────────────────────────────
-        const TENANTS_KEY = 'construct_erp_tenants';
-        const ACTIVE_TENANT_KEY = 'construct_erp_active_tenant';
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">${type.charAt(0).toUpperCase() + type.slice(1)}s</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">${entities.length} total records</p>
+        </div>
+        <button class="btn btn-primary" onclick="showCreateModal('${type}')">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> New ${type.charAt(0).toUpperCase() + type.slice(1)}
+        </button>
+      </div>
 
-        const DEFAULT_TENANTS = [
-            { id: 't1', name: 'Demo Corp', color: 0 },
-            { id: 't2', name: 'BuildRight LLC', color: 1 },
-            { id: 't3', name: 'Skyline Developers', color: 2 }
-        ];
-
-        const TENANT_COLORS = ['tenant-color-0','tenant-color-1','tenant-color-2','tenant-color-3','tenant-color-4','tenant-color-5','tenant-color-6','tenant-color-7'];
-
-        function loadTenants() {
-            try { const raw = localStorage.getItem(TENANTS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
-            return JSON.parse(JSON.stringify(DEFAULT_TENANTS));
-        }
-
-        function saveTenants() { localStorage.setItem(TENANTS_KEY, JSON.stringify(tenants)); }
-
-        function getActiveTenantId() { return localStorage.getItem(ACTIVE_TENANT_KEY) || 't1'; }
-        function setActiveTenantId(id) { localStorage.setItem(ACTIVE_TENANT_KEY, id); }
-
-        function getActiveTenant() { return tenants.find(t => t.id === getActiveTenantId()) || tenants[0]; }
-        function getDataKey() { return `construct_erp_data_${getActiveTenantId()}`; }
-
-        let tenants = loadTenants();
-
-        // ── Data Store (per-tenant localStorage) ─────────────────────
-        const DEFAULT_DATA = {
-            projects: [
-                { id: 'p1', name: 'Riverside Tower', location: '123 Main St', budget: 1450000, duration: '18 months', description: 'Mixed-use commercial tower', status: 'active', progress: 62, createdAt: '2024-01-15' },
-                { id: 'p2', name: 'Harbor Bridge', location: '456 Bay Ave', budget: 3200000, duration: '24 months', description: 'Suspension bridge rehabilitation', status: 'active', progress: 34, createdAt: '2024-03-01' },
-                { id: 'p3', name: 'Greenfield School', location: '789 Oak Dr', budget: 890000, duration: '12 months', description: 'K-12 educational facility', status: 'active', progress: 78, createdAt: '2024-02-10' }
-            ],
-            tasks: [
-                { id: 't1', name: 'Site Preparation', start: 0, width: 18, color: 'amber' },
-                { id: 't2', name: 'Foundation Excavation', start: 5, width: 22, color: 'blue' },
-                { id: 't3', name: 'Concrete Foundation', start: 15, width: 25, color: 'green' },
-                { id: 't4', name: 'Structural Steel', start: 30, width: 30, color: 'purple' },
-                { id: 't5', name: 'MEP Rough-In', start: 45, width: 28, color: 'rose' },
-                { id: 't6', name: 'Interior Finishes', start: 60, width: 35, color: 'cyan' }
-            ],
-            resources: {
-                labor: [{ name: 'Carpenters', required: 15, available: 12 }, { name: 'Electricians', required: 8, available: 6 }, { name: 'Operators', required: 4, available: 4 }, { name: 'Laborers', required: 20, available: 18 }],
-                equipment: [{ name: 'Excavators', required: 3, available: 3 }, { name: 'Cranes', required: 2, available: 1 }, { name: 'Forklifts', required: 4, available: 4 }, { name: 'Dump Trucks', required: 6, available: 5 }],
-                materials: [{ name: 'Steel (tons)', required: 85, available: 42 }, { name: 'Concrete (yd³)', required: 600, available: 320 }, { name: 'Lumber (bdft)', required: 18000, available: 12000 }, { name: 'Rebar (tons)', required: 32, available: 18 }]
-            },
-            budget: [
-                { category: 'Site Work', budget: 180000, committed: 165000, spent: 148000 },
-                { category: 'Foundation', budget: 280000, committed: 260000, spent: 245000 },
-                { category: 'Structure', budget: 650000, committed: 520000, spent: 480000 },
-                { category: 'MEP', budget: 220000, committed: 180000, spent: 155000 },
-                { category: 'Finishes', budget: 120000, committed: 95000, spent: 64000 }
-            ],
-            pos: [
-                { id: 'PO-2024-038', supplier: 'BuildCo Steel', item: 'Structural Steel', qty: '42 tons', amount: 168000, status: 'Delivered', delivery: 'Jul 2', vendor: 'BuildCo Steel' },
-                { id: 'PO-2024-039', supplier: 'Concrete Supply Co', item: 'Ready-Mix Concrete', qty: '320 yd³', amount: 96000, status: 'In Transit', delivery: 'Jul 10', vendor: 'Concrete Supply Co' },
-                { id: 'PO-2024-040', supplier: 'Electrical Wholesale', item: 'Cable & Wiring', qty: '5,000 ft', amount: 24500, status: 'Ordered', delivery: 'Jul 15', vendor: 'Electrical Wholesale' },
-                { id: 'PO-2024-041', supplier: 'Lumber Yard Inc', item: 'Framing Lumber', qty: '12,000 bdft', amount: 38400, status: 'Pending', delivery: 'Jul 22', vendor: 'Lumber Yard Inc' },
-                { id: 'PO-2024-042', supplier: 'HVAC Distributors', item: 'HVAC Units', qty: '6 units', amount: 72000, status: 'In Transit', delivery: 'Jul 18', vendor: 'HVAC Distributors' }
-            ],
-            subs: [
-                { id: 's1', initials: 'EC', name: 'Elite Electrical', trade: 'Electrical', contract: 185000, progress: 62, status: 'Active', color: 'from-blue-500 to-cyan-600' },
-                { id: 's2', initials: 'MP', name: 'Metro Plumbing', trade: 'Plumbing', contract: 142000, progress: 45, status: 'Active', color: 'from-green-500 to-emerald-600' },
-                { id: 's3', initials: 'SF', name: 'Steel Fabricators Inc', trade: 'Structural', contract: 420000, progress: 88, status: 'Active', color: 'from-amber-500 to-orange-600' }
-            ],
-            nextPO: 43
-        };
-
-        function loadData() {
-            const key = getDataKey();
-            try { const raw = localStorage.getItem(key); if (raw) { const parsed = JSON.parse(raw); return deepMerge(DEFAULT_DATA, parsed); } } catch (e) { console.warn('Failed to load data, using defaults', e); }
-            return JSON.parse(JSON.stringify(DEFAULT_DATA));
-        }
-
-        function deepMerge(defaults, overrides) {
-            const result = JSON.parse(JSON.stringify(defaults));
-            for (const key in overrides) {
-                if (overrides.hasOwnProperty(key)) {
-                    if (typeof overrides[key] === 'object' && !Array.isArray(overrides[key]) && overrides[key] !== null && result[key]) { result[key] = deepMerge(result[key], overrides[key]); }
-                    else { result[key] = overrides[key]; }
-                }
-            }
-            return result;
-        }
-
-        function saveData() { localStorage.setItem(getDataKey(), JSON.stringify(data)); }
-
-        let data = loadData();
-
-        // ── Tenant UI ────────────────────────────────────────────────
-        function updateTenantUI() {
-            const tenant = getActiveTenant();
-            const el = document.getElementById('tenant-name');
-            const dot = document.getElementById('tenant-dot');
-            const badge = document.getElementById('header-tenant-badge');
-            if (el) el.textContent = tenant.name;
-            if (dot) { dot.className = `tenant-dot ${TENANT_COLORS[tenant.color] || 'tenant-color-0'}`; }
-            if (badge) badge.textContent = tenant.name;
-        }
-
-        function cycleTenant() {
-            const role = ROLES[getRole()];
-            if (!role.canManageTenants) { showToast('Tenant switching is restricted for your role', 'error'); return; }
-            const ids = tenants.map(t => t.id);
-            const current = getActiveTenantId();
-            const idx = ids.indexOf(current);
-            const next = ids[(idx + 1) % ids.length];
-            switchTenant(next);
-        }
-
-        function switchTenant(id) {
-            if (id === getActiveTenantId()) return;
-            setActiveTenantId(id);
-            data = loadData();
-            updateTenantUI();
-            refreshAll();
-            showToast(`Switched to ${getActiveTenant().name}`, 'info');
-        }
-
-        // ── Theme Toggle ─────────────────────────────────────────────
-        const THEME_KEY = 'construct_erp_theme';
-        function getTheme() { return localStorage.getItem(THEME_KEY) || 'dark'; }
-        function setTheme(theme) {
-            localStorage.setItem(THEME_KEY, theme);
-            document.documentElement.classList.toggle('light-mode', theme === 'light');
-            const icon = document.getElementById('theme-icon');
-            if (icon) { icon.setAttribute('data-lucide', theme === 'light' ? 'sun' : 'moon'); }
-            lucide.createIcons();
-            renderBudgetChart();
-        }
-        function toggleTheme() { setTheme(getTheme() === 'dark' ? 'light' : 'dark'); }
-        setTheme(getTheme());
-
-        // ── Sidebar Toggle ───────────────────────────────────────────
-        function toggleSidebar(forceClose) {
-            const sidebar = document.querySelector('.sidebar');
-            if (forceClose && window.innerWidth <= 768) { sidebar.classList.remove('open'); return; }
-            sidebar.classList.toggle('open');
-        }
-
-        // ── Toast Notifications ─────────────────────────────────────
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const colors = { info: 'bg-blue-500/20 border-blue-500/30 text-blue-300', success: 'bg-green-500/20 border-green-500/30 text-green-300', error: 'bg-red-500/20 border-red-500/30 text-red-300' };
-            const icons = { info: 'info', success: 'check-circle', error: 'alert-circle' };
-            const toast = document.createElement('div');
-            toast.className = `glass rounded-xl px-4 py-3 border text-sm flex items-center gap-3 fade-in ${colors[type] || colors.info}`;
-            toast.innerHTML = `<i data-lucide="${icons[type]}" class="w-4 h-4 flex-shrink-0"></i><span>${message}</span>`;
-            container.appendChild(toast);
-            lucide.createIcons();
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
-        }
-
-        // ── Tab Switching ─────────────────────────────────────────────
-        function switchTab(tab) {
-            const role = ROLES[getRole()];
-            if (!role.tabs.includes(tab)) { showToast(`"${tab.charAt(0).toUpperCase()+tab.slice(1)}" is restricted for ${role.label}`, 'error'); return; }
-            const titles = { dashboard:'Dashboard', projects:'Projects', schedule:'Schedule', resources:'Resources', budget:'Budget', procurement:'Procurement', subs:'Subcontractors', reports:'Reports' };
-            document.getElementById('page-title').innerText = titles[tab] || tab;
-            Object.keys(titles).forEach(t => {
-                document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
-                document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
-            });
-            if (tab === 'dashboard') renderBudgetChart();
-            if (tab === 'projects') renderProjects();
-            if (tab === 'schedule') renderGantt();
-            if (tab === 'resources') renderResources();
-            if (tab === 'budget') { renderBudgetSummary(); renderBudgetTable(); }
-            if (tab === 'procurement') renderPOTable();
-            if (tab === 'subs') renderSubs();
-            lucide.createIcons();
-        }
-
-        function refreshAll() {
-            updateKPIs();
-            renderProjects();
-            renderGantt();
-            renderResources();
-            renderBudgetSummary();
-            renderBudgetTable();
-            renderBudgetChart();
-            renderPOTable();
-            renderSubs();
-            lucide.createIcons();
-            showToast('All data refreshed', 'success');
-        }
-
-        // ── KPI Updates ──────────────────────────────────────────────
-        function updateKPIs() {
-            const activeProjects = data.projects.filter(p => p.status === 'active').length;
-            const totalBudget = data.budget.reduce((s, c) => s + c.budget, 0);
-            const totalSpent = data.budget.reduce((s, c) => s + c.spent, 0);
-            const totalWorkforce = data.resources.labor.reduce((s, r) => s + r.available, 0);
-            const avgProgress = data.projects.length ? Math.round(data.projects.reduce((s, p) => s + p.progress, 0) / data.projects.length) : 0;
-            document.getElementById('kpi-projects').innerText = activeProjects;
-            document.getElementById('kpi-projects-change').innerText = `+${activeProjects}`;
-            document.getElementById('kpi-budget').innerText = '$' + (totalBudget / 1000000).toFixed(2) + 'M';
-            document.getElementById('kpi-budget-pct').innerText = totalBudget ? Math.round((totalSpent / totalBudget) * 100) + '%' : '0%';
-            document.getElementById('kpi-workforce').innerText = totalWorkforce;
-            document.getElementById('kpi-schedule').innerText = avgProgress + '%';
-        }
-
-        // ── Budget vs. Actual Chart ──────────────────────────────────
-        let budgetChart = null;
-        function renderBudgetChart() {
-            const canvas = document.getElementById('budgetChartCanvas');
-            if (!canvas) return;
-            if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
-            const isLight = getTheme() === 'light';
-            const fmt = (v) => '$' + v.toLocaleString('en-US');
-            const style = getComputedStyle(document.documentElement);
-            budgetChart = new Chart(canvas.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: data.budget.map(c => c.category),
-                    datasets: [
-                        { label: 'Budget', data: data.budget.map(c => c.budget), backgroundColor: isLight ? 'rgba(37, 99, 235, 0.7)' : 'rgba(96, 165, 250, 0.8)', borderColor: isLight ? 'rgba(37, 99, 235, 1)' : 'rgba(96, 165, 250, 1)', borderWidth: 1, borderRadius: 4 },
-                        { label: 'Spent', data: data.budget.map(c => c.spent), backgroundColor: isLight ? 'rgba(217, 119, 6, 0.7)' : 'rgba(251, 191, 36, 0.8)', borderColor: isLight ? 'rgba(217, 119, 6, 1)' : 'rgba(251, 191, 36, 1)', borderWidth: 1, borderRadius: 4 }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: style.getPropertyValue('--chart-text').trim() || (isLight ? '#475569' : '#cbd5e1'), font: { size: 11 }, boxWidth: 12, padding: 16 } },
-                        tooltip: { backgroundColor: style.getPropertyValue('--chart-tooltip-bg').trim() || (isLight ? 'rgba(255,255,255,0.98)' : 'rgba(15,23,42,0.95)'), titleColor: isLight ? '#0f172a' : '#f8fafc', bodyColor: isLight ? '#475569' : '#e2e8f0', borderColor: style.getPropertyValue('--chart-tooltip-border').trim() || (isLight ? 'rgba(203,213,225,0.5)' : 'rgba(148,163,184,0.2)'), borderWidth: 1, padding: 10, callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
-                    },
-                    scales: {
-                        x: { grid: { color: style.getPropertyValue('--chart-grid').trim() || (isLight ? 'rgba(148,163,184,0.2)' : 'rgba(148,163,184,0.1)') }, ticks: { color: style.getPropertyValue('--chart-text').trim() || (isLight ? '#475569' : '#cbd5e1'), font: { size: 10 } } },
-                        y: { beginAtZero: true, grid: { color: style.getPropertyValue('--chart-grid').trim() || (isLight ? 'rgba(148,163,184,0.2)' : 'rgba(148,163,184,0.1)') }, ticks: { color: style.getPropertyValue('--chart-text').trim() || (isLight ? '#475569' : '#cbd5e1'), font: { size: 10 }, callback: (v) => '$' + (v / 1000) + 'k' } }
-                    }
-                }
-            });
-        }
-
-        // ── Projects ─────────────────────────────────────────────────
-        function renderProjects() {
-            const grid = document.getElementById('projects-grid');
-            const role = ROLES[getRole()];
-            if (!data.projects.length) {
-                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12" style="color: var(--text-muted)">No projects yet. Click "New Project" to create one.</div>';
-                return;
-            }
-            grid.innerHTML = data.projects.map(p => `
-                <div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
-                    ${role.canEdit || role.canDelete ? `<div class="absolute top-3 right-3 flex gap-1">
-                        ${role.canEdit ? `<button onclick="editProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400 transition-all"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>` : ''}
-                        ${role.canDelete ? `<button onclick="deleteProject('${p.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
-                    </div>` : ''}
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white font-bold text-sm">${p.name.charAt(0)}</div>
-                        <div><div class="font-medium text-sm" style="color: var(--text-primary)">${p.name}</div><div class="text-[10px]" style="color: var(--text-muted)">${p.location}</div></div>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between"><span style="color: var(--text-muted)">Budget</span><span class="mono" style="color: var(--text-primary)">$${(p.budget / 1000000).toFixed(1)}M</span></div>
-                        <div class="flex justify-between"><span style="color: var(--text-muted)">Duration</span><span style="color: var(--text-secondary)">${p.duration}</span></div>
-                        <div class="flex justify-between"><span style="color: var(--text-muted)">Progress</span><span class="text-amber-400 mono">${p.progress}%</span></div>
-                        <div class="progress-bar mt-2"><div class="progress-fill bg-amber-400" style="width:${p.progress}%"></div></div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function editProject(id) { const p = data.projects.find(x => x.id === id); if (p) showModal('project', p); }
-        function deleteProject(id) { data.projects = data.projects.filter(p => p.id !== id); saveData(); renderProjects(); updateKPIs(); showToast('Project deleted', 'info'); }
-
-        // ── Gantt Chart ──────────────────────────────────────────────
-        function renderGantt() {
-            const chart = document.getElementById('gantt-chart');
-            const role = ROLES[getRole()];
-            const colors = { amber: 'bg-amber-500/60', blue: 'bg-blue-500/60', green: 'bg-green-500/60', purple: 'bg-purple-500/60', rose: 'bg-rose-500/60', cyan: 'bg-cyan-500/60' };
-            if (!data.tasks.length) {
-                chart.innerHTML = '<div class="text-slate-600 italic text-sm text-center py-8" style="color: var(--text-muted)">No tasks scheduled. Click "Add Task" to create one.</div>';
-                return;
-            }
-            chart.innerHTML = data.tasks.map(t => `
-                <div class="flex items-center gap-4 h-8 fade-in group">
-                    <span class="w-48 text-xs truncate flex-shrink-0" style="color: var(--text-secondary)">${t.name}</span>
-                    <div class="flex-1 relative h-6 rounded" style="background: var(--border)"><div class="gantt-bar absolute h-full rounded ${colors[t.color] || colors.amber}" style="left:${t.start}%;width:${t.width}%"></div></div>
-                    ${role.canEdit || role.canDelete ? `<div class="flex gap-1">
-                        ${role.canEdit ? `<button onclick="editTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>` : ''}
-                        ${role.canDelete ? `<button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
-                    </div>` : ''}
-                </div>
-            `).join('');
-        }
-
-        function editTask(id) { const t = data.tasks.find(x => x.id === id); if (t) showModal('task', t); }
-        function deleteTask(id) { data.tasks = data.tasks.filter(t => t.id !== id); saveData(); renderGantt(); showToast('Task removed', 'info'); }
-
-        // ── Resources ─────────────────────────────────────────────────
-        function renderResources() {
-            const grid = document.getElementById('resources-grid');
-            const r = data.resources;
-            grid.innerHTML = `
-                <div class="glass rounded-2xl p-5 border border-slate-800">
-                    <div class="flex items-center gap-3 mb-4"><i data-lucide="users" class="w-5 h-5 text-cyan-400"></i><span class="text-white font-semibold text-sm">Labor</span></div>
-                    <div class="space-y-3 text-xs">${r.labor.map(l => `<div class="flex justify-between"><span style="color: var(--text-muted)">${l.name}</span><span class="mono" style="color: var(--text-primary)">${l.available} / ${l.required}</span></div>`).join('')}</div>
-                </div>
-                <div class="glass rounded-2xl p-5 border border-slate-800">
-                    <div class="flex items-center gap-3 mb-4"><i data-lucide="tractor" class="w-5 h-5 text-green-400"></i><span class="text-white font-semibold text-sm">Equipment</span></div>
-                    <div class="space-y-3 text-xs">${r.equipment.map(e => `<div class="flex justify-between"><span style="color: var(--text-muted)">${e.name}</span><span class="mono" style="color: var(--text-primary)">${e.available} / ${e.required}</span></div>`).join('')}</div>
-                </div>
-                <div class="glass rounded-2xl p-5 border border-slate-800">
-                    <div class="flex items-center gap-3 mb-4"><i data-lucide="package" class="w-5 h-5 text-amber-400"></i><span class="text-white font-semibold text-sm">Materials On-Site</span></div>
-                    <div class="space-y-3 text-xs">${r.materials.map(m => `<div class="flex justify-between"><span style="color: var(--text-muted)">${m.name}</span><span class="mono" style="color: var(--text-primary)">${m.available.toLocaleString()} / ${m.required.toLocaleString()}</span></div>`).join('')}</div>
-                </div>
-            `;
-        }
-
-        // ── Budget ───────────────────────────────────────────────────
-        let budgetSort = { field: null, dir: 'asc' };
-        let budgetPage = 1;
-        const BUDGET_PER_PAGE = 5;
-
-        function renderBudgetSummary() {
-            const total = data.budget.reduce((s, c) => s + c.budget, 0);
-            const committed = data.budget.reduce((s, c) => s + c.committed, 0);
-            const spent = data.budget.reduce((s, c) => s + c.spent, 0);
-            const remaining = total - spent;
-            document.getElementById('budget-total').innerText = '$' + total.toLocaleString();
-            document.getElementById('budget-committed').innerText = '$' + committed.toLocaleString();
-            document.getElementById('budget-committed-pct').innerText = total ? Math.round((committed / total) * 100) + '% of budget' : '0% of budget';
-            document.getElementById('budget-spent').innerText = '$' + spent.toLocaleString();
-            document.getElementById('budget-spent-pct').innerText = total ? Math.round((spent / total) * 100) + '% of budget' : '0% of budget';
-            document.getElementById('budget-remaining').innerText = '$' + remaining.toLocaleString();
-            document.getElementById('budget-remaining-pct').innerText = total ? Math.round((remaining / total) * 100) + '% remaining' : '0% remaining';
-        }
-
-        function sortBudget(field) {
-            if (budgetSort.field === field) { budgetSort.dir = budgetSort.dir === 'asc' ? 'desc' : 'asc'; }
-            else { budgetSort.field = field; budgetSort.dir = 'asc'; }
-            budgetPage = 1; renderBudgetTable();
-        }
-
-        function getBudgetData() {
-            const search = (document.getElementById('budget-search')?.value || '').toLowerCase();
-            let items = data.budget.filter(c => c.category.toLowerCase().includes(search));
-            if (budgetSort.field) {
-                const dir = budgetSort.dir === 'asc' ? 1 : -1;
-                items.sort((a, b) => {
-                    let va, vb;
-                    if (budgetSort.field === 'category') { va = a.category; vb = b.category; return va.localeCompare(vb) * dir; }
-                    if (budgetSort.field === 'remaining') { va = a.budget - a.spent; vb = b.budget - b.spent; return (va - vb) * dir; }
-                    if (budgetSort.field === 'pct') { va = a.budget ? a.spent / a.budget : 0; vb = b.budget ? b.spent / b.budget : 0; return (va - vb) * dir; }
-                    va = a[budgetSort.field]; vb = b[budgetSort.field];
-                    return (va - vb) * dir;
-                });
-            }
-            return items;
-        }
-
-        function renderBudgetTable() {
-            const tbody = document.getElementById('budget-table-body');
-            const pagination = document.getElementById('budget-pagination');
-            const role = ROLES[getRole()];
-            const all = getBudgetData();
-            const totalPages = Math.max(1, Math.ceil(all.length / BUDGET_PER_PAGE));
-            if (budgetPage > totalPages) budgetPage = totalPages;
-            const start = (budgetPage - 1) * BUDGET_PER_PAGE;
-            const pageItems = all.slice(start, start + BUDGET_PER_PAGE);
-            document.querySelectorAll('[id^="sort-budget-"]').forEach(el => { el.classList.remove('asc', 'desc'); if (el.id === `sort-budget-${budgetSort.field}`) el.classList.add(budgetSort.dir); });
-            tbody.innerHTML = pageItems.map(c => {
-                const pct = c.budget ? Math.round((c.spent / c.budget) * 100) : 0;
-                const remaining = c.budget - c.spent;
-                const color = pct > 85 ? 'text-red-400' : pct > 70 ? 'text-amber-400' : pct > 50 ? 'text-blue-400' : 'text-green-400';
-                return `<tr class="hover:bg-slate-800/20 ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
-                    <td class="p-4" style="color: var(--text-secondary)">${c.category}</td>
-                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.budget.toLocaleString()}</td>
-                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.committed.toLocaleString()}</td>
-                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${c.spent.toLocaleString()}</td>
-                    <td class="p-4 text-right text-green-400 mono">$${remaining.toLocaleString()}</td>
-                    <td class="p-4 text-right"><span class="${color} text-[10px] mono">${pct}%</span></td>
-                    <td class="p-4 text-right">${role.canEdit || role.canDelete ? `<div class="flex items-center justify-end gap-1">
-                        ${role.canEdit ? `<button onclick="editBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>` : ''}
-                        ${role.canDelete ? `<button onclick="deleteBudgetItem('${c.category}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
-                    </div>` : ''}</td>
+      <div class="card overflow-hidden">
+        <div class="p-3 border-b border-[var(--border-light)] flex items-center gap-3">
+          <div class="relative flex-1 max-w-xs">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style="color: var(--text-muted);"></i>
+            <input type="text" class="input pl-8" placeholder="Search ${type}s..." oninput="filterEntityTable(this.value, '${type}')" id="entity-search">
+          </div>
+          <select class="input w-auto" onchange="filterEntityStatus(this.value, '${type}')" id="entity-status-filter">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="open">Open</option>
+            <option value="draft">Draft</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Reference</th>
+                ${displayAttrs.map(a => `<th>${a.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase())}</th>`).join('')}
+                <th>Status</th>
+                <th class="w-16"></th>
+              </tr>
+            </thead>
+            <tbody id="entity-table-body">
+              ${entities.map(e => {
+                const attrs = e.attrs || {};
+                return `<tr class="animate-fade-in">
+                  <td><span class="font-medium text-sm" style="color: var(--text-primary);">${e.title}</span></td>
+                  <td><span class="mono text-[11px]" style="color: var(--text-muted);">${e.reference_no || '—'}</span></td>
+                  ${displayAttrs.map(a => `<td class="text-xs">${formatAttr(attrs[a])}</td>`).join('')}
+                  <td><span class="badge ${e.status === 'active' || e.status === 'open' ? 'badge-green' : e.status === 'draft' ? 'badge-amber' : 'badge-blue'}">${e.status}</span></td>
+                  <td><button class="btn-icon action-btn" onclick="showToast('View details for ${e.title}', 'info')"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button></td>
                 </tr>`;
-            }).join('');
-            if (!pageItems.length) tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center" style="color: var(--text-muted)">No matching categories</td></tr>';
-            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
-            let phtml = `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=1;renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=Math.max(1,budgetPage-1);renderBudgetTable()" ${budgetPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
-            for (let i = Math.max(1, budgetPage-2); i <= Math.min(totalPages, budgetPage+2); i++) phtml += `<button class="pagination-btn ${i===budgetPage?'active':''}" style="${i!==budgetPage?'color:var(--text-muted)':''}" onclick="budgetPage=${i};renderBudgetTable()">${i}</button>`;
-            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=Math.min(${totalPages},budgetPage+1);renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="budgetPage=${totalPages};renderBudgetTable()" ${budgetPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
-            pagination.innerHTML = phtml;
-        }
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        ${entities.length === 0 ? '<div class="p-8 text-center text-xs" style="color: var(--text-muted);">No records found</div>' : ''}
+      </div>
+    </div>`;
+}
 
-        function editBudgetItem(category) { const c = data.budget.find(x => x.category === category); if (c) showModal('budgetItem', c); }
-        function deleteBudgetItem(category) { data.budget = data.budget.filter(c => c.category !== category); saveData(); renderBudgetSummary(); renderBudgetTable(); updateKPIs(); showToast(`Category "${category}" removed`, 'info'); }
-
-        // ── Procurement ──────────────────────────────────────────────
-        let poSort = { field: null, dir: 'asc' };
-        let poPage = 1;
-        const PO_PER_PAGE = 5;
-
-        function sortPO(field) {
-            if (poSort.field === field) { poSort.dir = poSort.dir === 'asc' ? 'desc' : 'asc'; }
-            else { poSort.field = field; poSort.dir = 'asc'; }
-            poPage = 1; renderPOTable();
-        }
-
-        function getPOData() {
-            const role = ROLES[getRole()];
-            const search = (document.getElementById('po-search')?.value || '').toLowerCase();
-            const statusFilter = document.getElementById('po-status-filter')?.value || 'all';
-            let items = data.pos.filter(po => (po.supplier.toLowerCase().includes(search) || po.item.toLowerCase().includes(search) || po.id.toLowerCase().includes(search)) && (statusFilter === 'all' || po.status === statusFilter));
-            // Role-based filtering: vendor/supplier only see their own POs
-            if (role.poFilter === 'own') {
-                // For demo, filter by a simulated "current vendor" based on role
-                // In production this would come from auth context
-                const vendorName = role.label === 'Vendor' ? 'BuildCo Steel' : 'Concrete Supply Co';
-                items = items.filter(po => po.vendor === vendorName);
-            }
-            if (poSort.field) {
-                const dir = poSort.dir === 'asc' ? 1 : -1;
-                items.sort((a, b) => {
-                    let va, vb;
-                    if (poSort.field === 'qty') { va = parseInt(a.qty) || 0; vb = parseInt(b.qty) || 0; return (va - vb) * dir; }
-                    if (['id','supplier','item','status','delivery'].includes(poSort.field)) { va = (a[poSort.field] || '').toLowerCase(); vb = (b[poSort.field] || '').toLowerCase(); return va.localeCompare(vb) * dir; }
-                    va = a[poSort.field] || 0; vb = b[poSort.field] || 0; return (va - vb) * dir;
-                });
-            }
-            return items;
-        }
-
-        function renderPOTable() {
-            const tbody = document.getElementById('po-table-body');
-            const pagination = document.getElementById('po-pagination');
-            const role = ROLES[getRole()];
-            const statusColors = { Delivered: 'bg-green-500/10 text-green-400 border-green-500/20', 'In Transit': 'bg-amber-500/10 text-amber-400 border-amber-500/20', Ordered: 'bg-blue-500/10 text-blue-400 border-blue-500/20', Pending: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
-            const all = getPOData();
-            const totalPages = Math.max(1, Math.ceil(all.length / PO_PER_PAGE));
-            if (poPage > totalPages) poPage = totalPages;
-            const start = (poPage - 1) * PO_PER_PAGE;
-            const pageItems = all.slice(start, start + PO_PER_PAGE);
-            document.querySelectorAll('[id^="sort-po-"]').forEach(el => { el.classList.remove('asc', 'desc'); if (el.id === `sort-po-${poSort.field}`) el.classList.add(poSort.dir); });
-            tbody.innerHTML = pageItems.map(po => `
-                <tr class="hover:bg-slate-800/20 ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
-                    <td class="p-4 text-cyan-400 mono text-xs">${po.id}</td>
-                    <td class="p-4" style="color: var(--text-secondary)">${po.supplier}</td>
-                    <td class="p-4" style="color: var(--text-muted)">${po.item}</td>
-                    <td class="p-4 text-right mono" style="color: var(--text-primary)">${po.qty}</td>
-                    <td class="p-4 text-right mono" style="color: var(--text-primary)">$${po.amount.toLocaleString()}</td>
-                    <td class="p-4"><span class="text-[10px] px-2 py-0.5 rounded ${statusColors[po.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}">${po.status}</span></td>
-                    <td class="p-4 text-xs" style="color: var(--text-muted)">${po.delivery}</td>
-                    <td class="p-4 text-right">${role.canEdit || role.canDelete ? `<div class="flex items-center justify-end gap-1">
-                        ${role.canEdit ? `<button onclick="editPO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>` : ''}
-                        ${role.canDelete ? `<button onclick="deletePO('${po.id}')" class="action-btn p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
-                    </div>` : ''}</td>
+function renderProcurement(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Procurement</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">Purchase orders, RFQs, and goods receipt</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost"><i data-lucide="file-plus" class="w-3.5 h-3.5"></i> New RFQ</button>
+          <button class="btn btn-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i> New PO</button>
+        </div>
+      </div>
+      <div class="card overflow-hidden">
+        <div class="p-3 border-b border-[var(--border-light)] flex items-center gap-3">
+          <div class="relative flex-1 max-w-xs">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style="color: var(--text-muted);"></i>
+            <input type="text" class="input pl-8" placeholder="Search POs...">
+          </div>
+          <select class="input w-auto"><option>All Status</option><option>Pending</option><option>Ordered</option><option>Delivered</option></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>PO Number</th><th>Supplier</th><th>Item</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              ${data.pos.map(po => `
+                <tr>
+                  <td><span class="mono text-xs font-medium" style="color: var(--text-primary);">${po.po_number}</span></td>
+                  <td class="text-xs">${po.supplier}</td>
+                  <td class="text-xs">${po.item}</td>
+                  <td class="text-xs font-medium" style="color: var(--text-primary);">RM${po.amount.toLocaleString()}</td>
+                  <td><span class="badge ${po.status === 'Delivered' ? 'badge-green' : po.status === 'In Transit' ? 'badge-blue' : 'badge-amber'}">${po.status}</span></td>
+                  <td><button class="btn-icon action-btn"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button></td>
                 </tr>
-            `).join('');
-            if (!pageItems.length) tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center" style="color: var(--text-muted)">No purchase orders found</td></tr>';
-            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
-            let phtml = `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=1;renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevrons-left" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=Math.max(1,poPage-1);renderPOTable()" ${poPage<=1?'disabled':''}><i data-lucide="chevron-left" class="w-3 h-3"></i></button>`;
-            for (let i = Math.max(1, poPage-2); i <= Math.min(totalPages, poPage+2); i++) phtml += `<button class="pagination-btn ${i===poPage?'active':''}" style="${i!==poPage?'color:var(--text-muted)':''}" onclick="poPage=${i};renderPOTable()">${i}</button>`;
-            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=Math.min(${totalPages},poPage+1);renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevron-right" class="w-3 h-3"></i></button>`;
-            phtml += `<button class="pagination-btn" style="color: var(--text-muted)" onclick="poPage=${totalPages};renderPOTable()" ${poPage>=totalPages?'disabled':''}><i data-lucide="chevrons-right" class="w-3 h-3"></i></button>`;
-            pagination.innerHTML = phtml;
-        }
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
 
-        function editPO(id) { const po = data.pos.find(x => x.id === id); if (po) showModal('po', po); }
-        function deletePO(id) { data.pos = data.pos.filter(po => po.id !== id); saveData(); renderPOTable(); showToast(`PO ${id} deleted`, 'info'); }
+function renderBudget(area) {
+    const total = data.budget.reduce((s, b) => s + b.budget, 0);
+    const spent = data.budget.reduce((s, b) => s + b.spent, 0);
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Budget Overview</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">RM${(total/1e6).toFixed(1)}M total • RM${(spent/1e6).toFixed(1)}M spent</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Budget Item</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        ${[
+          { label: 'Total Budget', value: `RM${(total/1e6).toFixed(1)}M`, color: 'amber' },
+          { label: 'Committed', value: `RM${(data.budget.reduce((s,b) => s + b.committed, 0)/1e6).toFixed(1)}M`, color: 'blue' },
+          { label: 'Remaining', value: `RM${((total - spent)/1e6).toFixed(1)}M`, color: 'green' },
+        ].map(k => `
+          <div class="card p-4">
+            <div class="stat-label">${k.label}</div>
+            <div class="stat-value mt-1" style="color: var(--${k.color});">${k.value}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card overflow-hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Category</th><th>Budget</th><th>Committed</th><th>Spent</th><th>Remaining</th><th>Progress</th></tr></thead>
+            <tbody>
+              ${data.budget.map(b => {
+                const remaining = b.budget - b.spent;
+                const pct = (b.spent / b.budget) * 100;
+                return `<tr>
+                  <td><span class="font-medium text-xs" style="color: var(--text-primary);">${b.category}</span></td>
+                  <td class="text-xs">RM${b.budget.toLocaleString()}</td>
+                  <td class="text-xs">RM${b.committed.toLocaleString()}</td>
+                  <td class="text-xs">RM${b.spent.toLocaleString()}</td>
+                  <td class="text-xs ${remaining < 0 ? 'text-red-400' : ''}">RM${remaining.toLocaleString()}</td>
+                  <td><div class="progress w-24"><div class="progress-fill bg-[var(--accent)]" style="width:${pct}%"></div></div></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
 
-        // ── Subcontractors ────────────────────────────────────────────
-        function renderSubs() {
-            const grid = document.getElementById('subs-grid');
-            const role = ROLES[getRole()];
-            if (!data.subs.length) {
-                grid.innerHTML = '<div class="text-slate-600 italic text-sm col-span-3 text-center py-12" style="color: var(--text-muted)">No subcontractors yet. Click "Add Sub" to add one.</div>';
-                return;
-            }
-            grid.innerHTML = data.subs.map(s => {
-                const progressColor = s.progress > 80 ? 'text-green-400' : s.progress > 50 ? 'text-amber-400' : 'text-blue-400';
-                return `<div class="glass rounded-2xl p-5 border border-slate-800 glass-hover card-hover relative ${!role.canEdit && !role.canDelete ? 'readonly-row' : ''}">
-                    ${role.canEdit || role.canDelete ? `<div class="absolute top-3 right-3 flex gap-1">
-                        ${role.canEdit ? `<button onclick="editSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-amber-400"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>` : ''}
-                        ${role.canDelete ? `<button onclick="deleteSub('${s.id}')" class="action-btn p-1 hover:bg-slate-700 rounded-lg text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
-                    </div>` : ''}
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white font-bold">${s.initials}</div>
-                        <div><div class="font-medium text-sm" style="color: var(--text-primary)">${s.name}</div><div class="text-[10px]" style="color: var(--text-muted)">${s.trade}</div></div>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between"><span style="color: var(--text-muted)">Contract</span><span class="mono" style="color: var(--text-primary)">$${s.contract.toLocaleString()}</span></div>
-                        <div class="flex justify-between"><span style="color: var(--text-muted)">Progress</span><span class="${progressColor} mono">${s.progress}%</span></div>
-                        <div class="flex justify-between"><span style="color: var(--text-muted)">Status</span><span class="text-green-400">${s.status}</span></div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
+function renderEInvoices(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">E-Invoices</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">LHDN MyInvois compliant • ${data.eInvoices.length} invoices</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i> New Invoice</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+        ${[
+          { label: 'Draft', value: '0', color: 'amber' },
+          { label: 'Submitted', value: '0', color: 'blue' },
+          { label: 'Validated', value: '0', color: 'green' },
+          { label: 'Rejected', value: '0', color: 'red' },
+        ].map(k => `
+          <div class="card p-4">
+            <div class="stat-label">${k.label}</div>
+            <div class="stat-value mt-1" style="color: var(--${k.color});">${k.value}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card p-6 text-center">
+        <i data-lucide="receipt" class="w-12 h-12 mx-auto mb-3" style="color: var(--text-muted);"></i>
+        <p class="text-sm" style="color: var(--text-muted);">No e-invoices yet. Create your first invoice to get started.</p>
+        <button class="btn btn-primary mt-4"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Create Invoice</button>
+      </div>
+    </div>`;
+}
 
-        function editSub(id) { const s = data.subs.find(x => x.id === id); if (s) showModal('sub', s); }
-        function deleteSub(id) { data.subs = data.subs.filter(s => s.id !== id); saveData(); renderSubs(); showToast('Subcontractor removed', 'info'); }
+function renderPayments(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Payments</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">PayNET • FPX • DuitNow • Card Processing</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i> New Payment</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+        ${[
+          { label: 'Pending', value: '0', color: 'amber' },
+          { label: 'Completed', value: '0', color: 'green' },
+          { label: 'Failed', value: '0', color: 'red' },
+          { label: 'Refunded', value: '0', color: 'blue' },
+        ].map(k => `
+          <div class="card p-4">
+            <div class="stat-label">${k.label}</div>
+            <div class="stat-value mt-1" style="color: var(--${k.color});">${k.value}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card p-6 text-center">
+        <i data-lucide="credit-card" class="w-12 h-12 mx-auto mb-3" style="color: var(--text-muted);"></i>
+        <p class="text-sm" style="color: var(--text-muted);">No payment transactions yet.</p>
+      </div>
+    </div>`;
+}
 
-        // ── Form Validation ─────────────────────────────────────────
-        function validateField(id, rules) {
-            const el = document.getElementById(id);
-            if (!el) return true;
-            const val = el.value.trim();
-            el.classList.remove('field-error');
-            let errorText = el.parentElement.querySelector('.error-text');
-            if (!errorText) { errorText = document.createElement('div'); errorText.className = 'error-text'; el.parentElement.appendChild(errorText); }
-            errorText.style.display = 'none';
-            for (const rule of rules) {
-                if (rule.required && !val) { el.classList.add('field-error'); errorText.textContent = rule.message || 'This field is required'; errorText.style.display = 'block'; return false; }
-                if (rule.min !== undefined && parseFloat(val) < rule.min) { el.classList.add('field-error'); errorText.textContent = rule.message || `Minimum value is ${rule.min}`; errorText.style.display = 'block'; return false; }
-                if (rule.max !== undefined && parseFloat(val) > rule.max) { el.classList.add('field-error'); errorText.textContent = rule.message || `Maximum value is ${rule.max}`; errorText.style.display = 'block'; return false; }
-                if (rule.pattern && !rule.pattern.test(val)) { el.classList.add('field-error'); errorText.textContent = rule.message || 'Invalid format'; errorText.style.display = 'block'; return false; }
-            }
-            return true;
-        }
+function renderTax(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Tax & Compliance</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">LHDN • SST • Withholding Tax • Tax Clearance</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> SST Return</button>
+          <button class="btn btn-primary"><i data-lucide="landmark" class="w-3.5 h-3.5"></i> File Return</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        ${[
+          { label: 'SST Due (Current Period)', value: 'RM 0.00', color: 'amber' },
+          { label: 'Withholding Tax Pending', value: 'RM 0.00', color: 'red' },
+          { label: 'Tax Clearance Valid', value: '0', color: 'green' },
+        ].map(k => `
+          <div class="card p-4">
+            <div class="stat-label">${k.label}</div>
+            <div class="stat-value mt-1" style="color: var(--${k.color});">${k.value}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card p-6 text-center">
+        <i data-lucide="landmark" class="w-12 h-12 mx-auto mb-3" style="color: var(--text-muted);"></i>
+        <p class="text-sm" style="color: var(--text-muted);">Tax compliance dashboard. Connect to LHDN MyInvois via Integrations.</p>
+      </div>
+    </div>`;
+}
 
-        function clearValidation() { document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error')); document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none'); }
+function renderCredit(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Credit Bureau</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">CTOS • CCRIS • FICO • Credit Checks</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="search" class="w-3.5 h-3.5"></i> New Credit Check</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        ${[
+          { label: 'Queries This Month', value: '0', color: 'blue' },
+          { label: 'Pass Rate', value: '—', color: 'green' },
+          { label: 'Watchlist Alerts', value: '0', color: 'red' },
+        ].map(k => `
+          <div class="card p-4">
+            <div class="stat-label">${k.label}</div>
+            <div class="stat-value mt-1" style="color: var(--${k.color});">${k.value}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card p-6 text-center">
+        <i data-lucide="shield" class="w-12 h-12 mx-auto mb-3" style="color: var(--text-muted);"></i>
+        <p class="text-sm" style="color: var(--text-muted);">Connect to CTOS API via Integrations to run credit checks on vendors.</p>
+      </div>
+    </div>`;
+}
 
-        // ── Modals ─────────────────────────────────────────────────────
-        function showModal(type, editData) {
-            const overlay = document.getElementById('modal-overlay');
-            const title = document.getElementById('modal-title');
-            const body = document.getElementById('modal-body');
-            const role = ROLES[getRole()];
-            clearValidation();
-            const isEdit = !!editData;
+function renderBIM(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">BIM Digital Twin</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">Autodesk APS • Revit Integration • 3D Model Viewer</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload Model</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        ${[
+          { label: 'Models', value: '0', color: 'cyan' },
+          { label: 'Elements', value: '0', color: 'blue' },
+          { label: 'RFI Links', value: '0', color: 'purple' },
+        ].map(k => `
+          <div class="card p-4">
+            <div class="stat-label">${k.label}</div>
+            <div class="stat-value mt-1" style="color: var(--${k.color});">${k.value}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card p-6 text-center">
+        <i data-lucide="cube" class="w-12 h-12 mx-auto mb-3" style="color: var(--text-muted);"></i>
+        <p class="text-sm" style="color: var(--text-muted);">Upload Revit models to enable 3D BIM visualization and element tracking.</p>
+      </div>
+    </div>`;
+}
 
-            // Check permissions for create/edit modals
-            if (!isEdit && !role.canCreate && type !== 'role' && type !== 'tenant') {
-                showToast(`Creating is restricted for ${role.label}`, 'error');
-                return;
-            }
+function renderIntegrations(area) {
+    const connectors = [
+        { name: 'SSM Company Registry', provider: 'ssm', status: 'disconnected', desc: 'Malaysia company registration & director lookup' },
+        { name: 'CIDB Contractor Registry', provider: 'cidb', status: 'disconnected', desc: 'Contractor grade & registration verification' },
+        { name: 'LHDN MyInvois', provider: 'lhdn', status: 'disconnected', desc: 'E-invoice submission & tax compliance' },
+        { name: 'CTOS Credit Bureau', provider: 'ctos', status: 'disconnected', desc: 'Credit checks & vendor pre-qualification' },
+        { name: 'PayNET / FPX', provider: 'paynet', status: 'disconnected', desc: 'Online payment processing & reconciliation' },
+        { name: 'Autodesk APS', provider: 'autodesk', status: 'disconnected', desc: 'BIM model conversion & 3D viewer' },
+        { name: 'Xero Accounting', provider: 'xero', status: 'disconnected', desc: 'Financial sync & reconciliation' },
+        { name: 'JKR ePerolehan', provider: 'eperolehan', status: 'disconnected', desc: 'Government tender listing & awards' },
+    ];
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Integrations</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">Connect external systems via API connectors</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="link-2" class="w-3.5 h-3.5"></i> Add Connector</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        ${connectors.map(c => `
+          <div class="card p-4 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0">
+              <i data-lucide="plug" class="w-5 h-5" style="color: var(--text-muted);"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-sm" style="color: var(--text-primary);">${c.name}</span>
+                <span class="badge ${c.status === 'connected' ? 'badge-green' : 'badge-red'}">${c.status}</span>
+              </div>
+              <p class="text-xs mt-1" style="color: var(--text-muted);">${c.desc}</p>
+              <button class="text-xs font-medium mt-2" style="color: var(--accent);" onclick="showToast('Configure ${c.name} integration', 'info')">Configure →</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
 
-            const forms = {
-                project: { t: isEdit ? 'Edit Project' : 'New Project', h: (d) => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Project Name <span class="text-red-400">*</span></label>
-                        <input id="f-project-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.name||''}" placeholder="e.g. Riverside Tower" required><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Location</label>
-                        <input id="f-project-location" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.location||''}" placeholder="e.g. 123 Main St"></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Budget ($) <span class="text-red-400">*</span></label>
-                        <input id="f-project-budget" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.budget||''}" placeholder="1000000" min="0"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Duration</label>
-                        <input id="f-project-duration" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.duration||''}" placeholder="e.g. 12 months"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Progress (%)</label>
-                        <input id="f-project-progress" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.progress||0}" min="0" max="100"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Description</label>
-                        <textarea id="f-project-desc" class="w-full rounded-xl px-4 py-2.5 text-sm h-20" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="Project scope...">${d?.description||''}</textarea></div>
-                    <button onclick="${isEdit ? `submitEditProject('${d.id}')` : 'submitProject()'}" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create Project'}</button>
-                ` },
-                task: { t: isEdit ? 'Edit Task' : 'New Task', h: (d) => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Task Name <span class="text-red-400">*</span></label>
-                        <input id="f-task-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.name||''}" placeholder="e.g. Foundation Pour" required><div class="error-text"></div></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Start %</label>
-                        <input id="f-task-start" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.start||0}" min="0" max="90"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Width %</label>
-                        <input id="f-task-width" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.width||20}" min="5" max="100"><div class="error-text"></div></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Color</label>
-                        <select id="f-task-color" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">${['amber','blue','green','purple','rose','cyan'].map(c => `<option value="${c}" ${d?.color===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select></div>
-                    <button onclick="${isEdit ? `submitEditTask('${d.id}')` : 'submitTask()'}" class="w-full py-2.5 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Task'}</button>
-                ` },
-                resource: { t: 'Add Resource', h: () => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Resource Type</label>
-                        <select id="f-resource-type" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)"><option value="labor">Labor</option><option value="equipment">Equipment</option><option value="materials">Material</option></select></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Name <span class="text-red-400">*</span></label>
-                        <input id="f-resource-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="e.g. Crane Operator" required><div class="error-text"></div></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Required</label>
-                        <input id="f-resource-req" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" min="0"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Available</label>
-                        <input id="f-resource-avail" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" min="0"><div class="error-text"></div></div></div>
-                    <button onclick="submitResource()" class="w-full py-2.5 bg-green-500 hover:bg-green-400 text-white rounded-xl text-sm font-medium transition-all">Add Resource</button>
-                ` },
-                changeorder: { t: 'Change Order', h: () => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Title <span class="text-red-400">*</span></label>
-                        <input id="f-co-title" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="e.g. Additional electrical work" required><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Description</label>
-                        <textarea id="f-co-desc" class="w-full rounded-xl px-4 py-2.5 text-sm h-20" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="Scope change details..."></textarea></div>
-                    <div class="grid grid-cols-2 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Cost Impact ($)</label>
-                        <input id="f-co-cost" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="0" min="0"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Schedule Impact</label>
-                        <input id="f-co-schedule" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="e.g. +5 days"></div></div>
-                    <button onclick="submitChangeOrder()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Submit Change Order</button>
-                ` },
-                po: { t: isEdit ? 'Edit Purchase Order' : 'New Purchase Order', h: (d) => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Supplier <span class="text-red-400">*</span></label>
-                        <input id="f-po-supplier" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.supplier||''}" placeholder="Supplier name" required><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Item / Material</label>
-                        <input id="f-po-item" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.item||''}" placeholder="e.g. Rebar #4"></div>
-                    <div class="grid grid-cols-3 gap-3"><div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Qty</label>
-                        <input id="f-po-qty" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.qty?.split(' ')[0]||''}" placeholder="42"></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Unit</label>
-                        <input id="f-po-unit" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.qty?.split(' ').slice(1).join(' ')||''}" placeholder="tons"></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Unit Price</label>
-                        <input id="f-po-price" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.amount && d?.qty ? Math.round(d.amount / (parseInt(d.qty)||1)) : ''}" placeholder="$" min="0"><div class="error-text"></div></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Delivery Date</label>
-                        <input id="f-po-delivery" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.delivery||''}" placeholder="e.g. Aug 1"></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Status</label>
-                        <select id="f-po-status" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">${['Pending','Ordered','In Transit','Delivered'].map(s => `<option value="${s}" ${d?.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
-                    <button onclick="${isEdit ? `submitEditPO('${d.id}')` : 'submitPO()'}" class="w-full py-2.5 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Create PO'}</button>
-                ` },
-                sub: { t: isEdit ? 'Edit Subcontractor' : 'Add Subcontractor', h: (d) => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Company Name <span class="text-red-400">*</span></label>
-                        <input id="f-sub-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.name||''}" placeholder="Company name" required><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Trade</label>
-                        <select id="f-sub-trade" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">${['Electrical','Plumbing','Structural','HVAC','Finishes'].map(t => `<option value="${t}" ${d?.trade===t?'selected':''}>${t}</option>`).join('')}</select></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Contract Amount ($) <span class="text-red-400">*</span></label>
-                        <input id="f-sub-contract" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.contract||''}" placeholder="0" min="0"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Progress (%)</label>
-                        <input id="f-sub-progress" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.progress||0}" min="0" max="100"><div class="error-text"></div></div>
-                    <button onclick="${isEdit ? `submitEditSub('${d.id}')` : 'submitSub()'}" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-medium transition-all">${isEdit ? 'Save Changes' : 'Add Subcontractor'}</button>
-                ` },
-                budgetItem: { t: 'Edit Budget Category', h: (d) => `
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Category Name <span class="text-red-400">*</span></label>
-                        <input id="f-budget-category" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.category||''}" placeholder="e.g. Site Work" required><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Budget ($) <span class="text-red-400">*</span></label>
-                        <input id="f-budget-budget" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.budget||0}" min="0"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Committed ($)</label>
-                        <input id="f-budget-committed" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.committed||0}" min="0"><div class="error-text"></div></div>
-                    <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Spent ($)</label>
-                        <input id="f-budget-spent" type="number" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" value="${d?.spent||0}" min="0"><div class="error-text"></div></div>
-                    <button onclick="submitEditBudgetItem('${d.category}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Save Changes</button>
-                ` },
-                role: { t: 'Switch Role', h: () => `
-                    <div class="space-y-2">
-                        ${Object.entries(ROLES).map(([id, r]) => `
-                            <div onclick="setRole('${id}'); closeModal();" class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all" style="background: var(--input-bg); border: 1px solid var(--input-border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--input-border)'">
-                                <span class="role-badge ${r.badgeClass}">${r.label}</span>
-                                <div>
-                                    <div class="text-sm font-medium" style="color: var(--text-primary)">${r.label}</div>
-                                    <div class="text-[10px]" style="color: var(--text-muted)">${r.description}</div>
-                                </div>
-                                <div class="ml-auto text-xs" style="color: var(--text-muted)">${r.tabs.length} tabs</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="text-xs mt-4 p-3 rounded-xl" style="background: var(--accent-dim); color: var(--accent);">
-                        <strong>Note:</strong> Role switching is a demo simulation. In production, roles would be assigned via OAuth/OIDC authentication.
-                    </div>
-                ` },
-                tenant: { t: 'Manage Tenants', h: () => `
-                    <div class="space-y-3 max-h-60 overflow-y-auto scrollbar-thin" id="tenant-list">
-                        ${tenants.map((t, i) => `
-                            <div class="flex items-center justify-between p-3 rounded-xl" style="background: var(--input-bg); border: 1px solid var(--input-border);">
-                                <div class="flex items-center gap-3">
-                                    <div class="tenant-dot ${TENANT_COLORS[t.color] || 'tenant-color-0'}"></div>
-                                    <div>
-                                        <div class="text-sm font-medium" style="color: var(--text-primary)">${t.name}</div>
-                                        <div class="text-[10px]" style="color: var(--text-muted)">ID: ${t.id}</div>
-                                    </div>
-                                </div>
-                                <div class="flex gap-1">
-                                    ${t.id !== 't1' ? `<button onclick="deleteTenant('${t.id}')" class="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-red-400 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="border-t border-slate-800 pt-4">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">New Tenant Name</label>
-                                <input id="f-tenant-name" type="text" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)" placeholder="Company name"></div>
-                            <div><label class="text-xs mb-1 block" style="color: var(--text-secondary)">Color</label>
-                                <select id="f-tenant-color" class="w-full rounded-xl px-4 py-2.5 text-sm" style="background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary)">
-                                    ${['Amber','Blue','Green','Purple','Red','Pink','Teal','Orange'].map((c, i) => `<option value="${i}">${c}</option>`).join('')}
-                                </select></div>
-                        </div>
-                        <button onclick="addTenant()" class="w-full mt-3 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-sm font-medium transition-all">Add Tenant</button>
-                    </div>
-                ` }
-            };
-            const f = forms[type] || forms.project;
-            title.innerText = f.t;
-            body.innerHTML = typeof f.h === 'function' ? f.h(editData) : f.h;
-            overlay.classList.remove('hidden');
-            lucide.createIcons();
-        }
+function renderSiteDiary(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Site Diary</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">Daily site logs and observations</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i> New Entry</button>
+      </div>
+      <div class="space-y-3">
+        ${data.siteDiaries.map(d => `
+          <div class="card p-4">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <span class="font-medium text-sm" style="color: var(--text-primary);">${d.title}</span>
+                <span class="text-xs ml-2" style="color: var(--text-muted);">${d.attrs?.weather || ''}</span>
+              </div>
+              <span class="badge badge-cyan">${d.attrs?.labour_count || 0} workers</span>
+            </div>
+            <p class="text-xs" style="color: var(--text-secondary);">${d.attrs?.work_summary || ''}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
 
-        function closeModal(e) {
-            if (e && e.target !== document.getElementById('modal-overlay') && e.target.closest('#modal-content')) return;
-            document.getElementById('modal-overlay').classList.add('hidden');
-        }
+function renderReports(area) {
+    area.innerHTML = `
+    <div class="animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="font-display text-lg font-bold" style="color: var(--text-primary);">Reports</h1>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);">Generate and export project reports</p>
+        </div>
+        <button class="btn btn-primary"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export All</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        ${[
+          { name: 'Daily Progress Report', icon: 'file-text', color: 'amber', desc: 'Site activities, labour, equipment, issues' },
+          { name: 'Cost Report', icon: 'file-text', color: 'blue', desc: 'Budget vs actual, committed costs, forecasts' },
+          { name: 'Tender Comparison', icon: 'file-text', color: 'purple', desc: 'Bid analysis, scores, recommendations' },
+          { name: 'Compliance Report', icon: 'file-text', color: 'green', desc: 'Tax, credit checks, regulatory status' },
+        ].map(r => `
+          <div class="card p-4 flex items-start gap-3 cursor-pointer hover:bg-[var(--bg-card-hover)]" onclick="showToast('Generating ${r.name}...', 'info')">
+            <div class="w-10 h-10 rounded-xl bg-[var(--${r.color}-glow)] flex items-center justify-center flex-shrink-0">
+              <i data-lucide="${r.icon}" class="w-5 h-5" style="color: var(--${r.color});"></i>
+            </div>
+            <div>
+              <div class="font-medium text-sm" style="color: var(--text-primary);">${r.name}</div>
+              <p class="text-xs mt-0.5" style="color: var(--text-muted);">${r.desc}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
 
-        // ── Tenant Management ────────────────────────────────────────
-        function addTenant() {
-            const name = document.getElementById('f-tenant-name')?.value.trim();
-            if (!name) { showToast('Tenant name is required', 'error'); return; }
-            const color = parseInt(document.getElementById('f-tenant-color')?.value) || 0;
-            tenants.push({ id: 't' + Date.now(), name, color });
-            saveTenants();
-            closeModal();
-            showToast(`Tenant "${name}" created`, 'success');
-            showModal('tenant');
-        }
+// ══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════════════════
 
-        function deleteTenant(id) {
-            if (id === getActiveTenantId()) { showToast('Cannot delete active tenant. Switch first.', 'error'); return; }
-            tenants = tenants.filter(t => t.id !== id);
-            saveTenants();
-            localStorage.removeItem(`construct_erp_data_${id}`);
-            showToast('Tenant deleted', 'info');
-            showModal('tenant');
-        }
+function formatAttr(val) {
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'boolean') return val ? '✓' : '✗';
+    if (typeof val === 'number') {
+        if (val > 10000) return 'RM' + val.toLocaleString();
+        return val.toString();
+    }
+    return val;
+}
 
-        // ── Form Submissions ─────────────────────────────────────────
-        function submitProject() {
-            if (!validateField('f-project-name', [{required: true, message: 'Project name is required'}])) return;
-            if (!validateField('f-project-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
-            data.projects.push({ id: 'p' + Date.now(), name: document.getElementById('f-project-name').value.trim(), location: document.getElementById('f-project-location')?.value || '', budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0, duration: document.getElementById('f-project-duration')?.value || '', progress: parseInt(document.getElementById('f-project-progress')?.value) || 0, description: document.getElementById('f-project-desc')?.value || '', status: 'active', createdAt: new Date().toISOString().split('T')[0] });
-            saveData(); closeModal(); renderProjects(); updateKPIs(); showToast('Project created!', 'success');
-        }
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const icons = { success: 'check-circle', error: 'x-circle', info: 'info' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 flex-shrink-0" style="color: var(--${type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue'});"></i> ${msg}`;
+    container.appendChild(toast);
+    lucide.createIcons();
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)'; toast.style.transition = 'all 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
 
-        function submitEditProject(id) {
-            if (!validateField('f-project-name', [{required: true, message: 'Project name is required'}])) return;
-            if (!validateField('f-project-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
-            const p = data.projects.find(x => x.id === id); if (!p) return;
-            Object.assign(p, { name: document.getElementById('f-project-name').value.trim(), location: document.getElementById('f-project-location')?.value || '', budget: parseFloat(document.getElementById('f-project-budget')?.value) || 0, duration: document.getElementById('f-project-duration')?.value || '', progress: parseInt(document.getElementById('f-project-progress')?.value) || 0, description: document.getElementById('f-project-desc')?.value || '' });
-            saveData(); closeModal(); renderProjects(); updateKPIs(); showToast('Project updated!', 'success');
-        }
+function toggleTheme() {
+    isDark = !isDark;
+    document.body.classList.toggle('light-mode', !isDark);
+    const icon = document.getElementById('theme-icon-header') || document.getElementById('theme-icon-sidebar');
+    if (icon) icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+}
 
-        function submitTask() {
-            if (!validateField('f-task-name', [{required: true, message: 'Task name is required'}])) return;
-            if (!validateField('f-task-start', [{min: 0}, {max: 90}])) return;
-            if (!validateField('f-task-width', [{min: 5}, {max: 100}])) return;
-            data.tasks.push({ id: 't' + Date.now(), name: document.getElementById('f-task-name').value.trim(), start: parseInt(document.getElementById('f-task-start')?.value) || 0, width: parseInt(document.getElementById('f-task-width')?.value) || 20, color: document.getElementById('f-task-color')?.value || 'amber' });
-            saveData(); closeModal(); renderGantt(); showToast('Task added!', 'success');
-        }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-        function submitEditTask(id) {
-            if (!validateField('f-task-name', [{required: true, message: 'Task name is required'}])) return;
-            if (!validateField('f-task-start', [{min: 0}, {max: 90}])) return;
-            if (!validateField('f-task-width', [{min: 5}, {max: 100}])) return;
-            const t = data.tasks.find(x => x.id === id); if (!t) return;
-            Object.assign(t, { name: document.getElementById('f-task-name').value.trim(), start: parseInt(document.getElementById('f-task-start')?.value) || 0, width: parseInt(document.getElementById('f-task-width')?.value) || 20, color: document.getElementById('f-task-color')?.value || 'amber' });
-            saveData(); closeModal(); renderGantt(); showToast('Task updated!', 'success');
-        }
+function toggleAIPanel() {
+    aiPanelOpen = !aiPanelOpen;
+    document.getElementById('ai-panel').classList.toggle('open', aiPanelOpen);
+    document.getElementById('main-area').style.marginRight = aiPanelOpen ? '360px' : '0';
+}
 
-        function submitResource() {
-            if (!validateField('f-resource-name', [{required: true, message: 'Resource name is required'}])) return;
-            const type = document.getElementById('f-resource-type')?.value;
-            data.resources[type].push({ name: document.getElementById('f-resource-name').value.trim(), required: parseInt(document.getElementById('f-resource-req')?.value) || 0, available: parseInt(document.getElementById('f-resource-avail')?.value) || 0 });
-            saveData(); closeModal(); renderResources(); updateKPIs(); showToast('Resource added!', 'success');
-        }
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
-        function submitChangeOrder() {
-            if (!validateField('f-co-title', [{required: true, message: 'Title is required'}])) return;
-            const cost = parseFloat(document.getElementById('f-co-cost')?.value) || 0;
-            showToast(`Change order "${document.getElementById('f-co-title').value.trim()}" submitted ($${cost.toLocaleString()})`, 'success');
-            closeModal();
-        }
+function showCreateModal(type) { showToast(`Create new ${type} — feature coming soon`, 'info'); }
 
-        function submitPO() {
-            if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
-            const qty = document.getElementById('f-po-qty')?.value || '0', unit = document.getElementById('f-po-unit')?.value || '', price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
-            const poId = `PO-2024-${String(data.nextPO).padStart(3, '0')}`; data.nextPO++;
-            data.pos.push({ id: poId, supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), status: 'Pending', delivery: document.getElementById('f-po-delivery')?.value || 'TBD', vendor: document.getElementById('f-po-supplier').value.trim() });
-            saveData(); closeModal(); renderPOTable(); showToast(`PO ${poId} created!`, 'success');
-        }
+function filterNav() {
+    const q = document.getElementById('nav-search').value.toLowerCase();
+    document.querySelectorAll('[data-nav]').forEach(el => {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
 
-        function submitEditPO(id) {
-            if (!validateField('f-po-supplier', [{required: true, message: 'Supplier is required'}])) return;
-            const po = data.pos.find(x => x.id === id); if (!po) return;
-            const qty = document.getElementById('f-po-qty')?.value || '0', unit = document.getElementById('f-po-unit')?.value || '', price = parseFloat(document.getElementById('f-po-price')?.value) || 0;
-            Object.assign(po, { supplier: document.getElementById('f-po-supplier').value.trim(), item: document.getElementById('f-po-item')?.value || '', qty: unit ? `${qty} ${unit}` : qty, amount: price * (parseInt(qty) || 1), delivery: document.getElementById('f-po-delivery')?.value || 'TBD', status: document.getElementById('f-po-status')?.value || 'Pending', vendor: document.getElementById('f-po-supplier').value.trim() });
-            saveData(); closeModal(); renderPOTable(); showToast('PO updated!', 'success');
-        }
+function globalSearch(q) { /* placeholder */ }
 
-        function submitSub() {
-            if (!validateField('f-sub-name', [{required: true, message: 'Company name is required'}])) return;
-            if (!validateField('f-sub-contract', [{min: 0, message: 'Contract must be 0 or greater'}])) return;
-            const name = document.getElementById('f-sub-name').value.trim(), trade = document.getElementById('f-sub-trade')?.value || 'General', contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0;
-            const colors = ['from-blue-500 to-cyan-600', 'from-green-500 to-emerald-600', 'from-amber-500 to-orange-600', 'from-purple-500 to-pink-600', 'from-rose-500 to-red-600'];
-            data.subs.push({ id: 's' + Date.now(), initials: name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(), name, trade, contract, progress: 0, status: 'Active', color: colors[data.subs.length % colors.length] });
-            saveData(); closeModal(); renderSubs(); showToast('Subcontractor added!', 'success');
-        }
+function filterEntityTable(q, type) { /* placeholder */ }
+function filterEntityStatus(s, type) { /* placeholder */ }
 
-        function submitEditSub(id) {
-            if (!validateField('f-sub-name', [{required: true, message: 'Company name is required'}])) return;
-            if (!validateField('f-sub-contract', [{min: 0, message: 'Contract must be 0 or greater'}])) return;
-            const s = data.subs.find(x => x.id === id); if (!s) return;
-            s.name = document.getElementById('f-sub-name').value.trim(); s.trade = document.getElementById('f-sub-trade')?.value || 'General'; s.contract = parseFloat(document.getElementById('f-sub-contract')?.value) || 0; s.progress = parseInt(document.getElementById('f-sub-progress')?.value) || 0; s.initials = s.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            saveData(); closeModal(); renderSubs(); showToast('Subcontractor updated!', 'success');
-        }
+function sendAIMessage() {
+    const input = document.getElementById('ai-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const container = document.getElementById('ai-messages');
+    container.innerHTML += `<div class="ai-msg user">${msg}</div>`;
+    input.value = '';
+    setTimeout(() => {
+        container.innerHTML += `<div class="ai-msg assistant animate-fade-in">Thanks for your question! I'm analyzing the data now. In production, I'd query the entity system, check tender statuses, and provide a comprehensive answer.</div>`;
+        container.scrollTop = container.scrollHeight;
+    }, 500);
+    container.scrollTop = container.scrollHeight;
+}
 
-        function submitEditBudgetItem(oldCategory) {
-            if (!validateField('f-budget-category', [{required: true, message: 'Category name is required'}])) return;
-            if (!validateField('f-budget-budget', [{min: 0, message: 'Budget must be 0 or greater'}])) return;
-            const c = data.budget.find(x => x.category === oldCategory); if (!c) return;
-            Object.assign(c, { category: document.getElementById('f-budget-category').value.trim(), budget: parseFloat(document.getElementById('f-budget-budget')?.value) || 0, committed: parseFloat(document.getElementById('f-budget-committed')?.value) || 0, spent: parseFloat(document.getElementById('f-budget-spent')?.value) || 0 });
-            saveData(); closeModal(); renderBudgetSummary(); renderBudgetTable(); updateKPIs(); showToast('Budget category updated!', 'success');
-        }
+function quickAIPrompt(prompt) {
+    document.getElementById('ai-input').value = prompt;
+    sendAIMessage();
+}
 
-        // ── Export ────────────────────────────────────────────────────
-        function exportAll() {
-            const role = ROLES[getRole()];
-            const exportData = JSON.stringify({ tenant: getActiveTenant(), role: getRole(), data }, null, 2);
-            const blob = new Blob([exportData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `construct_erp_${getActiveTenant().name.replace(/\s+/g,'_').toLowerCase()}_${role.label.toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
-            a.click(); URL.revokeObjectURL(url);
-            showToast('Data exported as JSON', 'success');
-        }
+// ══════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════
 
-        // ── Init ──────────────────────────────────────────────────────
-        updateTenantUI();
-        applyRole(getRole());
-        updateKPIs();
-        renderProjects();
-        renderGantt();
-        renderResources();
-        renderBudgetSummary();
-        renderBudgetTable();
-        renderBudgetChart();
-        renderPOTable();
-        renderSubs();
-        lucide.createIcons();
-    </script>
+document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+    loadData();
+    // Keyboard shortcut
+    document.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.getElementById('global-search')?.focus(); }
+    });
+});
+</script>
 </body>
 </html>

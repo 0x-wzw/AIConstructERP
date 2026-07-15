@@ -68,8 +68,14 @@ async def lifespan(app: FastAPI):
     )
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
 
-    # Create tables and seed demo data on startup (idempotent).
-    Base.metadata.create_all(bind=engine)
+    # Schema management:
+    #   • SQLite (dev/test/demo) — create_all() for zero-setup convenience.
+    #   • Postgres (production)  — schema is owned by Alembic migrations, run
+    #     via `alembic upgrade head` in the container entrypoint. create_all()
+    #     is intentionally skipped there because it cannot ALTER existing tables
+    #     (it would silently miss new columns on an upgrade).
+    if settings.database_url.startswith("sqlite"):
+        Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         from .seed import seed_demo_users, seed_if_empty

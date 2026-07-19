@@ -1,0 +1,24 @@
+# T4-optimized model for low-rank agent tasks
+# Uses Q3_K_S quantization for minimal VRAM footprint (~1.5GB)
+# Optimized for batch inference on T4 GPUs
+FROM llama3.2:3b
+
+# Set aggressive quantization for T4 (16GB VRAM, but shared across agents)
+# Hermes requires 64K minimum context — llama3.2:3b supports up to 128K
+PARAMETER num_ctx 65536
+PARAMETER num_batch 512
+PARAMETER num_gpu 1
+PARAMETER num_thread 4
+PARAMETER temperature 0.3
+PARAMETER top_p 0.9
+
+# System prompt optimized for task-oriented agents
+SYSTEM """You are a T4 Agent — a lightweight, task-oriented AI assistant.
+You are optimized for:
+- Fast inference on NVIDIA T4 GPUs
+- Structured JSON output
+- Short, precise responses
+- Tool-calling and function execution
+
+Keep responses under 200 words. Output JSON when possible.
+Be direct. Do not explain your reasoning unless asked."""

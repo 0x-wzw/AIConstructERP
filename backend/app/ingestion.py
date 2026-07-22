@@ -121,7 +121,12 @@ def extract_fields(category: str, text: str) -> dict:
         return extract_invoice_fields(text)
     if category == "po":
         return extract_po_fields(text)
-    # Generic: capture any total we can see so the record isn't empty.
+    # Non-financial documents (blueprints, permits, photos) have no monetary
+    # fields to pull — don't run the money parser and stamp a spurious total.
+    if category in ("blueprint", "permit", "photo"):
+        return {}
+    # Generic documents/reports: capture any total we can see so the record
+    # isn't empty, but nothing is invented when there's no money in the text.
     return extract_po_fields(text)
 
 

@@ -289,3 +289,52 @@ class PresignedUploadResponse(BaseModel):
     url: str
     expires_in: int
     method: str = "PUT"
+
+
+# ── Raw landing zone (unstructured data, pre-ETL) ─────────────────────
+class RawDocumentRead(BaseModel):
+    """A document as it landed in the raw zone, plus its ETL state."""
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    tenant_id: Optional[int] = None
+    source: str
+    original_filename: str
+    content_type: str
+    size_bytes: int
+    storage_backend: str
+    storage_bucket: str = ""
+    storage_path: str
+    checksum_sha256: str = ""
+    category: str = ""
+    etl_status: str
+    etl_error: str = ""
+    file_upload_id: Optional[int] = None
+    received_at: Optional[str] = None
+    processed_at: Optional[str] = None
+
+
+class RawPresignRequest(BaseModel):
+    filename: str
+    content_type: str = "application/octet-stream"
+    category: Optional[str] = None
+
+
+class RawPresignResponse(BaseModel):
+    """Pre-signed URL for a direct-to-cloud landing, with the manifest row that
+    already tracks the (not-yet-uploaded) object."""
+    raw_document_id: int
+    storage_path: str
+    url: str
+    expires_in: int
+    method: str = "PUT"
+
+
+class RawEtlResult(BaseModel):
+    raw_document_id: int
+    etl_status: str
+    file_upload_id: Optional[int] = None
+    category: Optional[str] = None
+    extracted_data: dict = Field(default_factory=dict)
+    linked_entity_type: Optional[str] = None
+    linked_entity_id: Optional[int] = None
+    error: Optional[str] = None

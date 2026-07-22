@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
 
     app_name: str = "ConstructERP API"
-    app_version: str = "0.5.0"
+    app_version: str = "0.6.0"
 
     # ── Auth ──────────────────────────────────────────────────────────
     # Auto-generated per install so no two dev instances share a key.
@@ -51,6 +51,18 @@ class Settings(BaseSettings):
     s3_force_path_style: bool = False
     # Lifetime of pre-signed direct-to-cloud upload/download URLs.
     s3_presigned_expiry_seconds: int = 3600
+
+    # ── Raw landing zone (unstructured data, pre-ETL) ────────────────
+    # Unstructured documents land here immutably before ETL promotes them
+    # into structured domain records. Zoning is by key prefix so it works
+    # identically on the local, S3, MinIO, and R2 backends. The curated
+    # (post-ETL) FileUpload references the same object read-only — raw is
+    # never mutated or deleted by the pipeline.
+    raw_prefix: str = "raw"          # landing-zone key prefix (bronze tier)
+    # On confirm of a direct-to-cloud (pre-signed) upload, read the object
+    # back to verify size/checksum. Disable for very large objects where a
+    # HEAD (size-only) check is enough.
+    raw_verify_checksum_on_confirm: bool = True
 
     # ── Chunked / resumable upload (large tender docs, 50–500 MB) ─────
     chunk_temp_dir: str = "./uploads/_chunks"

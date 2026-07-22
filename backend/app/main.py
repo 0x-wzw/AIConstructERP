@@ -51,6 +51,7 @@ from .crud import generate_po_number, make_crud_router
 from .database import Base, SessionLocal, engine, get_db
 from .files import router as files_router
 from .ocr_routes import router as ocr_router
+from .raw_routes import router as raw_router
 from .sse_routes import router as sse_router
 from .models import User
 from .security import Role, get_current_active_user
@@ -343,6 +344,7 @@ ROUTERS = [
 app.include_router(auth_router, prefix="/api")
 app.include_router(tenants_router, prefix="/api")
 app.include_router(files_router, prefix="/api")
+app.include_router(raw_router, prefix="/api")
 app.include_router(chunked_upload_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
 app.include_router(audit_router, prefix="/api")

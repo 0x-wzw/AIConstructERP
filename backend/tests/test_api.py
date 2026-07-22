@@ -1067,3 +1067,125 @@ def test_chunked_upload_roundtrip(client):
     got = client.get(f"/api/files/{d['file_id']}/download", headers=hdr(t))
     assert got.status_code == 200
     assert got.content == payload
+
+
+# ── Raw landing zone (unstructured data, pre-ETL) ──────────────────────
+def test_raw_land_requires_auth(client):
+    r = client.post("/api/raw/land",
+                    files={"file": ("x.pdf", b"%PDF-1.4", "application/pdf")})
+    assert r.status_code == 401
+
+
+def test_raw_land_and_list(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    body = b"%PDF-1.4 raw tender doc"
+    r = client.post("/api/raw/land",
+                    files={"file": ("tender-plan.pdf", body, "application/pdf")},
+                    headers=hdr(t))
+    assert r.status_code == 201, r.text
+    d = r.json()
+    assert d["etl_status"] == "landed"
+    assert d["source"] == "upload"
+    assert d["storage_path"].startswith("raw/")  # lives in the landing zone
+    import hashlib
+    assert d["checksum_sha256"] == hashlib.sha256(body).hexdigest()
+
+    raw_id = d["id"]
+    listed = client.get("/api/raw", headers=hdr(t)).json()
+    assert any(x["id"] == raw_id for x in listed)
+    # Filter by ETL state.
+    landed = client.get("/api/raw?etl_status=landed", headers=hdr(t)).json()
+    assert any(x["id"] == raw_id for x in landed)
+
+    # Original bytes are downloadable, untouched.
+    got = client.get(f"/api/raw/{raw_id}/download", headers=hdr(t))
+    assert got.status_code == 200 and got.content == body
+
+
+def test_raw_validation_rejects_bad_extension(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    r = client.post("/api/raw/land",
+                    files={"file": ("malware.exe", b"MZ", "application/x-msdownload")},
+                    headers=hdr(t))
+    assert r.status_code == 400
+
+
+def test_raw_presign_rejected_on_local_backend(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    r = client.post("/api/raw/presign",
+                    json={"filename": "big.pdf", "content_type": "application/pdf"},
+                    headers=hdr(t))
+    assert r.status_code == 400
+    assert "S3" in r.json()["detail"]
+    # No orphaned manifest row should have been created.
+    listed = client.get("/api/raw", headers=hdr(t)).json()
+    assert all(x["original_filename"] != "big.pdf" for x in listed)
+
+
+def test_raw_etl_promotes_invoice_to_einvoice(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    # Land an invoice as a .txt so ETL can read text without a tesseract engine.
+    r = client.post("/api/raw/land",
+                    files={"file": ("invoice-raw.txt", INVOICE_TEXT, "text/plain")},
+                    headers=hdr(t))
+    assert r.status_code == 201, r.text
+    raw = r.json()
+    assert raw["category"] == "invoice"
+    raw_id = raw["id"]
+
+    # Run ETL.
+    e = client.post(f"/api/raw/{raw_id}/etl", headers=hdr(t))
+    assert e.status_code == 200, e.text
+    out = e.json()
+    assert out["etl_status"] == "extracted"
+    assert out["extracted_data"]["invoice_no"] == "INV-2026-0042"
+    assert out["linked_entity_type"] == "e_invoices"
+    fu_id = out["file_upload_id"]
+    assert fu_id is not None
+
+    # The curated FileUpload exists and is ingested.
+    meta = client.get(f"/api/files/{fu_id}", headers=hdr(t)).json()
+    assert meta["ingest_status"] == "ingested"
+
+    # Raw manifest now reflects the extracted state + link.
+    raw2 = client.get(f"/api/raw/{raw_id}", headers=hdr(t)).json()
+    assert raw2["etl_status"] == "extracted"
+    assert raw2["file_upload_id"] == fu_id
+    assert raw2["processed_at"]
+
+
+def test_raw_etl_is_idempotent(client):
+    t = tok(client, "pm@constructerp.dev", "pm123")
+    r = client.post("/api/raw/land",
+                    files={"file": ("invoice-idem.txt", INVOICE_TEXT, "text/plain")},
+                    headers=hdr(t))
+    raw_id = r.json()["id"]
+    first = client.post(f"/api/raw/{raw_id}/etl", headers=hdr(t)).json()
+    second = client.post(f"/api/raw/{raw_id}/etl", headers=hdr(t)).json()
+    # Re-running ETL reuses the same curated FileUpload, doesn't fan out rows.
+    assert first["file_upload_id"] == second["file_upload_id"]
+    assert first["linked_entity_id"] == second["linked_entity_id"]
+
+
+def test_raw_tenant_isolation(client):
+    at = tok(client, "admin@constructerp.dev", "admin123")
+    t1 = client.post("/api/tenants", json={"name": "Raw T1"}, headers=hdr(at)).json()["id"]
+    t2 = client.post("/api/tenants", json={"name": "Raw T2"}, headers=hdr(at)).json()["id"]
+    client.post("/api/auth/users",
+                json={"email": "raw-a@e.com", "password": "secret1", "full_name": "A",
+                      "role": "project_manager", "tenant_id": t1}, headers=hdr(at))
+    client.post("/api/auth/users",
+                json={"email": "raw-b@e.com", "password": "secret1", "full_name": "B",
+                      "role": "project_manager", "tenant_id": t2}, headers=hdr(at))
+    ta = tok(client, "raw-a@e.com", "secret1")
+    tb = tok(client, "raw-b@e.com", "secret1")
+
+    r = client.post("/api/raw/land",
+                    files={"file": ("a-doc.pdf", b"secret", "application/pdf")},
+                    headers=hdr(ta))
+    raw_id = r.json()["id"]
+
+    assert client.get(f"/api/raw/{raw_id}", headers=hdr(tb)).status_code == 404
+    assert client.get(f"/api/raw/{raw_id}/download", headers=hdr(tb)).status_code == 404
+    assert client.post(f"/api/raw/{raw_id}/etl", headers=hdr(tb)).status_code == 404
+    assert all(x["id"] != raw_id for x in client.get("/api/raw", headers=hdr(tb)).json())

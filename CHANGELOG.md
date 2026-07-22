@@ -3,6 +3,34 @@
 All notable changes to ConstructERP are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-07-22
+
+### Added
+- **Raw landing zone (bronze tier)** — a dedicated cloud staging area where
+  unstructured documents land immutably *before* ETL turns them into structured
+  data. Zoned by the `raw/` key prefix so it works identically on the local,
+  S3, MinIO, and R2 backends (`RAW_PREFIX`). New `raw_documents` staging table
+  tracks each landed object and its ETL state
+  (`landed → extracting → extracted | failed`) independently of the curated
+  `FileUpload` it produces (Alembic migration `a2f7c9d4e810`).
+- New endpoints (`app/raw_routes.py`, `app/raw_store.py`):
+  - `POST /api/raw/land` — proxy an unstructured file into the landing zone.
+  - `POST /api/raw/presign` — issue a pre-signed PUT **and** pre-register the
+    manifest row, so direct-to-cloud uploads are tracked from the moment the URL
+    is issued.
+  - `POST /api/raw/{id}/confirm` — verify a pre-signed upload actually landed
+    (size + checksum), closing the orphaned-object gap.
+  - `POST /api/raw/{id}/etl` — promote a landed doc into structured domain data,
+    reusing the existing ingestion parser (idempotent; raw bytes never mutated).
+  - `GET /api/raw`, `GET /api/raw/{id}`, `GET /api/raw/{id}/download`.
+
+### Fixed
+- Pre-signed direct-to-cloud uploads no longer strand objects with no DB row —
+  the raw flow registers a manifest up front and confirms landing.
+- Pre-signed uploads now validate file extension/size (previously bypassed).
+- Field extraction no longer stamps a spurious `total_amount` on non-financial
+  documents (blueprints, permits, photos).
+
 ## [0.5.0] — 2026-07-16
 
 ### Added

@@ -107,6 +107,10 @@ Seeded automatically on first run (when `SEED_DEMO_USERS=true`):
 | POST | `/api/files/{id}/ocr` | PM | Extract text via OCR |
 | POST | `/api/files/{id}/ingest` | user | Ingest → structured `extracted_data`; invoices create/link an EInvoice |
 | GET | `/api/files/{id}/extracted` | user | Retrieve extracted structured data + linked entity |
+| POST | `/api/raw/land` | user | Land an unstructured doc in the raw zone (pre-ETL) |
+| POST | `/api/raw/presign` · `/{id}/confirm` | user | Direct-to-cloud landing with tracked manifest |
+| POST | `/api/raw/{id}/etl` | user | Promote a landed doc into structured data |
+| GET | `/api/raw` · `/{id}` · `/{id}/download` | user | List/inspect/download the landing zone |
 | GET | `/api/ai/status` | user | AI agent availability |
 | POST | `/api/ai/command` | user | NL command |
 | POST | `/api/ai/analyze` | user | Budget analysis |
@@ -115,18 +119,44 @@ Seeded automatically on first run (when `SEED_DEMO_USERS=true`):
 | GET | `/api/health` | public | Health check |
 | GET | `/api/state` | user | Full app state (single request) |
 
-## Test Suite (62 tests)
+## Test Suite (69 tests)
 
 Full end-to-end coverage across auth/RBAC, multi-tenancy, every domain module,
-file storage (checksums, chunked upload, pre-signed URLs), OCR, and document
-ingestion (invoice → structured `extracted_data` → linked EInvoice). Run with
-`python -m pytest`.
+file storage (checksums, chunked upload, pre-signed URLs), the raw landing zone
+(land → confirm → ETL → linked EInvoice, tenant isolation, idempotency), OCR,
+and document ingestion. Run with `python -m pytest`.
+
+## Data flow: raw landing zone → ETL → structured
+
+Unstructured documents follow a two-tier (medallion) path so the original bytes
+are preserved and processing state is separated from domain data:
+
+```
+upload / presign+confirm / chunked
+        │
+        ▼
+  RAW ZONE (bronze)   raw/{tenant}/YYYY/MM/DD/uuid.ext   ← immutable
+  raw_documents       etl_status: landed → extracting → extracted | failed
+        │  POST /api/raw/{id}/etl   (reads raw read-only)
+        ▼
+  CURATED (silver)    FileUpload + EInvoice + extracted_data (JSON)
+```
+
+- **Land** unstructured data first: `POST /api/raw/land` (proxied) or
+  `POST /api/raw/presign` → PUT to cloud → `POST /api/raw/{id}/confirm`. The
+  manifest row is created up front, so direct-to-cloud objects are never
+  orphaned. The landing zone is immutable — ETL never mutates or deletes it.
+- **ETL**: `POST /api/raw/{id}/etl` promotes a landed doc into a curated
+  `FileUpload` and runs the ingestion parser (OCR → classify → extract fields →
+  link an `EInvoice` for invoices). Idempotent — safe to re-run.
 
 ## Storage & Ingestion
 
 - **Unified storage layer** (`STORAGE_BACKEND=local|s3`) records a SHA-256
   checksum, backend, and bucket for every file. S3/MinIO/R2/Spaces are supported
-  (set `S3_ENDPOINT` + `S3_FORCE_PATH_STYLE=true` for MinIO-style hosts).
+  (set `S3_ENDPOINT` + `S3_FORCE_PATH_STYLE=true` for MinIO-style hosts). The raw
+  landing zone shares the backend, isolated by the `RAW_PREFIX` (`raw/`) key
+  prefix.
 - **Direct-to-cloud uploads** via `POST /api/files/presign-upload` (pre-signed
   PUT), and **resumable chunked uploads** for large tender documents.
 - **Ingestion pipeline**: `POST /api/files/{id}/ingest` runs OCR → classifies →

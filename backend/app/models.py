@@ -741,6 +741,56 @@ class FileUpload(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+class RawDocument(Base):
+    """Landing-zone (bronze tier) manifest for unstructured documents.
+
+    A raw document is the immutable, verbatim copy of an uploaded file as it
+    landed in cloud storage, tracked *before* any ETL runs. It exists so that:
+      • direct-to-cloud (pre-signed) uploads are tracked from the moment a URL
+        is issued — no orphaned objects;
+      • the original bytes are preserved untouched for re-processing and audit;
+      • ETL state is separated from the curated FileUpload it produces.
+
+    Lifecycle (`etl_status`):
+        pending_upload → landed → extracting → extracted | failed | skipped
+    `pending_upload` is only used by the pre-signed flow between URL issue and
+    client confirmation. ETL promotes a landed raw doc into a curated
+    FileUpload (`file_upload_id`) and, through the existing ingestion pipeline,
+    a structured domain record.
+    """
+
+    __tablename__ = "raw_documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    # How the object arrived: upload | presign | chunked | email | api.
+    source: Mapped[str] = mapped_column(String(20), default="upload")
+    original_filename: Mapped[str] = mapped_column(String(255))
+    content_type: Mapped[str] = mapped_column(String(100), default="")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    # Object location within the raw landing zone.
+    storage_backend: Mapped[str] = mapped_column(String(20), default="local")
+    storage_bucket: Mapped[str] = mapped_column(String(200), default="")
+    storage_path: Mapped[str] = mapped_column(String(500))
+    checksum_sha256: Mapped[str] = mapped_column(String(64), default="", index=True)
+    # Best-effort classification at landing time (refined during ETL).
+    category: Mapped[str] = mapped_column(String(50), default="")
+    # ETL state machine — see class docstring.
+    etl_status: Mapped[str] = mapped_column(String(20), default="landed", index=True)
+    etl_error: Mapped[str] = mapped_column(Text, default="")
+    # Cached extracted text so re-runs don't re-OCR.
+    raw_text: Mapped[str] = mapped_column(Text, default="")
+    # The curated FileUpload produced by ETL (nullable until promoted).
+    file_upload_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("file_uploads.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    received_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+
+
 class User(Base):
     __tablename__ = "users"
 

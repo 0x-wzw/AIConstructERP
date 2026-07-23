@@ -12,7 +12,7 @@ from .database import get_db
 from .ingestion import ingest_file
 from .models import User
 from .schemas import PresignedUploadResponse
-from .security import get_current_active_user
+from .security import get_current_active_user, is_admin
 from .storage import (
     generate_storage_path,
     get_storage_backend,
@@ -69,7 +69,7 @@ def _file_to_read(f: models.FileUpload) -> dict:
 def _scoped_query(db: Session, user: User, include_archived: bool = False):
     """Return a query for FileUpload filtered by the user's tenant."""
     q = db.query(models.FileUpload)
-    if user.tenant_id is not None:
+    if not is_admin(user):
         q = q.filter(models.FileUpload.tenant_id == user.tenant_id)
     if not include_archived:
         q = q.filter(models.FileUpload.is_archived == False)  # noqa: E712
@@ -80,7 +80,7 @@ def _get_file_or_404(db: Session, file_id: int, user: User) -> models.FileUpload
     f = db.get(models.FileUpload, file_id)
     if f is None:
         raise HTTPException(status_code=404, detail="File not found")
-    if user.tenant_id is not None and f.tenant_id != user.tenant_id:
+    if not is_admin(user) and f.tenant_id != user.tenant_id:
         raise HTTPException(status_code=404, detail="File not found")
     if f.is_archived:
         raise HTTPException(status_code=404, detail="File not found")

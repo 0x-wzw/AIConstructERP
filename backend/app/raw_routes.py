@@ -31,7 +31,7 @@ from .schemas import (
     RawPresignRequest,
     RawPresignResponse,
 )
-from .security import get_current_active_user
+from .security import get_current_active_user, is_admin
 from .storage import get_storage_backend, guess_file_category, validate_file
 
 router = APIRouter(prefix="/raw", tags=["raw"])
@@ -62,7 +62,7 @@ def _to_read(r: models.RawDocument) -> dict:
 
 def _scoped(db: Session, user: User):
     q = db.query(models.RawDocument).filter(models.RawDocument.is_archived == False)  # noqa: E712
-    if user.tenant_id is not None:
+    if not is_admin(user):
         q = q.filter(models.RawDocument.tenant_id == user.tenant_id)
     return q
 
@@ -71,7 +71,7 @@ def _get_or_404(db: Session, raw_id: int, user: User) -> models.RawDocument:
     r = db.get(models.RawDocument, raw_id)
     if r is None or r.is_archived:
         raise HTTPException(status_code=404, detail="Raw document not found")
-    if user.tenant_id is not None and r.tenant_id != user.tenant_id:
+    if not is_admin(user) and r.tenant_id != user.tenant_id:
         raise HTTPException(status_code=404, detail="Raw document not found")
     return r
 

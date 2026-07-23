@@ -5,6 +5,9 @@ import tempfile
 # Point the app at an isolated temp DB *before* importing it.
 _tmp = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
+# Demo users are OFF by default (public passwords) — the suite opts in
+# explicitly, on its throwaway SQLite DB, to exercise the RBAC matrix.
+os.environ["SEED_DEMO_USERS"] = "true"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -1189,3 +1192,48 @@ def test_raw_tenant_isolation(client):
     assert client.get(f"/api/raw/{raw_id}/download", headers=hdr(tb)).status_code == 404
     assert client.post(f"/api/raw/{raw_id}/etl", headers=hdr(tb)).status_code == 404
     assert all(x["id"] != raw_id for x in client.get("/api/raw", headers=hdr(tb)).json())
+
+
+def test_null_tenant_user_is_scoped_not_superuser(client):
+    """A user with no tenant assigned (e.g. public self-signup) must be treated
+    as SCOPED — seeing only untenanted/shared rows — never as a cross-tenant
+    admin. Regression for the tenant_id-IS-NULL == see-all bypass."""
+    at = tok(client, "admin@constructerp.dev", "admin123")
+    tnt = client.post("/api/tenants", json={"name": "Confidential Co"}, headers=hdr(at)).json()["id"]
+    client.post("/api/auth/users",
+                json={"email": "conf-pm@e.com", "password": "secret1", "full_name": "Conf PM",
+                      "role": "project_manager", "tenant_id": tnt}, headers=hdr(at))
+    pmt = tok(client, "conf-pm@e.com", "secret1")
+
+    # Tenant PM creates a project inside their tenant.
+    r = client.post("/api/projects", json={"name": "Top Secret Bridge"}, headers=hdr(pmt))
+    assert r.status_code == 201
+    assert r.json()["tenant_id"] == tnt
+
+    # A public self-registration → active viewer with NO tenant.
+    client.post("/api/auth/register",
+                json={"email": "outsider@e.com", "password": "secret1", "full_name": "Outsider"})
+    ot = tok(client, "outsider@e.com", "secret1")
+
+    # The outsider must NOT see the tenant's confidential project.
+    names = {p["name"] for p in client.get("/api/projects", headers=hdr(ot)).json()}
+    assert "Top Secret Bridge" not in names
+
+
+def test_non_admin_cannot_forge_tenant_id_on_write(client):
+    """A scoped user cannot plant a record in another tenant by supplying
+    tenant_id in the body (mass-assignment / tenant escape)."""
+    at = tok(client, "admin@constructerp.dev", "admin123")
+    victim = client.post("/api/tenants", json={"name": "Victim Tenant"}, headers=hdr(at)).json()["id"]
+    home = client.post("/api/tenants", json={"name": "Home Tenant"}, headers=hdr(at)).json()["id"]
+    client.post("/api/auth/users",
+                json={"email": "attacker@e.com", "password": "secret1", "full_name": "Atk",
+                      "role": "project_manager", "tenant_id": home}, headers=hdr(at))
+    kt = tok(client, "attacker@e.com", "secret1")
+
+    # Attempt to create a project stamped into the victim tenant.
+    r = client.post("/api/projects",
+                    json={"name": "Planted", "tenant_id": victim}, headers=hdr(kt))
+    assert r.status_code == 201
+    # Server ignores the forged tenant_id and stamps the caller's own.
+    assert r.json()["tenant_id"] == home

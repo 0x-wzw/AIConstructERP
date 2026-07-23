@@ -115,6 +115,16 @@ def get_current_active_user(user: User = Depends(get_current_user)) -> User:
     return user
 
 
+def is_admin(user: User) -> bool:
+    """True for platform admins, who are intentionally cross-tenant.
+
+    Tenant isolation keys off THIS, never off ``tenant_id is None`` — a user
+    with no tenant assigned (e.g. a public self-registration) is a *scoped*
+    user who must see only untenanted/shared rows, not every tenant's data.
+    """
+    return user.role == Role.admin.value
+
+
 def require_roles(*roles: str):
     """Dependency factory — allow only the given roles (admin always allowed)."""
     allowed = {r.value if isinstance(r, Role) else r for r in roles} | {Role.admin.value}

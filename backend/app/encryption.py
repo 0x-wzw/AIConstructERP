@@ -79,6 +79,20 @@ def encrypt_file_for_bidder(file_path: str) -> bytes:
     return encrypt_financial_proposal(data)
 
 
+def encrypt_secret(plaintext: str) -> str:
+    """Encrypt a short secret (e.g. an API client secret) to a storable string."""
+    if not plaintext:
+        return ""
+    return _get_fernet().encrypt(plaintext.encode()).decode()
+
+
+def decrypt_secret(ciphertext: str) -> str:
+    """Inverse of encrypt_secret. Returns "" for empty input."""
+    if not ciphertext:
+        return ""
+    return _get_fernet().decrypt(ciphertext.encode()).decode()
+
+
 def generate_encryption_key() -> str:
     """Generate a new Fernet key for production use.
     

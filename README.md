@@ -47,11 +47,18 @@ uvicorn app.main:app --reload --port 8787
 ### Docker
 
 ```bash
-cp backend/.env.example .env  # set SECRET_KEY (required) + optional S3 config
+cp backend/.env.example .env  # then set POSTGRES_PASSWORD + SECRET_KEY (both required)
 docker compose up -d
 # API at http://localhost:8000/docs
-# MinIO console at http://localhost:9001
+
+# For S3-compatible storage via the bundled MinIO, also set MINIO_ROOT_USER /
+# MINIO_ROOT_PASSWORD (+ STORAGE_BACKEND=s3, S3_* ) in .env, then:
+#   docker compose --profile s3 up -d   # MinIO console at http://localhost:9001
 ```
+
+Compose intentionally has **no fallback values** for `POSTGRES_PASSWORD`,
+`SECRET_KEY`, or the MinIO credentials — it errors out if they are unset, so a
+deployment can never silently run on a weak, publicly-known secret.
 
 The container entrypoint runs `alembic upgrade head` before serving, so the
 Postgres schema is always brought up to date on deploy. **Set a stable

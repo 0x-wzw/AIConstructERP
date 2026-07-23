@@ -8,10 +8,13 @@ services:
       # non-root user. Only relevant for STORAGE_BACKEND=local.
       - uploads:/app/uploads
     environment:
-      - DATABASE_URL=postgresql+psycopg://constructerp:${POSTGRES_PASSWORD:-constructerp}@db:5432/constructerp
-      # SECRET_KEY MUST be set for any real deploy (and is required if WORKERS>1,
-      # else JWTs signed by one worker are rejected by another).
-      - SECRET_KEY=${SECRET_KEY:-dev-insecure-change-me}
+      # No weak fallbacks for secrets — compose fails fast if these are unset.
+      # Copy backend/.env.example → .env and fill them in (see README).
+      - "DATABASE_URL=postgresql+psycopg://constructerp:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/constructerp"
+      # A STATIC known SECRET_KEY lets anyone forge admin JWTs — it must be a
+      # strong per-deployment value. Required (and mandatory if WORKERS>1, else
+      # JWTs signed by one worker are rejected by another).
+      - "SECRET_KEY=${SECRET_KEY:?set SECRET_KEY in .env - generate with: python -c \"import secrets;print(secrets.token_hex(32))\"}"
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
       - WORKERS=${WORKERS:-1}
       # ── File storage ──────────────────────────────────────────────
@@ -42,7 +45,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: constructerp
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-constructerp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: constructerp
     ports:
       - "5432:5432"
@@ -55,15 +58,18 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Optional: MinIO for S3-compatible file storage
+  # Optional: MinIO for S3-compatible file storage.
+  # Only started with `docker compose --profile s3 up`; set the two MinIO
+  # credentials in .env (they double as S3_KEY/S3_SECRET for the api service).
   minio:
     image: minio/minio:latest
+    profiles: ["s3"]
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"

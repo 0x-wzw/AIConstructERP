@@ -91,5 +91,20 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
 
+    # ── Malaysia LHDN MyInvois e-invoicing ────────────────────────────
+    # Backend that actually talks to LHDN:
+    #   stub   — no network; echoes a fake UUID (default, dev/test safe)
+    #   direct — call the MyInvois REST API using each tenant's credentials
+    einvoice_backend: str = "stub"  # stub | direct
+    # Base URLs per environment (chosen by each tenant's MyInvoisConfig).
+    myinvois_sandbox_url: str = "https://preprod-api.myinvois.hasil.gov.my"
+    myinvois_production_url: str = "https://api.myinvois.hasil.gov.my"
+    myinvois_token_path: str = "/connect/token"
+    myinvois_scope: str = "InvoicingAPI"
+    myinvois_http_timeout_seconds: int = 30
+    # Refuse to sign/submit to the production environment until a real
+    # (CA-issued) signer is wired — the scaffold ships an unsigned dev signer.
+    myinvois_allow_unsigned_production: bool = False
+
 
 settings = Settings()

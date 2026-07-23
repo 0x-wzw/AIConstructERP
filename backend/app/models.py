@@ -440,8 +440,107 @@ class EInvoice(Base):
     tax_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
     total_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
     status: Mapped[str] = mapped_column(String(30), default="draft", index=True)  # draft|submitted|validated|rejected|paid
+
+    # ── Malaysia LHDN MyInvois fields ────────────────────────────────
+    # document_type: 01 Invoice, 02 Credit, 03 Debit, 04 Refund,
+    #                11-14 self-billed variants.
+    document_type: Mapped[str] = mapped_column(String(2), default="01")
+    document_version: Mapped[str] = mapped_column(String(5), default="1.1")
+    currency: Mapped[str] = mapped_column(String(3), default="MYR")
+    exchange_rate: Mapped[float] = mapped_column(Numeric(14, 6), default=1)
+    # Supplier (issuer) identity — required by LHDN.
+    supplier_tin: Mapped[str] = mapped_column(String(20), default="")
+    supplier_reg_no: Mapped[str] = mapped_column(String(30), default="")  # BRN/NRIC/passport
+    supplier_sst: Mapped[str] = mapped_column(String(35), default="")
+    supplier_msic: Mapped[str] = mapped_column(String(5), default="")
+    # Buyer identity.
+    buyer_tin: Mapped[str] = mapped_column(String(20), default="")
+    buyer_reg_no: Mapped[str] = mapped_column(String(30), default="")
+    buyer_name: Mapped[str] = mapped_column(String(200), default="")
+    # MyInvois clearance results.
+    myinvois_status: Mapped[str] = mapped_column(String(20), default="not_submitted", index=True)
+    # not_submitted | submitting | submitted | valid | invalid | cancelled
+    myinvois_uuid: Mapped[str] = mapped_column(String(40), default="", index=True)
+    myinvois_long_id: Mapped[str] = mapped_column(String(80), default="")
+    submission_uid: Mapped[str] = mapped_column(String(40), default="")
+    validation_link: Mapped[str] = mapped_column(String(500), default="")  # QR target
+    myinvois_error: Mapped[str] = mapped_column(Text, default="")
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    validated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    cancel_reason: Mapped[str] = mapped_column(String(300), default="")
+
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    lines: Mapped[List["EInvoiceLine"]] = relationship(
+        "EInvoiceLine", cascade="all, delete-orphan", back_populates="e_invoice"
+    )
+
+
+class EInvoiceLine(Base):
+    """A single e-invoice line item. MyInvois validates per line, so each line
+    carries its own classification code and tax breakdown."""
+    __tablename__ = "e_invoice_lines"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    e_invoice_id: Mapped[int] = mapped_column(
+        ForeignKey("e_invoices.id", ondelete="CASCADE"), index=True
+    )
+    line_no: Mapped[int] = mapped_column(Integer, default=1)
+    classification_code: Mapped[str] = mapped_column(String(5), default="")  # MyInvois class code
+    description: Mapped[str] = mapped_column(String(300), default="")
+    quantity: Mapped[float] = mapped_column(Numeric(14, 3), default=1)
+    unit_price: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    measurement: Mapped[str] = mapped_column(String(10), default="")  # UN/ECE unit code
+    tax_type: Mapped[str] = mapped_column(String(10), default="")  # 01 sales, 02 service, E exempt...
+    tax_rate: Mapped[float] = mapped_column(Numeric(6, 2), default=0)
+    tax_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    discount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    subtotal: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+
+    e_invoice: Mapped["EInvoice"] = relationship("EInvoice", back_populates="lines")
+
+
+class MyInvoisConfig(Base):
+    """Per-tenant MyInvois connection + issuer identity.
+
+    One row per tenant. The client secret is stored ENCRYPTED (see
+    einvoice.secrets); it is never returned by the API in cleartext.
+    """
+    __tablename__ = "myinvois_config"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, unique=True, index=True
+    )
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    environment: Mapped[str] = mapped_column(String(12), default="sandbox")  # sandbox|production
+    # Issuer (this tenant, as supplier) identity.
+    tin: Mapped[str] = mapped_column(String(20), default="")
+    registration_no: Mapped[str] = mapped_column(String(30), default="")
+    sst_no: Mapped[str] = mapped_column(String(35), default="")
+    msic_code: Mapped[str] = mapped_column(String(5), default="")
+    business_activity: Mapped[str] = mapped_column(String(300), default="")
+    email: Mapped[str] = mapped_column(String(200), default="")
+    address_line: Mapped[str] = mapped_column(String(300), default="")
+    city: Mapped[str] = mapped_column(String(100), default="")
+    state_code: Mapped[str] = mapped_column(String(3), default="")  # MyInvois state code
+    postal_code: Mapped[str] = mapped_column(String(10), default="")
+    country_code: Mapped[str] = mapped_column(String(3), default="MYS")
+    # API credentials (from the MyInvois portal). Secret stored encrypted.
+    client_id: Mapped[str] = mapped_column(String(100), default="")
+    client_secret_enc: Mapped[str] = mapped_column(Text, default="")
+    # Intermediary mode: submit on behalf of `onbehalf_tin`.
+    is_intermediary: Mapped[bool] = mapped_column(Boolean, default=False)
+    onbehalf_tin: Mapped[str] = mapped_column(String(20), default="")
+    # Reference/alias to the signing certificate (resolved by the signer).
+    cert_ref: Mapped[str] = mapped_column(String(200), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 # ── BRD Module 5: Cost Data Management ─────────────────────────────────

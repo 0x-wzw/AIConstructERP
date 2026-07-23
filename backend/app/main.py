@@ -47,6 +47,7 @@ from .brd_schemas2 import (
 from .chat_routes import router as chat_router
 from .chunked_upload import router as chunked_upload_router
 from .config import settings
+from .einvoice_routes import router as einvoice_router
 from .crud import generate_po_number, make_crud_router
 from .database import Base, SessionLocal, engine, get_db
 from .files import router as files_router
@@ -361,6 +362,7 @@ app.include_router(auction_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(sse_router, prefix="/api")
 app.include_router(ocr_router, prefix="/api")
+app.include_router(einvoice_router, prefix="/api")
 for r in ROUTERS:
     app.include_router(r, prefix="/api")
 

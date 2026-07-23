@@ -31,6 +31,7 @@ from .storage import (
     generate_storage_path,
     get_storage_backend,
     guess_file_category,
+    validate_file,
 )
 
 # Prefix has no leading /api — main.py mounts every router under /api, and the
@@ -84,6 +85,12 @@ def init_upload(
             status_code=413,
             detail=f"File too large. Max {settings.max_upload_size_bytes // (1024*1024)} MB.",
         )
+
+    # Enforce the same extension/MIME allowlist the single-shot and raw-zone
+    # uploads use, so large/resumable uploads can't smuggle in disallowed types.
+    error = validate_file(filename, content_type, total_size)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
 
     upload_id = uuid.uuid4().hex
     chunk_size = settings.upload_chunk_size_bytes

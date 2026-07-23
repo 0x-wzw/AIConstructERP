@@ -32,8 +32,18 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
 
-    # If set, demo users (admin/pm/accounting/viewer) are seeded on first run.
-    seed_demo_users: bool = True
+    # Symmetric key for two-bid financial-proposal encryption (Fernet). Empty
+    # ⇒ dev mode (an ephemeral key is generated per process — do NOT rely on it
+    # for durable secrets). Set a stable value in production:
+    #   export ENCRYPTION_KEY="$(python -c 'from cryptography.fernet import Fernet;print(Fernet.generate_key().decode())')"
+    encryption_key: str = ""
+
+    # Seed built-in DEMO users (admin/pm/accounting/viewer) with well-known
+    # passwords. OFF by default and, additionally, only ever honoured on a
+    # SQLite (dev/test) database — these credentials are public in the repo and
+    # must never exist on a production deployment. Opt in for local dev with
+    # SEED_DEMO_USERS=true.
+    seed_demo_users: bool = False
 
     # ── File storage ─────────────────────────────────────────────────
     storage_backend: str = "local"  # local | s3

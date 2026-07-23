@@ -75,16 +75,25 @@ async def lifespan(app: FastAPI):
     #     via `alembic upgrade head` in the container entrypoint. create_all()
     #     is intentionally skipped there because it cannot ALTER existing tables
     #     (it would silently miss new columns on an upgrade).
+    # Demo/seed data (and the create_all convenience) are strictly a SQLite
+    # dev/test affordance. On a real (Postgres) database the schema is owned by
+    # Alembic and NO demo data — least of all the public-password demo users —
+    # is ever seeded, regardless of settings.
     if settings.database_url.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    try:
-        from .seed import seed_demo_users, seed_if_empty
-        seed_if_empty(db)
-        if settings.seed_demo_users:
-            seed_demo_users(db)
-    finally:
-        db.close()
+        db = SessionLocal()
+        try:
+            from .seed import seed_demo_users, seed_if_empty
+            seed_if_empty(db)
+            if settings.seed_demo_users:
+                seed_demo_users(db)
+        finally:
+            db.close()
+    elif settings.seed_demo_users:
+        logger.warning(
+            "SEED_DEMO_USERS is set but the database is not SQLite — refusing to "
+            "seed demo users with public passwords on a non-dev database."
+        )
     yield
     logger.info("Shutting down %s", settings.app_name)
 

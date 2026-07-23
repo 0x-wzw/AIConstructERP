@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 from .audit import log_action
 from .database import get_db
 from .models import User
-from .security import get_current_active_user, require_roles
+from .security import get_current_active_user, is_admin, require_roles
 
 logger = logging.getLogger("constructerp.crud")
 
@@ -38,11 +38,17 @@ def _has_archive_column(model: Type) -> bool:
 
 
 def _tenant_filter(model: Type, user: User):
-    """Return a SQLAlchemy filter condition for the user's tenant, or None."""
+    """Return a SQLAlchemy filter condition for the user's tenant, or None.
+
+    Only platform admins are unscoped (None ⇒ see everything). Every other
+    user — including one with no tenant assigned — is filtered to their own
+    tenant; a NULL tenant_id therefore yields ``tenant_id IS NULL`` (shared
+    rows only), NOT a cross-tenant bypass.
+    """
     if not _has_tenant_column(model):
         return None
-    if user.tenant_id is None:
-        return None  # admin / unscoped — see everything
+    if is_admin(user):
+        return None  # platform admin — see everything
     return model.tenant_id == user.tenant_id
 
 
@@ -108,9 +114,14 @@ def make_crud_router(
         user: User = Depends(require_roles(*(write_roles or []))),
     ):
         data = payload.model_dump(exclude_unset=True)
-        # Stamp tenant_id from the authenticated user (if model supports it).
-        if _has_tenant_column(model) and "tenant_id" not in data:
-            data["tenant_id"] = user.tenant_id
+        # Tenant stamping. Non-admins may NOT choose their tenant: any
+        # client-supplied tenant_id is overwritten with their own, preventing
+        # cross-tenant writes. Admins may target a specific tenant explicitly.
+        if _has_tenant_column(model):
+            if is_admin(user):
+                data.setdefault("tenant_id", None)
+            else:
+                data["tenant_id"] = user.tenant_id
         obj = model(**data)
         if on_create is not None:
             on_create(obj, db)
@@ -139,6 +150,9 @@ def make_crud_router(
     ):
         obj = _get_or_404(item_id, db, user)
         changes = payload.model_dump(exclude_unset=True)
+        # A non-admin cannot move a record to another tenant.
+        if _has_tenant_column(model) and not is_admin(user):
+            changes.pop("tenant_id", None)
         for key, value in changes.items():
             setattr(obj, key, value)
         log_action(db, user=user, action="update", entity_type=_entity_tag(model),

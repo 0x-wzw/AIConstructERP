@@ -2,22 +2,33 @@
 
 **Construction Project Management Suite** — a FastAPI backend with multi-tenancy, RBAC, file management, and AI agent capabilities.
 
-![Version](https://img.shields.io/badge/version-0.5.0-amber)
+![Version](https://img.shields.io/badge/version-0.7.0-amber)
 ![Status](https://img.shields.io/badge/status-active-green)
 
 ## Features
 
-- **Multi-tenancy** — Tenant isolation on all data (projects, tasks, budget, POs, files). Admins see all tenants; users see only their own.
-- **RBAC** — 4 roles (admin, project_manager, accounting, viewer) with section-level access control enforced server-side.
-- **Projects** — Create, view, and manage construction projects with budget tracking.
-- **Tasks** — Gantt-chart-style task scheduling with timeline visualization.
-- **Resources** — Track labor, equipment, and materials inventory.
-- **Budget** — Cost breakdown with budget vs committed vs spent tracking.
-- **Procurement** — Purchase order management with auto-numbered POs (PO-YYYY-NNN).
-- **Subcontractors** — Subcontractor directory with contract and progress tracking.
-- **Change Orders** — Track scope changes with cost and schedule impact.
-- **File Upload** — Authenticated file uploads with auto-classification, local/S3 storage, download, and delete.
-- **AI Agent** — Natural language commands, morning briefings, budget analysis, and conversational chat (OpenAI/Ollama backends).
+- **Multi-tenancy** — Strict tenant isolation on all data. Cross-tenant access is
+  granted only to platform admins (explicit `is_admin` check); every other user —
+  including public self-registrations with no tenant — is scoped to their own
+  tenant's (and shared) rows.
+- **RBAC** — 4 roles (admin, project_manager, accounting, viewer) with
+  section-level access control enforced server-side.
+- **Projects · Tasks · Resources · Budget** — Core project management with budget
+  vs committed vs spent tracking and Gantt-style task timelines.
+- **Procurement** — Purchase orders (auto-numbered `PO-YYYY-NNN`), purchase
+  requests, RFQs, goods receipts, and cost codes.
+- **Tender & Contract** — Tenders, BOQ items, tender bids/addenda, reverse
+  auctions, progress claims, payment certificates, and final accounts.
+- **Vendors · Consultants · Subcontractors · Change Orders** — Directories and
+  scope-change tracking with cost/schedule impact.
+- **Malaysia e-Invoicing (LHDN MyInvois)** — Pluggable clearance layer
+  (`submit → validate → cancel`, per-line items, per-tenant credentials) with an
+  offline `stub` backend for dev. See [e-Invoicing](#malaysia-e-invoicing-lhdn-myinvois).
+- **Files, storage & ingestion** — Unified local/S3 storage (SHA-256, presigned +
+  chunked uploads), a raw landing zone (bronze tier), and OCR → classify → extract
+  ingestion that links invoices to `EInvoice` records.
+- **AI Agent** — Natural language commands, briefings, budget analysis, and chat
+  (OpenAI/Ollama backends).
 - **Tenant Management** — Admin-only tenant CRUD with user assignment.
 
 ## Tech Stack
@@ -75,7 +86,12 @@ python -m pytest tests/test_api.py -v
 
 ## Demo Accounts
 
-Seeded automatically on first run (when `SEED_DEMO_USERS=true`):
+> ⚠️ **Dev only.** These passwords are public in this repo. Demo seeding is **off
+> by default** (`SEED_DEMO_USERS=false`) and is honoured **only on a SQLite**
+> database — it is never seeded on Postgres. **Never** enable it on a production
+> deployment; create your first admin out-of-band instead.
+
+Enable for local dev with `SEED_DEMO_USERS=true` (on a SQLite DB):
 
 | Email | Password | Role |
 |---|---|---|
@@ -118,6 +134,12 @@ Seeded automatically on first run (when `SEED_DEMO_USERS=true`):
 | POST | `/api/raw/presign` · `/{id}/confirm` | user | Direct-to-cloud landing with tracked manifest |
 | POST | `/api/raw/{id}/etl` | user | Promote a landed doc into structured data |
 | GET | `/api/raw` · `/{id}` · `/{id}/download` | user | List/inspect/download the landing zone |
+| GET/PUT | `/api/einvoice/config` | admin | Per-tenant MyInvois config (secret never echoed) |
+| PUT | `/api/einvoice/{id}/lines` | accounting | Set e-invoice line items |
+| POST | `/api/einvoice/{id}/submit` | accounting | Submit an invoice to MyInvois |
+| GET | `/api/einvoice/{id}/status` | user | Refresh MyInvois clearance status |
+| POST | `/api/einvoice/{id}/cancel` | accounting | Cancel a validated e-invoice (≤72h) |
+| GET | `/api/einvoice/validate-tin/{tin}` | user | Validate a TIN against MyInvois |
 | GET | `/api/ai/status` | user | AI agent availability |
 | POST | `/api/ai/command` | user | NL command |
 | POST | `/api/ai/analyze` | user | Budget analysis |
@@ -126,12 +148,14 @@ Seeded automatically on first run (when `SEED_DEMO_USERS=true`):
 | GET | `/api/health` | public | Health check |
 | GET | `/api/state` | user | Full app state (single request) |
 
-## Test Suite (69 tests)
+## Test Suite (75 tests)
 
-Full end-to-end coverage across auth/RBAC, multi-tenancy, every domain module,
-file storage (checksums, chunked upload, pre-signed URLs), the raw landing zone
+Full end-to-end coverage across auth/RBAC, multi-tenancy (incl. the null-tenant
+isolation and forged-`tenant_id` regressions), every domain module, file storage
+(checksums, chunked upload, pre-signed URLs), the raw landing zone
 (land → confirm → ETL → linked EInvoice, tenant isolation, idempotency), OCR,
-and document ingestion. Run with `python -m pytest`.
+document ingestion, and the MyInvois e-invoice lifecycle (stub backend). Run with
+`python -m pytest`.
 
 ## Data flow: raw landing zone → ETL → structured
 
@@ -170,18 +194,50 @@ upload / presign+confirm / chunked
   extracts normalized fields into `extracted_data` (JSON), and for invoices
   creates and links an `EInvoice` domain record (`ingested_entity_type/id`).
 
+## Malaysia e-Invoicing (LHDN MyInvois)
+
+The `app/einvoice/` module connects the ERP to Malaysia's national e-invoicing
+platform (LHDN MyInvois). Like the storage layer, the transport is a **pluggable
+backend** (`EINVOICE_BACKEND`):
+
+- `stub` (default) — offline, deterministic; simulates clearance so the full
+  `submit → status → cancel` lifecycle works with no credentials or certificate.
+- `direct` — calls the MyInvois REST API using each tenant's own credentials
+  (OAuth2), building a UBL 2.1 document and submitting it.
+
+Per-tenant identity and API credentials (TIN, BRN, SST, MSIC, client id/secret)
+live in `myinvois_config` via `PUT /api/einvoice/config` — the **client secret is
+stored encrypted and never returned**.
+
+> **Scaffold status.** Document mapping and the submit/status/cancel flow are in
+> place; the **XAdES digital signature is a placeholder** guarded against
+> production use. Before going live: implement the signer with a Malaysian-CA
+> certificate, complete UBL field coverage, set `EINVOICE_BACKEND=direct`, and
+> validate against the LHDN **preprod sandbox** first.
+
+## Roadmap
+
+See [`docs/rfc/0001-modular-architecture-and-document-control.md`](docs/rfc/0001-modular-architecture-and-document-control.md)
+for the next release: a module registry/manifest architecture (per-tenant module
+enablement) and a Document Control module (RFIs, drawing register, transmittals).
+
 ## Configuration
 
 See `backend/.env.example` for all options. Key settings:
 
 - `DATABASE_URL` — SQLite (dev) or PostgreSQL (prod)
-- `SECRET_KEY` — JWT signing key (auto-generated in dev, **required in prod**)
+- `SECRET_KEY` — JWT signing key (auto-generated per-process in dev, **required in
+  prod**; a stable value is mandatory if `WORKERS>1`)
+- `POSTGRES_PASSWORD` — required by docker-compose (no weak fallback)
+- `ENCRYPTION_KEY` — Fernet key for encrypted secrets (e.g. MyInvois client
+  secret); ephemeral in dev, set a stable value in prod
 - `STORAGE_BACKEND` — `local` or `s3`; S3 uses `S3_BUCKET/KEY/SECRET/REGION/ENDPOINT` (+ `S3_FORCE_PATH_STYLE`)
+- `EINVOICE_BACKEND` — `stub` (default) or `direct` (LHDN MyInvois)
 - `S3_PRESIGNED_EXPIRY_SECONDS` — lifetime of pre-signed upload/download URLs
 - `UPLOAD_CHUNK_SIZE_BYTES` / `MAX_CHUNKS_PER_UPLOAD` / `CHUNK_TTL_SECONDS` — chunked upload tuning
 - `AI_PROVIDER` — `openai`, `ollama`, or `disabled`
-- `SEED_DEMO_USERS` — seed demo accounts on startup
-- `WORKERS` — uvicorn worker count (set `SECRET_KEY` if >1)
+- `SEED_DEMO_USERS` — **off by default**; seed demo accounts (SQLite dev only)
+- `WORKERS` — uvicorn worker count (set a stable `SECRET_KEY` if >1)
 
 ## License
 

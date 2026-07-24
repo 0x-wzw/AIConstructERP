@@ -3,6 +3,56 @@
 All notable changes to ConstructERP are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-07-24
+
+### Added
+- **Malaysia LHDN MyInvois e-invoicing (scaffold).** A pluggable clearance layer
+  (`EINVOICE_BACKEND=stub|direct`) mirroring the storage subsystem, so the
+  transport is swappable and nothing hits the network by default. New per-line
+  `e_invoice_lines` table, per-tenant `myinvois_config` (API client secret stored
+  **encrypted**), and MyInvois fields on `e_invoices` — TIN/BRN/SST/MSIC, UUID,
+  submission UID, validation link, status (Alembic migration `b3d9f1a26c47`).
+  - Endpoints under `/api/einvoice`: admin-only config, line management, and the
+    `submit → status → cancel` lifecycle plus `validate-tin`.
+  - `app/einvoice/`: `backends.py` (offline `stub` default + `direct` LHDN),
+    `client.py` (httpx OAuth2 + document APIs), `ubl_mapper.py` (UBL 2.1 JSON),
+    `signer.py` (minify + SHA-256 + base64; XAdES signature is a placeholder with
+    a hard guard that refuses to submit unsigned documents to production).
+- **`encryption.encrypt_secret` / `decrypt_secret`** helpers; `ENCRYPTION_KEY` is
+  now a first-class setting.
+- **RFC 0001** (`docs/rfc/`) — plans a module registry/manifest architecture and a
+  Document Control module (RFIs, drawing register, transmittals) for the next
+  release.
+
+### Security
+- **Demo accounts are no longer seeded by default.** `SEED_DEMO_USERS` defaults to
+  `false` and is only ever honoured on a **SQLite** dev/test database — never
+  Postgres. The demo passwords are public in this repo; production must create its
+  own admin out-of-band.
+- **Tenant isolation fix (critical).** Cross-tenant visibility now keys off an
+  explicit `is_admin()` check instead of `tenant_id IS NULL`. Previously a public
+  self-registration (which has no tenant) could read **every** tenant's data;
+  such users are now scoped to shared rows. Applied across CRUD, files, and the
+  raw landing zone.
+- **No forged `tenant_id` on writes** — non-admins can no longer set or move a
+  record's `tenant_id`; it is stamped from the authenticated user.
+- **Chunked upload** now enforces the same extension/MIME allowlist as the
+  single-shot and raw-zone upload paths.
+- **docker-compose has no weak secret fallbacks.** `POSTGRES_PASSWORD`,
+  `SECRET_KEY`, and the MinIO credentials are required (`${VAR:?}`) — compose
+  fails fast rather than running on a publicly-known default. (A static
+  `SECRET_KEY` would let anyone forge admin JWTs.) MinIO moved behind an `s3`
+  compose profile.
+
+### Changed
+- `.env.example` now ships `SEED_DEMO_USERS=false` and documents the required
+  secrets + MyInvois settings.
+- Shared pytest fixtures moved to `conftest.py`; the suite is now **75 tests**.
+
+### Fixed
+- `encryption.py` referenced an undefined `settings.encryption_key` (a latent
+  `AttributeError`) — `encryption_key` is now a defined setting.
+
 ## [0.6.0] — 2026-07-22
 
 ### Added

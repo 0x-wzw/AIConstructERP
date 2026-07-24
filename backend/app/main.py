@@ -48,6 +48,14 @@ from .chat_routes import router as chat_router
 from .chunked_upload import router as chunked_upload_router
 from .config import settings
 from .einvoice_routes import router as einvoice_router
+from .module_registry import (
+    ModuleManifest,
+    all_manifests,
+    register,
+    require_module,
+    validate_dependencies,
+)
+from .module_routes import router as modules_router
 from .crud import generate_po_number, make_crud_router
 from .database import Base, SessionLocal, engine, get_db
 from .files import router as files_router
@@ -362,7 +370,20 @@ app.include_router(auction_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(sse_router, prefix="/api")
 app.include_router(ocr_router, prefix="/api")
-app.include_router(einvoice_router, prefix="/api")
+app.include_router(modules_router, prefix="/api")
+
+# ── Registered modules ────────────────────────────────────────────────
+# Feature modules opt into the registry instead of being hand-wired here; each
+# is mounted with a per-tenant enablement gate. New modules (e.g. the planned
+# Document Control module) register the same way; existing core routers above
+# will be migrated to manifests incrementally.
+register(ModuleManifest(name="einvoice", version="1.0", router=einvoice_router))
+validate_dependencies()
+for _m in all_manifests():
+    app.include_router(
+        _m.router, prefix="/api",
+        dependencies=[Depends(require_module(_m.name))],
+    )
 for r in ROUTERS:
     app.include_router(r, prefix="/api")
 
